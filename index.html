@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light">
+<meta name="theme-color" content="#241a12">
+<title>El Reino de JuanFerland</title>
+<meta property="og:title" content="El Reino de JuanFerland">
+<meta property="og:description" content="¿Quién ganará la batalla por su control? Ajedrez contra 5 niveles, hasta el simulador Bobby Fischer.">
+<meta property="og:type" content="website">
+<style>
+:root{
+  color-scheme: light only;
+  forced-color-adjust: none;
+  --gold:#E8A020;
+  --gold2:#F5C24A;
+  --blue:#2b3f6b;
+  --blue-d:#16213d;
+  --red:#7a2222;
+  --red-d:#3d0f0f;
+  --bg:#241a12;
+  --panel:#1c140d;
+  --ink:#FFFFFF;
+  --cellW: 59;
+  --cellH: 67;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink) !important;-webkit-text-fill-color:var(--ink)}
+body{
+  font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif;
+  min-height:100vh; min-height:100svh;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #3a2a1a 0%, #241a12 55%, #160f08 100%);
+  display:flex; flex-direction:column; align-items:center;
+  padding:10px 8px 40px;
+}
+h1,h2,h3,p,span,a,strong,button,select,option,label,div{
+  -webkit-text-fill-color:inherit;
+}
+.wrap{width:100%; max-width:560px; display:flex; flex-direction:column; align-items:center}
+
+/* ---- Controls ---- */
+.controls{
+  width:100%; display:flex; flex-wrap:wrap; gap:8px; justify-content:center;
+  margin-bottom:12px;
+}
+.lvl-label{
+  width:100%; text-align:center; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important;
+  font-size:14px; font-weight:700; letter-spacing:.5px; margin-bottom:2px;
+}
+.levels{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; width:100%}
+.levels button{
+  font-size:13px; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  background:linear-gradient(#33476f,#1a2744);
+  border:2px solid var(--gold); border-radius:9px;
+  padding:7px 10px; cursor:pointer; min-height:40px;
+}
+.levels button.active{
+  background:linear-gradient(var(--gold2),var(--gold));
+  color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important;
+  box-shadow:0 0 10px rgba(232,160,32,.7);
+}
+.actions{display:flex; gap:8px; justify-content:center; width:100%; margin-top:8px}
+.actions button{
+  font-size:14px; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  background:linear-gradient(#5a2020,#3a1212);
+  border:2px solid var(--gold); border-radius:9px; padding:9px 16px; cursor:pointer; min-height:44px;
+}
+.actions button.gold{background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important}
+
+/* ---- Status ---- */
+.status{
+  width:100%; text-align:center; font-size:16px; font-weight:700; min-height:24px;
+  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; margin:4px 0 8px;
+}
+.status .chk{color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important}
+
+/* ---- Title flush to board ---- */
+.title-img{
+  display:block; width:100%; max-width:560px; height:auto; margin:0 auto -2px;
+  image-rendering:auto; pointer-events:none; user-select:none;
+}
+
+/* ---- Board ---- */
+.board-shell{width:100%; max-width:560px; position:relative}
+.board{
+  position:relative; width:100%;
+  aspect-ratio:547/605;
+  background:url("assets/board.png") center/100% 100% no-repeat;
+}
+.grid{
+  position:absolute; left:6.764%; top:5.289%; width:86.289%; height:88.595%;
+  display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(8,1fr);
+}
+.cell{position:relative; cursor:pointer; display:flex; align-items:center; justify-content:center}
+.cell img{
+  width:auto; height:90%; max-width:96%; object-fit:contain;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.55));
+  pointer-events:none; user-select:none;
+  image-rendering:auto;
+}
+.cell.sel::after{content:""; position:absolute; inset:6%; border:3px solid var(--gold2); border-radius:7px; box-shadow:0 0 9px var(--gold)}
+.cell.move::before{content:""; position:absolute; width:34%; height:34%; border-radius:50%;
+  background:rgba(40,236,170,.85); box-shadow:0 0 6px #28ECAA}
+.cell.cap::before{content:""; position:absolute; inset:8%; border:4px solid #28ECAA; border-radius:9px; background:transparent}
+.cell.last{background:rgba(232,160,32,.22)}
+.cell.check::after{content:""; position:absolute; inset:4%; border:3px solid #ff5252; border-radius:8px; box-shadow:0 0 12px #ff2020}
+
+/* ---- Captured trays ---- */
+.trays{width:100%; max-width:560px; display:flex; flex-direction:column; gap:10px; margin-top:14px}
+.tray{
+  border:3px solid var(--gold); border-radius:12px; padding:8px 10px;
+  background:linear-gradient(160deg,#1a2848,#0d1530);
+}
+.tray.red{background:linear-gradient(160deg,#46161a,#280a0c)}
+.tray h3{
+  margin:0 0 6px; font-size:14px; font-weight:800; letter-spacing:1px; text-align:center;
+  color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important;
+}
+.tray .slots{display:flex; flex-wrap:wrap; gap:4px; min-height:54px; align-items:center; justify-content:center}
+.slot{
+  width:38px; height:52px; border:1px solid rgba(232,160,32,.55); border-radius:5px;
+  display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.18)
+}
+.slot img{height:48px; width:auto}
+.score{font-size:14px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; margin-left:6px}
+
+/* ---- Promotion modal ---- */
+.modal{position:fixed; inset:0; background:rgba(0,0,0,.72); display:none; align-items:center; justify-content:center; z-index:50}
+.modal.on{display:flex}
+.modal .box{background:var(--panel); border:3px solid var(--gold); border-radius:14px; padding:16px}
+.modal h3{margin:0 0 10px; text-align:center; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:16px}
+.modal .opts{display:flex; gap:10px}
+.modal .opts img{height:84px; width:auto; cursor:pointer; border:2px solid transparent; border-radius:8px; background:rgba(255,255,255,.05)}
+.modal .opts img:hover{border-color:var(--gold2)}
+
+.engine-note{font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:center; margin-top:18px; max-width:520px}
+
+@media (min-width:600px){
+  .slot{width:42px;height:56px}.slot img{height:52px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important}}
+@media (prefers-color-scheme:dark){
+  html,body{background:var(--bg); color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important}
+  .status,.score{color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important}
+  .lvl-label,.tray h3,.modal h3{color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="controls">
+    <div class="lvl-label">Elige tu rival</div>
+    <div class="levels" id="levels"></div>
+    <div class="actions">
+      <button class="gold" id="newgame">Nueva partida</button>
+      <button id="undo">Deshacer</button>
+      <button id="flip">Girar tablero</button>
+    </div>
+  </div>
+
+  <div class="status" id="status">Tú juegas con el ejército Azul. Mueves primero.</div>
+
+  <img class="title-img" src="assets/title.png" alt="El Reino de JuanFerland">
+  <div class="board-shell">
+    <div class="board" id="board">
+      <div class="grid" id="grid"></div>
+    </div>
+  </div>
+
+  <div class="trays">
+    <div class="tray red">
+      <h3>PIEZAS CAPTURADAS · ROJO <span class="score" id="scoreB"></span></h3>
+      <div class="slots" id="capB"></div>
+    </div>
+    <div class="tray">
+      <h3>PIEZAS CAPTURADAS · AZUL <span class="score" id="scoreW"></span></h3>
+      <div class="slots" id="capW"></div>
+    </div>
+  </div>
+
+  <div class="engine-note" id="enote">Cargando motor de ajedrez…</div>
+</div>
+
+<div class="modal" id="promo">
+  <div class="box">
+    <h3>Corona tu peón</h3>
+    <div class="opts" id="promoOpts"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chess.js@0.12.1/chess.min.js"></script>
+<script>
+const PIECE = (c,t)=>`assets/pieces/${c}${t.toUpperCase()}.png`;
+const VAL = {p:1,n:3,b:3,r:5,q:9,k:0};
+const LEVELS = [
+  {key:'medio',   name:'Medio',          elo:1200, skill:3,  movetime:300},
+  {key:'alto',    name:'Alto calibre',   elo:1600, skill:8,  movetime:500},
+  {key:'master',  name:'Chess Master',   elo:2100, skill:14, movetime:800},
+  {key:'gm',      name:'Grandmaster',    elo:2600, skill:20, movetime:1200},
+  {key:'fischer', name:'Bobby Fischer',  elo:null, skill:20, movetime:1800},
+];
+let level = LEVELS[1];
+
+const game = new Chess();
+let flipped = false;        // false: blue (white) at bottom
+let selected = null;        // square string like 'e2'
+let legalForSel = [];
+let lastMove = null;
+let busy = false;
+const capturedByW = [];     // pieces blue captured (red pieces)
+const capturedByB = [];     // pieces red captured (blue pieces)
+
+const gridEl   = document.getElementById('grid');
+const statusEl = document.getElementById('status');
+const enote    = document.getElementById('enote');
+
+/* ---------- Build level buttons ---------- */
+const levelsEl = document.getElementById('levels');
+LEVELS.forEach(l=>{
+  const b=document.createElement('button');
+  b.textContent=l.name; b.dataset.key=l.key;
+  if(l.key===level.key) b.classList.add('active');
+  b.onclick=()=>{ level=l; [...levelsEl.children].forEach(x=>x.classList.toggle('active',x.dataset.key===l.key)); configEngine(); };
+  levelsEl.appendChild(b);
+});
+
+/* ---------- Board rendering ---------- */
+const FILES='abcdefgh';
+function sqAt(r,c){ // r,c are visual row/col 0..7 (top-left origin)
+  const file = flipped ? 7-c : c;
+  const rank = flipped ? r+1 : 8-r;
+  return FILES[file]+rank;
+}
+function render(){
+  gridEl.innerHTML='';
+  const board = game.board(); // [rank8..rank1][a..h]
+  for(let r=0;r<8;r++){
+    for(let c=0;c<8;c++){
+      const sq=sqAt(r,c);
+      const cell=document.createElement('div');
+      cell.className='cell'; cell.dataset.sq=sq;
+      // piece lookup
+      const file = FILES.indexOf(sq[0]);
+      const rank = parseInt(sq[1]);
+      const p = board[8-rank][file];
+      if(p){
+        const img=document.createElement('img');
+        img.src=PIECE(p.color,p.type);
+        img.alt=p.color+p.type;
+        cell.appendChild(img);
+      }
+      if(lastMove && (sq===lastMove.from||sq===lastMove.to)) cell.classList.add('last');
+      if(selected===sq) cell.classList.add('sel');
+      if(legalForSel.includes(sq)){
+        cell.classList.add( game.get(sq) ? 'cap':'move' );
+      }
+      // check highlight
+      if(p && p.type==='k' && p.color===game.turn() && game.in_check()) cell.classList.add('check');
+      cell.onclick=()=>onCell(sq);
+      gridEl.appendChild(cell);
+    }
+  }
+  renderCaptured();
+}
+function renderCaptured(){
+  const cw=document.getElementById('capW'), cb=document.getElementById('capB');
+  cw.innerHTML=''; cb.innerHTML='';
+  const add=(host,arr)=>arr.forEach(pc=>{
+    const s=document.createElement('div'); s.className='slot';
+    const i=document.createElement('img'); i.src=PIECE(pc.color,pc.type); s.appendChild(i); host.appendChild(s);
+  });
+  add(cw,capturedByW); add(cb,capturedByB);
+  const sw=capturedByW.reduce((a,p)=>a+VAL[p.type],0);
+  const sb=capturedByB.reduce((a,p)=>a+VAL[p.type],0);
+  const diff=sw-sb;
+  document.getElementById('scoreW').textContent = diff>0?`(+${diff})`:'';
+  document.getElementById('scoreB').textContent = diff<0?`(+${-diff})`:'';
+}
+
+/* ---------- Interaction ---------- */
+function onCell(sq){
+  if(busy || game.game_over()) return;
+  if(game.turn()!=='w') return; // human is white/blue
+  const piece=game.get(sq);
+  if(selected && legalForSel.includes(sq)){
+    tryMove(selected,sq); return;
+  }
+  if(piece && piece.color==='w'){
+    selected=sq;
+    legalForSel=game.moves({square:sq,verbose:true}).map(m=>m.to);
+  }else{
+    selected=null; legalForSel=[];
+  }
+  render();
+}
+function tryMove(from,to){
+  const moves=game.moves({square:from,verbose:true}).filter(m=>m.to===to);
+  const needsPromo=moves.some(m=>m.promotion);
+  if(needsPromo){ askPromotion(from,to); return; }
+  doMove({from,to});
+}
+function doMove(mv){
+  const res=game.move({from:mv.from,to:mv.to,promotion:mv.promotion||undefined});
+  if(!res) return;
+  if(res.captured) capturedByW.push({color:'b',type:res.captured});
+  lastMove={from:res.from,to:res.to};
+  selected=null; legalForSel=[];
+  render(); updateStatus();
+  if(!game.game_over()) setTimeout(aiMove,250);
+}
+
+/* ---------- Promotion ---------- */
+function askPromotion(from,to){
+  const modal=document.getElementById('promo');
+  const opts=document.getElementById('promoOpts'); opts.innerHTML='';
+  ['q','r','b','n'].forEach(t=>{
+    const i=document.createElement('img'); i.src=PIECE('w',t);
+    i.onclick=()=>{ modal.classList.remove('on'); doMove({from,to,promotion:t}); };
+    opts.appendChild(i);
+  });
+  modal.classList.add('on');
+}
+
+/* ---------- Status ---------- */
+function updateStatus(){
+  let s='';
+  if(game.in_checkmate()){ s = game.turn()==='w' ? '¡Jaque mate! Gana el Rojo. 🐉' : '¡Jaque mate! Ganas tú, Azul. 🦁'; }
+  else if(game.in_stalemate()) s='Tablas por ahogado.';
+  else if(game.in_threefold_repetition()) s='Tablas por repetición.';
+  else if(game.insufficient_material()) s='Tablas por material insuficiente.';
+  else if(game.in_draw()) s='Tablas (regla de 50 movimientos).';
+  else if(game.in_check()) s = game.turn()==='w' ? '<span class="chk">¡Jaque a tu Rey!</span>' : '<span class="chk">Jaque al Rojo.</span>';
+  else s = game.turn()==='w' ? 'Tu turno (Azul).' : 'Piensa el Rojo…';
+  statusEl.innerHTML=s;
+}
+
+/* ================= Stockfish engine ================= */
+let engine=null, engineReady=false, useFallback=false;
+const SF_URL='https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js';
+
+async function bootEngine(){
+  try{
+    const r=await fetch(SF_URL);
+    if(!r.ok) throw new Error('http '+r.status);
+    const code=await r.text();
+    const blob=new Blob([code],{type:'application/javascript'});
+    engine=new Worker(URL.createObjectURL(blob));
+    engine.onmessage=onEngineMsg;
+    engine.postMessage('uci');
+    engine.postMessage('isready');
+    setTimeout(()=>{ if(!engineReady){ fallbackMode('timeout'); } },6000);
+  }catch(e){ fallbackMode(e.message); }
+}
+function fallbackMode(why){
+  if(useFallback) return;
+  useFallback=true; engineReady=true;
+  enote.textContent='Motor offline ('+why+'). Usando IA local básica.';
+}
+function onEngineMsg(e){
+  const line=typeof e.data==='string'?e.data:'';
+  if(line.includes('uciok')||line.includes('readyok')){
+    if(!engineReady){ engineReady=true; configEngine(); enote.textContent='Motor Stockfish listo. Rival: '+level.name+'.'; }
+  }
+  if(line.startsWith('bestmove')){
+    const mv=line.split(' ')[1];
+    if(mv && mv!=='(none)') applyEngineMove(mv);
+  }
+}
+function configEngine(){
+  enote.textContent = useFallback ? 'IA local · '+level.name : 'Stockfish · Rival: '+level.name;
+  if(!engine||useFallback) return;
+  if(level.elo){
+    engine.postMessage('setoption name UCI_LimitStrength value true');
+    engine.postMessage('setoption name UCI_Elo value '+level.elo);
+  }else{
+    engine.postMessage('setoption name UCI_LimitStrength value false');
+  }
+  engine.postMessage('setoption name Skill Level value '+level.skill);
+}
+function aiMove(){
+  if(game.game_over()) return;
+  busy=true; updateStatus();
+  if(useFallback||!engine){ setTimeout(fallbackMove,300); return; }
+  engine.postMessage('position fen '+game.fen());
+  engine.postMessage('go movetime '+level.movetime);
+}
+function applyEngineMove(uci){
+  const from=uci.slice(0,2), to=uci.slice(2,4), promo=uci.length>4?uci[4]:undefined;
+  const res=game.move({from,to,promotion:promo});
+  busy=false;
+  if(!res){ render(); updateStatus(); return; }
+  if(res.captured) capturedByB.push({color:'w',type:res.captured});
+  lastMove={from:res.from,to:res.to};
+  render(); updateStatus();
+}
+function fallbackMove(){
+  // simple greedy: prefer highest-value capture, else random
+  const moves=game.moves({verbose:true});
+  if(!moves.length){ busy=false; return; }
+  moves.sort((a,b)=>(b.captured?VAL[b.captured]:0)-(a.captured?VAL[a.captured]:0));
+  const top=moves[0].captured?VAL[moves[0].captured]:0;
+  const pool=moves.filter(m=>(m.captured?VAL[m.captured]:0)===top);
+  const m=pool[Math.floor(Math.random()*pool.length)];
+  applyEngineMove(m.from+m.to+(m.promotion||''));
+}
+
+/* ---------- Buttons ---------- */
+document.getElementById('newgame').onclick=()=>{
+  game.reset(); selected=null; legalForSel=[]; lastMove=null; busy=false;
+  capturedByW.length=0; capturedByB.length=0;
+  render(); updateStatus();
+};
+document.getElementById('undo').onclick=()=>{
+  if(busy) return;
+  game.undo(); game.undo(); // undo AI + player
+  // rebuild captured from scratch is complex; simple approach: recompute
+  recomputeCaptured(); selected=null; legalForSel=[];
+  const h=game.history({verbose:true}); lastMove = h.length?{from:h[h.length-1].from,to:h[h.length-1].to}:null;
+  render(); updateStatus();
+};
+function recomputeCaptured(){
+  capturedByW.length=0; capturedByB.length=0;
+  game.history({verbose:true}).forEach(m=>{
+    if(m.captured){ (m.color==='w'?capturedByW:capturedByB).push({color:m.color==='w'?'b':'w',type:m.captured}); }
+  });
+}
+document.getElementById('flip').onclick=()=>{ flipped=!flipped; render(); };
+
+/* ---------- Go ---------- */
+render(); updateStatus(); bootEngine();
+</script>
+</body>
+</html>
