@@ -1,0 +1,392 @@
+/* ============================================
+   EL REINO DE JUANFERLAND
+   Estilo 90s Sierra / LucasArts Premium
+   Paleta extremadamente saturada
+   ============================================ */
+
+:root {
+  --gold: #FFD700;
+  --dark-gold: #B8860B;
+  --deep-blue: #0A1628;
+  --royal-blue: #1E3A8A;
+  --crimson: #DC143C;
+  --magenta: #C71585;
+  --purple: #6B21A8;
+  --emerald: #059669;
+  --wood: #5C4033;
+  --stone: #4A5568;
+  --velvet: #4C1D95;
+  --bright-gold: #FBBF24;
+  --background: #0F172A;
+  --panel: #1E293B;
+  --text: #F8FAFC;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  image-rendering: pixelated;
+}
+
+body {
+  background: var(--deep-blue);
+  color: var(--text);
+  font-family: "Georgia", "Times New Roman", serif;
+  font-size: 15px;
+  line-height: 1.3;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  background-image: 
+    linear-gradient(rgba(255,215,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,215,0,0.03) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+#game-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+  padding: 12px;
+  gap: 8px;
+  background: linear-gradient(180deg, #0A1628 0%, #111827 100%);
+  border: 6px solid var(--gold);
+  border-image: linear-gradient(#FFD700, #B8860B, #FFD700) 1;
+  box-shadow: 
+    0 0 0 4px #1E293B,
+    inset 0 0 40px rgba(0,0,0,0.6),
+    0 20px 60px rgba(0,0,0,0.8);
+}
+
+/* === TOP BAR - Estilo aventura gráfica === */
+#top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: linear-gradient(180deg, #1E293B 0%, #111827 100%);
+  border: 4px solid var(--gold);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  flex-shrink: 0;
+}
+
+#logo {
+  font-family: "Georgia", serif;
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--gold);
+  text-shadow: 
+    2px 2px 0 #B8860B,
+    -1px -1px 0 #B8860B,
+    3px 3px 6px rgba(0,0,0,0.7);
+  letter-spacing: 2px;
+}
+
+#logo span {
+  color: #DC143C;
+  font-size: 32px;
+}
+
+#top-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+button {
+  font-family: "Georgia", serif;
+  background: linear-gradient(180deg, #FFD700 0%, #B8860B 100%);
+  color: #0A1628;
+  border: 3px solid #5C4033;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 0 #5C4033;
+  transition: all 0.1s ease;
+}
+
+button:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #5C4033;
+}
+
+button.secondary {
+  background: linear-gradient(180deg, #4C1D95 0%, #2E1065 100%);
+  color: #F8FAFC;
+  border-color: #6B21A8;
+}
+
+select {
+  background: #1E293B;
+  color: var(--gold);
+  border: 3px solid var(--gold);
+  padding: 5px 10px;
+  font-family: "Georgia", serif;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* === MAIN AREA === */
+#main-area {
+  display: flex;
+  flex: 1;
+  gap: 12px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* === BOARD CONTAINER === */
+#board-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-width: 0;
+}
+
+#board-wrapper {
+  position: relative;
+  border: 8px solid var(--gold);
+  box-shadow: 
+    0 0 0 6px #5C4033,
+    0 15px 40px rgba(0,0,0,0.8),
+    inset 0 0 30px rgba(255,215,0,0.2);
+  background: #111827;
+}
+
+#board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0;
+  background: #5C4033;
+  image-rendering: pixelated;
+}
+
+.square {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s ease;
+}
+
+.square.light {
+  background: #E8D4A3;
+}
+
+.square.dark {
+  background: #5C4033;
+}
+
+.square.highlight {
+  box-shadow: inset 0 0 0 6px #FCD34D;
+  z-index: 1;
+}
+
+.square.selected {
+  box-shadow: inset 0 0 0 6px #DC143C;
+}
+
+.square.legal::after {
+  content: '';
+  position: absolute;
+  width: 22%;
+  height: 22%;
+  background: rgba(220, 20, 60, 0.45);
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.piece {
+  position: absolute;
+  width: 82%;
+  height: 82%;
+  z-index: 10;
+  pointer-events: none;
+  image-rendering: pixelated;
+  filter: drop-shadow(2px 3px 3px rgba(0,0,0,0.6));
+  transition: transform 0.15s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.piece.moving {
+  transition: transform 0.18s ease-out;
+  z-index: 100;
+}
+
+/* === SIDE PANELS (Captures) === */
+.side-panel {
+  width: 132px;
+  background: linear-gradient(180deg, #1E293B 0%, #111827 100%);
+  border: 4px solid var(--gold);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+  flex-shrink: 0;
+}
+
+.side-panel h3 {
+  font-size: 11px;
+  text-align: center;
+  padding: 6px;
+  background: var(--deep-blue);
+  color: var(--gold);
+  border-bottom: 3px solid var(--gold);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.captured-pieces {
+  flex: 1;
+  padding: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.captured-piece {
+  width: 28px;
+  height: 28px;
+  image-rendering: pixelated;
+}
+
+/* === BOTTOM STATUS === */
+#status-bar {
+  padding: 8px 16px;
+  background: #111827;
+  border: 4px solid var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+}
+
+#status-text {
+  color: var(--gold);
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+#turn-indicator {
+  padding: 2px 14px;
+  background: var(--crimson);
+  color: white;
+  font-weight: bold;
+  border: 2px solid #5C4033;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+/* === RETRO ORNAMENTATION === */
+.ornate-border {
+  position: relative;
+}
+
+.ornate-border::before,
+.ornate-border::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--gold);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.ornate-border::before {
+  top: -3px;
+  left: -3px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.ornate-border::after {
+  bottom: -3px;
+  right: -3px;
+  border-left: none;
+  border-top: none;
+}
+
+/* === RESPONSIVE SCALING (sin scroll nunca) === */
+@media (max-width: 1600px) {
+  #game-container { padding: 8px; }
+  #board-wrapper { border-width: 6px; }
+  .side-panel { width: 110px; }
+}
+
+@media (max-width: 1366px) {
+  #logo { font-size: 22px; }
+  button, select { font-size: 11px; padding: 4px 10px; }
+  .side-panel { width: 92px; }
+}
+
+@media (max-width: 1024px) {
+  #game-container { padding: 6px; gap: 6px; }
+  #board-wrapper { border-width: 5px; }
+  .side-panel { width: 76px; }
+  .captured-piece { width: 22px; height: 22px; }
+}
+
+/* === DEBUG === */
+#debug-panel {
+  position: fixed;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 2px solid #FCD34D;
+  padding: 8px 10px;
+  font-family: monospace;
+  font-size: 11px;
+  color: #FCD34D;
+  z-index: 9999;
+  white-space: pre;
+  display: none;
+  max-width: 320px;
+  line-height: 1.25;
+}
+
+/* === ANIMACIONES RETRO === */
+@keyframes capture-pop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.35) rotate(8deg); }
+  60% { transform: scale(0.85) rotate(-6deg); }
+  100% { transform: scale(1); }
+}
+
+.piece.captured {
+  animation: capture-pop 380ms ease forwards;
+}
+
+@keyframes check-glow {
+  0%, 100% { box-shadow: 0 0 0 8px #DC143C; }
+  50% { box-shadow: 0 0 0 16px #EF4444; }
+}
+
+.square.in-check {
+  animation: check-glow 1.2s infinite;
+}
+
+/* === PIEZAS (estilo pixel / sprite) === */
+.piece {
+  transition: transform 140ms cubic-bezier(0.23, 1.0, 0.32, 1);
+}
+
+.piece:hover {
+  filter: brightness(1.15) drop-shadow(0 0 4px rgba(255,215,0,0.6));
+}
