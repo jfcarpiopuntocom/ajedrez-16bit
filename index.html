@@ -25,7 +25,9 @@
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
 html,body{height:100%; margin:0; padding:0; overflow:hidden; background:var(--bg); color:var(--ink) !important; -webkit-text-fill-color:var(--ink)}
 body{ font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif;
-  background:radial-gradient(1100px 600px at 50% -8%, #3a2a1a 0%, #1c130b 56%, #0c0805 100%); }
+  background:
+    radial-gradient(125% 85% at 50% 32%, transparent 56%, rgba(0,0,0,.55) 100%),
+    radial-gradient(1100px 620px at 50% -8%, #44301c 0%, #1c130b 55%, #0a0604 100%); }
 img{ -webkit-user-drag:none; user-select:none }
 h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
@@ -120,7 +122,8 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   .cap .slots img{ height:26px }
   .board-area{ flex:1 1 auto; order:0; align-self:stretch }
   .cap.red{ order:1 } .cap.blue{ order:2 }
-  .quote{ order:-1; align-self:center; flex:0 0 190px; width:190px; max-width:190px; font-size:15px; line-height:1.45; padding:10px; min-height:0 }
+  .quote{ order:-1; align-self:stretch; display:flex; align-items:center; justify-content:center; flex:0 0 205px; width:205px; max-width:205px;
+    font-size:15px; line-height:1.5; padding:16px; min-height:0; border:2px solid var(--gold); border-radius:12px; background:linear-gradient(160deg,#241a10,#140d07) }
   .title-img{ max-height:12vh }
 }
 @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important } }
@@ -208,11 +211,20 @@ const APHORISMS=[
   {t:'El peón es el alma del ajedrez.', a:'A. Philidor'},
   {t:'Una amenaza es más fuerte que su ejecución.', a:'A. Nimzowitsch'},
   {t:'Antes del final, los dioses crearon el medio juego.', a:'S. Tarrasch'},
-  {t:'Ayuda a tus piezas y ellas te ayudarán.', a:'Paul Morphy'},
   {t:'El ajedrez es la lucha contra el error.', a:'J. Zukertort'},
-  {t:'Domina el centro y dominarás la partida.', a:'Principio clásico'},
-  {t:'Un caballo al borde es un caballo pobre.', a:'Proverbio'},
-  {t:'El método es tan importante como el cálculo.', a:'M. Botvinnik'},
+  {t:'Ayuda a tus piezas y ellas te ayudarán.', a:'Paul Morphy'},
+  {t:'Toda batalla se gana antes de librarse.', a:'Sun Tzu'},
+  {t:'Conoce al rival y conócete: cien victorias.', a:'Sun Tzu'},
+  {t:'La oportunidad se multiplica cuando se aprovecha.', a:'Sun Tzu'},
+  {t:'La estrategia sin táctica es el camino lento a la victoria.', a:'Sun Tzu'},
+  {t:'No gana la pieza más fuerte, sino la mejor situada.', a:'Principio posicional'},
+  {t:'Planea como un sabio; ejecuta como una máquina.', a:'R. Spielmann'},
+  {t:'El método importa tanto como el cálculo.', a:'M. Botvinnik'},
+  {t:'Quien domina el centro, dicta el ritmo.', a:'Principio clásico'},
+  {t:'El error espera sentado a quien mueve sin plan.', a:'Proverbio'},
+  {t:'Sacrifica lo pequeño para conquistar lo grande.', a:'Estrategia'},
+  {t:'La paciencia es una jugada que el rival no ve.', a:'JuanFerland'},
+  {t:'Lo más caro es no planear.', a:'JuanFerland'},
   {t:'Quien no arriesga, rara vez conquista el reino.', a:'JuanFerland'},
 ];
 let qi=-1, qTimer=null;
