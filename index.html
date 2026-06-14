@@ -18,31 +18,29 @@
 :root{
   color-scheme:light only; forced-color-adjust:none;
   --gold:#E8A020; --gold2:#F5C24A;
+  --navy:#243b8f; --crimson:#a8112f;
   --bg:#120c08; --panel:#1c140d; --ink:#FFFFFF; --emerald:#28ECAA;
-  --g:18px;
+  --g:14px;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
-html,body{height:100%; margin:0; padding:0; overflow:hidden; background:var(--bg);
-  color:var(--ink) !important; -webkit-text-fill-color:var(--ink)}
+html,body{height:100%; margin:0; padding:0; overflow:hidden; background:var(--bg); color:var(--ink) !important; -webkit-text-fill-color:var(--ink)}
 body{ font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif;
   background:radial-gradient(1100px 600px at 50% -8%, #3a2a1a 0%, #1c130b 56%, #0c0805 100%); }
 img{ -webkit-user-drag:none; user-select:none }
 h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
-.app{ height:100vh; height:100svh; max-width:1180px; margin:0 auto; padding:6px 8px;
-  display:flex; flex-direction:column; gap:5px; overflow:hidden }
+.app{ height:100vh; height:100svh; max-width:1180px; margin:0 auto; padding:5px 6px;
+  display:flex; flex-direction:column; gap:4px; overflow:hidden }
 
 /* ---------- START SCREEN ---------- */
 .start{ position:fixed; inset:0; z-index:100; background:radial-gradient(1100px 700px at 50% -6%, #3a2a1a 0%, #160f08 60%, #0a0604 100%);
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:18px; overflow:auto }
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px; overflow:auto }
 .start.hidden{ display:none }
-.start img.banner{ width:100%; max-width:560px; height:auto; max-height:24vh; object-fit:contain }
-.start h2{ margin:0; font-size:18px; font-weight:800; text-align:center;
-  color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.start img.banner{ width:100%; max-width:560px; height:auto; max-height:22vh; object-fit:contain }
+.start h2{ margin:0; font-size:18px; font-weight:800; text-align:center; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .choices{ display:flex; flex-direction:column; gap:12px; width:100%; max-width:360px }
 .bigbtn{ font-size:18px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
-  border:3px solid var(--gold); border-radius:14px; padding:16px; cursor:pointer; min-height:60px;
-  background:linear-gradient(#2c416f,#16223f) }
+  border:3px solid var(--gold); border-radius:14px; padding:16px; cursor:pointer; min-height:60px; background:linear-gradient(#2c416f,#16223f) }
 .bigbtn.ai{ background:linear-gradient(#5a2a14,#3a1a0c) }
 .bigbtn:active{ transform:translateY(1px) }
 .levels{ display:none; flex-direction:column; gap:8px; width:100%; max-width:360px }
@@ -51,69 +49,75 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   border:2px solid var(--gold); border-radius:11px; padding:12px 14px; cursor:pointer; min-height:50px;
   background:linear-gradient(#3a1f12,#26140b); display:flex; justify-content:space-between; align-items:center }
 .levels .lv .tag{ font-size:13px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
-.kingrow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center }
-.kingrow .lbl{ font-size:14px; font-weight:700; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
-.kingrow button{ background:#1a2744; border:2px solid var(--gold); border-radius:10px; padding:3px 5px; min-height:56px; cursor:pointer }
+.kingpick{ display:flex; flex-direction:column; gap:7px; align-items:center }
+.kingrow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center }
+.kingrow .lbl{ font-size:14px; font-weight:800; min-width:78px; text-align:right;
+  color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.kingrow button{ background:#16223f; border:2px solid var(--gold); border-radius:10px; padding:2px 4px; min-height:54px; cursor:pointer }
+.kingrow[data-side="b"] button{ background:#2a0e12 }
 .kingrow button.active{ border-color:var(--gold2); box-shadow:0 0 10px var(--gold) }
-.kingrow button img{ height:46px; width:auto; display:block }
-.back{ font-size:14px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important;
-  background:transparent; border:none; cursor:pointer; padding:6px }
+.kingrow button img{ height:44px; width:auto; display:block }
+.back{ font-size:14px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; background:transparent; border:none; cursor:pointer; padding:6px }
 
-/* ---------- HUD (in-game, minimal) ---------- */
-.hud{ flex:0 0 auto; display:flex; gap:8px; justify-content:center; align-items:center }
-.hud button{ font-size:14px; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
-  background:linear-gradient(#5a2a14,#3a1a0c); border:2px solid var(--gold); border-radius:9px; padding:8px 16px; min-height:42px; cursor:pointer }
-.hud button.gold{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
-.status{ flex:0 0 auto; text-align:center; font-size:15px; font-weight:800; min-height:20px;
-  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+/* ---------- Title (top, prominent) ---------- */
+.title-img{ flex:0 0 auto; display:block; margin:0 auto; width:auto; max-width:100%; max-height:9vh; max-height:9svh; pointer-events:none }
+
+/* ---------- Turn / status ---------- */
+.status{ flex:0 0 auto; text-align:center; font-size:15px; font-weight:800; min-height:24px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.status .chip{ display:inline-block; padding:3px 13px; border-radius:9px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-weight:800 }
+.status .chip.azul{ background:var(--navy) }
+.status .chip.rojo{ background:var(--crimson) }
 .status .warn{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .status .win{ color:var(--emerald) !important; -webkit-text-fill-color:var(--emerald) !important }
 
-/* ---------- STAGE ---------- */
+/* ---------- Stage ---------- */
 .stage{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; align-items:center; gap:5px; width:100% }
-.board-area{ flex:1 1 auto; min-height:0; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px }
-.title-img{ flex:0 0 auto; max-height:8svh; max-height:8vh; width:auto; max-width:100%; margin-bottom:-2px; pointer-events:none }
-
-.board-frame{ flex:0 1 auto; display:grid; grid-template-columns:var(--g) auto var(--g); grid-template-rows:var(--g) auto var(--g) }
+.board-area{ flex:1 1 auto; min-height:0; width:100%; display:flex; align-items:center; justify-content:center }
+.board-frame{ display:grid; grid-template-columns:var(--g) auto var(--g); grid-template-rows:var(--g) auto var(--g) }
 .coord{ display:flex; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:13px; font-weight:800; line-height:1; align-items:center; justify-content:center }
 .coord.files{ flex-direction:row } .coord.files span{ flex:1; text-align:center }
 .coord.ranks{ flex-direction:column } .coord.ranks span{ flex:1; display:flex; align-items:center; justify-content:center }
 
 .board{ position:relative; width:200px; height:226px; background:url("assets/board.png") center/100% 100% no-repeat;
   border:3px solid var(--gold); border-radius:3px; box-shadow:0 10px 26px rgba(0,0,0,.55) }
-.grid{ position:absolute; inset:0; display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(8,1fr); touch-action:none }
+.board .dot{ position:absolute; width:5px; height:5px; margin:-2.5px 0 0 -2.5px; border-radius:50%; background:#C9A24B; box-shadow:0 0 1px rgba(0,0,0,.7); z-index:0; pointer-events:none }
+.grid{ position:absolute; inset:0; z-index:1; display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(8,1fr); touch-action:none }
 .cell{ position:relative; display:flex; align-items:center; justify-content:center; cursor:grab }
 .cell img{ width:92%; height:92%; object-fit:contain; object-position:bottom; filter:drop-shadow(0 2px 2px rgba(0,0,0,.5)); pointer-events:none }
 .cell img.flip{ transform:scaleX(-1) }
-/* ONLY essential, non-suggestion feedback: last move + check */
 .cell.last{ background:rgba(232,160,32,.20) }
 .cell.check::after{ content:""; position:absolute; inset:5%; border:3px solid #ff5252; border-radius:7px; box-shadow:0 0 12px #ff2020 }
 .drag-ghost{ position:fixed; pointer-events:none; z-index:60; transform:translate(-50%,-58%); will-change:left,top }
 .drag-ghost img{ width:auto; filter:drop-shadow(0 10px 9px rgba(0,0,0,.6)) }
 .drag-ghost img.flip{ transform:scaleX(-1) }
 
-/* ---------- Captures: fixed height so they NEVER shift the board ---------- */
-.cap{ flex:0 0 auto; width:100%; max-width:400px; height:28px; border:2px solid var(--gold); border-radius:8px; padding:1px 7px;
+/* ---------- Captures (fixed height) ---------- */
+.cap{ flex:0 0 auto; width:100%; max-width:400px; height:26px; border:2px solid var(--gold); border-radius:8px; padding:1px 7px;
   background:linear-gradient(160deg,#1a2848,#0d1530); display:flex; align-items:center; gap:6px; overflow:hidden }
 .cap.red{ background:linear-gradient(160deg,#46161a,#280a0e) }
 .cap h3{ margin:0; font-size:11px; font-weight:800; white-space:nowrap; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .cap .score{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
-.cap .slots{ flex:1; display:flex; gap:1px; align-items:center; overflow:hidden; height:24px }
-.cap .slots img{ height:21px; width:auto }
+.cap .slots{ flex:1; display:flex; gap:1px; align-items:center; overflow:hidden; height:22px }
+.cap .slots img{ height:20px; width:auto }
 
-.note{ flex:0 0 auto; text-align:center; font-size:13px; min-height:16px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+/* ---------- Buttons (bottom) ---------- */
+.hud{ flex:0 0 auto; display:flex; gap:10px; justify-content:center; align-items:center }
+.hud button{ font-size:15px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  background:linear-gradient(#5a2a14,#3a1a0c); border:2px solid var(--gold); border-radius:10px; padding:9px 18px; min-height:44px; cursor:pointer }
+.hud button.gold{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
+.note{ flex:0 0 auto; text-align:center; font-size:13px; min-height:15px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
 
 /* ---------- Desktop / tablet ---------- */
 @media (min-width:900px){
-  :root{ --g:20px }
+  :root{ --g:18px }
   .stage{ flex-direction:row; align-items:flex-start; justify-content:center; gap:12px }
   .cap{ flex:0 0 96px; width:96px; max-width:96px; height:auto; max-height:100%; flex-direction:column; align-items:stretch; padding:6px; align-self:flex-start }
   .cap h3{ white-space:normal; text-align:center; font-size:12px; margin-bottom:5px }
-  .cap .slots{ flex-wrap:wrap; align-content:flex-start; height:auto; max-height:60vh }
+  .cap .slots{ flex-wrap:wrap; align-content:flex-start; height:auto; max-height:62vh }
   .cap .slots img{ height:26px }
   .board-area{ flex:1 1 auto; order:0; align-self:stretch }
   .cap.red{ order:-1 } .cap.blue{ order:1 }
-  .title-img{ max-height:11vh }
+  .title-img{ max-height:12vh }
 }
 @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important } }
 @media (prefers-color-scheme:dark){
@@ -135,30 +139,41 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
     <button class="bigbtn ai" id="btnAI">🐉 Contra la IA</button>
   </div>
   <div class="levels" id="levels"></div>
-  <div class="kingrow" id="kingrow">
-    <span class="lbl">Tu Rey:</span>
-    <button data-k="wK" class="active"><img src="assets/pieces/wK.png" alt="Rey A"></button>
-    <button data-k="wK2"><img src="assets/pieces/wK2.png" alt="Rey B"></button>
+  <div class="kingpick" id="kingpick">
+    <div class="kingrow" data-side="w">
+      <span class="lbl">Rey Azul:</span>
+      <button data-k="wK" class="active"><img src="assets/pieces/wK.png" alt="Rey azul 1"></button>
+      <button data-k="wK2"><img src="assets/pieces/wK2.png" alt="Rey azul 2"></button>
+      <button data-k="wK3"><img src="assets/pieces/wK3.png" alt="Rey azul 3"></button>
+    </div>
+    <div class="kingrow" data-side="b">
+      <span class="lbl">Rey Rojo:</span>
+      <button data-k="bK" class="active"><img src="assets/pieces/bK.png" alt="Rey rojo 1"></button>
+      <button data-k="bK2"><img src="assets/pieces/bK2.png" alt="Rey rojo 2"></button>
+      <button data-k="bK3"><img src="assets/pieces/bK3.png" alt="Rey rojo 3"></button>
+    </div>
   </div>
   <button class="back" id="backBtn" style="display:none">← volver</button>
 </div>
 
 <!-- ===== GAME ===== -->
 <div class="app" id="app" style="display:none">
-  <div class="hud">
-    <button class="gold" id="newgame">Nueva</button>
-    <button id="undo">Deshacer</button>
-  </div>
+  <img class="title-img" src="assets/title.png" alt="El Reino de JuanFerland">
   <div class="status" id="status"></div>
 
   <div class="stage">
     <section class="cap red"><h3>Capturas Rojo <span class="score" id="scoreB"></span></h3><div class="slots" id="capB"></div></section>
     <div class="board-area">
-      <img class="title-img" src="assets/title.png" alt="El Reino de JuanFerland">
       <div class="board-frame">
         <div></div><div class="coord files" id="filesTop"></div><div></div>
         <div class="coord ranks" id="ranksLeft"></div>
-        <div class="board" id="board"><div class="grid" id="grid"></div></div>
+        <div class="board" id="board">
+          <i class="dot" style="left:37.5%;top:37.5%"></i>
+          <i class="dot" style="left:62.5%;top:37.5%"></i>
+          <i class="dot" style="left:37.5%;top:62.5%"></i>
+          <i class="dot" style="left:62.5%;top:62.5%"></i>
+          <div class="grid" id="grid"></div>
+        </div>
         <div class="coord ranks" id="ranksRight"></div>
         <div></div><div class="coord files" id="filesBot"></div><div></div>
       </div>
@@ -166,14 +181,18 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
     <section class="cap blue"><h3>Capturas Azul <span class="score" id="scoreW"></span></h3><div class="slots" id="capW"></div></section>
   </div>
 
+  <div class="hud">
+    <button class="gold" id="newgame">Nueva Partida</button>
+    <button id="undo">Deshacer Jugada</button>
+  </div>
   <div class="note" id="note"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chess.js@0.12.1/chess.min.js"></script>
 <script>
 "use strict";
-let blueKing='wK';
-const PIECE=(c,t)=> (c==='w'&&t==='k') ? `assets/pieces/${blueKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`;
+let blueKing='wK', redKing='bK';
+const PIECE=(c,t)=> (t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
 const VAL={p:1,n:3,b:3,r:5,q:9,k:0};
@@ -184,17 +203,14 @@ const LEVELS=[
   {key:'gm',     name:'Grandmaster',   elo:2600, skill:20, mt:1300},
   {key:'fischer',name:'Bobby Fischer', elo:null, skill:20, mt:1900},
 ];
-const BOARD_W=472, BOARD_H=536, ASPECT=BOARD_W/BOARD_H;
-const FILES='abcdefgh';
+const BOARD_W=472, BOARD_H=536, ASPECT=BOARD_W/BOARD_H, FILES='abcdefgh';
 
-let mode='2p';            // '2p' | 'ai'
-let level=LEVELS[1];
+let mode='2p', level=LEVELS[1];
 let started=false, flipped=false, lastMove=null, busy=false, healing=false;
 const game=new Chess(); const capW=[], capB=[];
 
 const $=id=>document.getElementById(id);
-const gridEl=$('grid'), boardEl=$('board'), statusEl=$('status'), note=$('note');
-const boardAreaEl=document.querySelector('.board-area'), titleEl=document.querySelector('#app .title-img');
+const gridEl=$('grid'), boardEl=$('board'), statusEl=$('status'), note=$('note'), boardAreaEl=document.querySelector('.board-area');
 
 /* ===== Start screen ===== */
 const levelsEl=$('levels');
@@ -204,8 +220,9 @@ LEVELS.forEach(l=>{ const b=document.createElement('button'); b.className='lv'; 
 $('btn2p').onclick=()=>startGame('2p');
 $('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('startH2').textContent='Elige el nivel del Rojo'; $('backBtn').style.display='block'; };
 $('backBtn').onclick=()=>{ levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none'; };
-$('kingrow').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(!b) return;
-  blueKing=b.dataset.k; [...$('kingrow').querySelectorAll('button[data-k]')].forEach(x=>x.classList.toggle('active',x===b)); });
+$('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(!b) return;
+  const row=b.closest('.kingrow'); if(row.dataset.side==='w') blueKing=b.dataset.k; else redKing=b.dataset.k;
+  [...row.querySelectorAll('button[data-k]')].forEach(x=>x.classList.toggle('active',x===b)); });
 
 function startGame(m){
   mode=m; started=true;
@@ -217,7 +234,6 @@ function startGame(m){
 }
 function backToStart(){
   started=false; $('app').style.display='none'; $('start').classList.remove('hidden');
-  $('backBtn').click && $('backBtn').click(); // reset levels view
   levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none';
 }
 
@@ -229,11 +245,11 @@ function labels(){
   $('filesTop').innerHTML=fh; $('filesBot').innerHTML=fh; $('ranksLeft').innerHTML=rh; $('ranksRight').innerHTML=rh;
 }
 
-/* ===== Fit board (only on layout changes, NOT per move) ===== */
+/* ===== Fit board ===== */
 function fitBoard(){
   if(!started) return;
-  const availW=boardAreaEl.clientWidth, availH=boardAreaEl.clientHeight-(titleEl.offsetHeight||0)-6;
-  const gutter=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--g'))||18;
+  const availW=boardAreaEl.clientWidth, availH=boardAreaEl.clientHeight-4;
+  const gutter=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--g'))||14;
   let bw=Math.min(availW-2*gutter, (availH-2*gutter)*ASPECT);
   bw=Math.max(170, Math.floor(bw||170));
   boardEl.style.width=bw+'px'; boardEl.style.height=Math.round(bw/ASPECT)+'px';
@@ -247,7 +263,7 @@ function ensureNoScroll(){
   }
 }
 
-/* ===== Render (rebuilds pieces only; no board resize, no move hints) ===== */
+/* ===== Render ===== */
 function needFlip(color,type){ const bottom=(color==='w')!==flipped; return bottom!==NATIVE_RIGHT(type); }
 function sqAt(r,c){ const f=flipped?7-c:c, rk=flipped?r+1:8-r; return FILES[f]+rk; }
 function render(){
@@ -274,26 +290,22 @@ function renderCaptured(){
   }catch(e){ console.warn('[cap]',e); }
 }
 function audit(){
-  try{
-    if(gridEl.children.length!==64) return heal('cells');
+  try{ if(gridEl.children.length!==64) return heal('cells');
     let n=0; game.board().forEach(row=>row.forEach(c=>{ if(c) n++; }));
     if(gridEl.querySelectorAll('.cell>img').length!==n) return heal('count');
   }catch(e){}
 }
 function heal(why){ if(healing) return; healing=true; try{ render(); } finally{ healing=false; } }
 
-/* ===== Pure drag (no selection, no hints) ===== */
-function canDrag(color){ if(busy||game.game_over()) return false; if(color!==game.turn()) return false; return mode==='2p' ? true : color==='w'; }
+/* ===== Pure drag ===== */
+function canDrag(color){ if(busy||game.game_over()) return false; if(color!==game.turn()) return false; return mode==='2p'?true:color==='w'; }
 let drag=null;
 function killGhost(){ document.querySelectorAll('.drag-ghost').forEach(g=>g.remove()); }
 function cleanupDrag(){ killGhost(); gridEl.querySelectorAll('img[style*="hidden"]').forEach(i=>i.style.visibility=''); drag=null; }
 gridEl.addEventListener('pointerdown',e=>{
-  try{
-    const cell=e.target.closest('.cell'); if(!cell) return; const sq=cell.dataset.sq, p=game.get(sq);
-    if(!p||!canDrag(p.color)) return;
-    e.preventDefault();
-    drag={from:sq,moved:false,sx:e.clientX,sy:e.clientY};
-    try{gridEl.setPointerCapture(e.pointerId);}catch(_){}
+  try{ const cell=e.target.closest('.cell'); if(!cell) return; const sq=cell.dataset.sq, p=game.get(sq);
+    if(!p||!canDrag(p.color)) return; e.preventDefault();
+    drag={from:sq,moved:false,sx:e.clientX,sy:e.clientY}; try{gridEl.setPointerCapture(e.pointerId);}catch(_){}
   }catch(err){ console.warn(err); cleanupDrag(); }
 });
 gridEl.addEventListener('pointermove',e=>{
@@ -301,8 +313,7 @@ gridEl.addEventListener('pointermove',e=>{
   try{
     if(!drag.moved){
       if(Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)<5) return;
-      drag.moved=true;
-      const p=game.get(drag.from); if(!p){ cleanupDrag(); return; }
+      drag.moved=true; const p=game.get(drag.from); if(!p){ cleanupDrag(); return; }
       const rect=gridEl.querySelector('.cell').getBoundingClientRect();
       const g=document.createElement('div'); g.className='drag-ghost';
       const img=document.createElement('img'); img.src=PIECE(p.color,p.type); img.style.height=Math.round(rect.height*1.05)+'px';
@@ -317,10 +328,9 @@ function endDrag(e,cancel){
   if(!drag){ killGhost(); return; }
   const moved=drag.moved, from=drag.from; cleanupDrag();
   if(cancel||!moved){ if(moved) render(); return; }
-  try{
-    const el=document.elementFromPoint(e.clientX,e.clientY), cell=el&&el.closest?el.closest('.cell'):null;
+  try{ const el=document.elementFromPoint(e.clientX,e.clientY), cell=el&&el.closest?el.closest('.cell'):null;
     const to=cell?cell.dataset.sq:null;
-    if(to&&to!==from) tryMove(from,to); else render(); // snap back
+    if(to&&to!==from) tryMove(from,to); else render();
   }catch(err){ console.warn(err); render(); }
 }
 gridEl.addEventListener('pointerup',e=>endDrag(e,false));
@@ -330,16 +340,15 @@ window.addEventListener('blur',()=>cleanupDrag());
 
 function tryMove(from,to){
   const ms=game.moves({square:from,verbose:true}).filter(m=>m.to===to);
-  if(!ms.length){ render(); return; }                 // illegal -> snap back
-  if(ms.some(m=>m.promotion)){ doMove({from,to,promotion:'q'}); return; }  // auto-dama (drag rápido)
+  if(!ms.length){ render(); return; }
+  if(ms.some(m=>m.promotion)){ doMove({from,to,promotion:'q'}); return; }
   doMove({from,to});
 }
 function doMove(mv){
   const res=game.move({from:mv.from,to:mv.to,promotion:mv.promotion||undefined});
   if(!res){ render(); return; }
   if(res.captured) (res.color==='w'?capW:capB).push({color:res.color==='w'?'b':'w',type:res.captured});
-  lastMove={from:res.from,to:res.to};
-  render(); status();
+  lastMove={from:res.from,to:res.to}; render(); status();
   if(mode==='ai' && !game.game_over() && game.turn()==='b') setTimeout(aiMove,200);
 }
 
@@ -352,18 +361,17 @@ function status(){
   else if(game.insufficient_material()) s='Tablas: material insuficiente.';
   else if(game.in_draw()) s='Tablas (50 movimientos).';
   else if(game.in_check()) s='<span class="warn">¡Jaque!</span>';
-  else if(mode==='2p') s=(game.turn()==='w'?'Turno Azul':'Turno Rojo');
-  else s=(game.turn()==='w'?'Tu turno (Azul)':'Piensa el Rojo…');
+  else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul">Turno Azul</span>':'<span class="chip rojo">Turno Rojo</span>');
+  else s=(game.turn()==='w'?'<span class="chip azul">Tu turno</span>':'<span class="chip rojo">Piensa el Rojo…</span>');
   statusEl.innerHTML=s;
 }
 
-/* ===== Stockfish (only used in AI mode) ===== */
+/* ===== Stockfish ===== */
 let engine=null, ready=false, fallback=false;
 const SF='https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js';
 async function boot(){
-  if(engine||fallback) { configEngine(); return; }
-  try{
-    const r=await fetch(SF); if(!r.ok) throw new Error('http '+r.status);
+  if(engine||fallback){ configEngine(); return; }
+  try{ const r=await fetch(SF); if(!r.ok) throw new Error('http '+r.status);
     const code=await r.text();
     engine=new Worker(URL.createObjectURL(new Blob([code],{type:'application/javascript'})));
     engine.onmessage=onMsg; engine.onerror=()=>toFallback('worker');
@@ -386,8 +394,7 @@ function aiMove(){ if(game.game_over()) return; busy=true; status();
   if(fallback||!engine){ setTimeout(fbMove,260); return; }
   engine.postMessage('position fen '+game.fen()); engine.postMessage('go movetime '+level.mt);
 }
-function engMove(uci){
-  const from=uci.slice(0,2), to=uci.slice(2,4), promo=uci.length>4?uci[4]:undefined;
+function engMove(uci){ const from=uci.slice(0,2), to=uci.slice(2,4), promo=uci.length>4?uci[4]:undefined;
   const res=game.move({from,to,promotion:promo}); busy=false;
   if(!res){ render(); status(); return; }
   if(res.captured) capB.push({color:'w',type:res.captured});
@@ -399,9 +406,8 @@ function fbMove(){ const ms=game.moves({verbose:true}); if(!ms.length){ busy=fal
   const m=pool[Math.floor(Math.random()*pool.length)]; engMove(m.from+m.to+(m.promotion||'')); }
 
 /* ===== Controls ===== */
-$('newgame').onclick=()=>backToStart();   // Nueva -> elegir modo otra vez
-$('undo').onclick=()=>{ if(busy) return;
-  game.undo(); if(mode==='ai') game.undo();
+$('newgame').onclick=()=>backToStart();
+$('undo').onclick=()=>{ if(busy) return; game.undo(); if(mode==='ai') game.undo();
   capW.length=0; capB.length=0; game.history({verbose:true}).forEach(m=>{ if(m.captured) (m.color==='w'?capW:capB).push({color:m.color==='w'?'b':'w',type:m.captured}); });
   const h=game.history({verbose:true}); lastMove=h.length?{from:h[h.length-1].from,to:h[h.length-1].to}:null; render(); status(); };
 
