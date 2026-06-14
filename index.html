@@ -78,14 +78,14 @@ select#level{ font-size:14px; font-weight:700; color:#FFFFFF !important; -webkit
 .drag-ghost img.flip{ transform:scaleX(-1) }
 
 /* CAPTURES (compact, 2/3 size) */
-.cap{ flex:0 0 auto; width:100%; max-width:560px; border:2px solid var(--gold); border-radius:10px; padding:3px 8px;
-  background:linear-gradient(160deg,#1a2848,#0d1530); display:flex; align-items:center; gap:8px; overflow:hidden }
+.cap{ flex:0 0 auto; width:100%; max-width:400px; border:2px solid var(--gold); border-radius:8px; padding:1px 7px;
+  background:linear-gradient(160deg,#1a2848,#0d1530); display:flex; align-items:center; gap:6px; overflow:hidden }
 .cap.red{ background:linear-gradient(160deg,#46161a,#280a0e) }
-.cap h3{ margin:0; font-size:12px; font-weight:800; white-space:nowrap;
+.cap h3{ margin:0; font-size:11px; font-weight:800; white-space:nowrap;
   color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .cap .score{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
-.cap .slots{ flex:1; display:flex; flex-wrap:wrap; gap:1px; align-items:center; min-height:30px; max-height:34px; overflow:hidden }
-.cap .slots img{ height:30px; width:auto }
+.cap .slots{ flex:1; display:flex; flex-wrap:wrap; gap:1px; align-items:center; min-height:0; max-height:24px; overflow:hidden }
+.cap .slots img{ height:21px; width:auto }
 
 .note{ flex:0 0 auto; text-align:center; font-size:13px; min-height:16px;
   color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
@@ -103,12 +103,12 @@ select#level{ font-size:14px; font-weight:700; color:#FFFFFF !important; -webkit
 /* DESKTOP / TABLET: captures flank the board, everything still one screen */
 @media (min-width:900px){
   :root{ --g:20px }
-  .stage{ flex-direction:row; align-items:stretch; justify-content:center; gap:14px }
-  .cap{ flex:0 0 168px; width:168px; max-width:168px; flex-direction:column; align-items:stretch; justify-content:flex-start; padding:8px }
-  .cap h3{ white-space:normal; text-align:center; font-size:13px; margin-bottom:6px }
+  .stage{ flex-direction:row; align-items:flex-start; justify-content:center; gap:12px }
+  .cap{ flex:0 0 90px; width:90px; max-width:90px; flex-direction:column; align-items:stretch; justify-content:flex-start; padding:5px; align-self:flex-start }
+  .cap h3{ white-space:normal; text-align:center; font-size:12px; margin-bottom:5px }
   .cap .slots{ align-content:flex-start; max-height:none; min-height:0 }
-  .cap .slots img{ height:38px }
-  .board-area{ flex:1 1 auto; order:0 }
+  .cap .slots img{ height:26px }
+  .board-area{ flex:1 1 auto; order:0; align-self:stretch }
   .cap.red{ order:-1 } .cap.blue{ order:1 }
   .title-img{ max-height:11vh }
 }
@@ -231,7 +231,7 @@ function render(){
     const f=FILES.indexOf(sq[0]), rk=parseInt(sq[1]); const p=board[8-rk][f];
     if(p){
       const img=document.createElement('img'); img.src=PIECE(p.color,p.type); img.alt=p.color+p.type;
-      const bottom=(p.color==='w')!==flipped; if(bottom) img.classList.add('flip');  // owner faces their right
+      const bottom=(p.color==='w')!==flipped; if(bottom) img.classList.add('flip'); // cada bando mira a SU derecha
       cell.appendChild(img);
     }
     if(lastMove&&(sq===lastMove.from||sq===lastMove.to)) cell.classList.add('last');
@@ -316,7 +316,7 @@ gridEl.addEventListener('pointermove',e=>{
       const g=document.createElement('div'); g.className='drag-ghost';
       const img=document.createElement('img'); img.src=PIECE(p.color,p.type);
       img.style.height=Math.round(rect.height*1.05)+'px';
-      const bottom=(p.color==='w')!==flipped; if(bottom) img.classList.add('flip');
+      img.classList.add('flip');
       g.appendChild(img); document.body.appendChild(g); drag.ghost=g;
       const oi=gridEl.querySelector(`.cell[data-sq="${drag.from}"] img`); if(oi) oi.style.visibility='hidden';
     }
