@@ -106,6 +106,9 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   background:linear-gradient(#5a2a14,#3a1a0c); border:2px solid var(--gold); border-radius:10px; padding:9px 18px; min-height:44px; cursor:pointer }
 .hud button.gold{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
 .note{ flex:0 0 auto; text-align:center; font-size:13px; min-height:15px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+.quote{ flex:0 0 auto; width:100%; max-width:430px; text-align:center; font-style:italic; font-size:13px; line-height:1.35;
+  color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; padding:1px 8px; min-height:17px; transition:opacity .35s }
+.quote b{ font-style:normal; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 
 /* ---------- Desktop / tablet ---------- */
 @media (min-width:900px){
@@ -116,7 +119,8 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   .cap .slots{ flex-wrap:wrap; align-content:flex-start; height:auto; max-height:62vh }
   .cap .slots img{ height:26px }
   .board-area{ flex:1 1 auto; order:0; align-self:stretch }
-  .cap.red{ order:-1 } .cap.blue{ order:1 }
+  .cap.red{ order:1 } .cap.blue{ order:2 }
+  .quote{ order:-1; align-self:center; flex:0 0 190px; width:190px; max-width:190px; font-size:15px; line-height:1.45; padding:10px; min-height:0 }
   .title-img{ max-height:12vh }
 }
 @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important } }
@@ -179,6 +183,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
       </div>
     </div>
     <section class="cap blue"><h3>Capturas Azul <span class="score" id="scoreW"></span></h3><div class="slots" id="capW"></div></section>
+    <div class="quote" id="quote"></div>
   </div>
 
   <div class="hud">
@@ -203,6 +208,23 @@ const LEVELS=[
   {key:'gm',     name:'Grandmaster',   elo:2600, skill:20, mt:1300},
   {key:'fischer',name:'Bobby Fischer', elo:null, skill:20, mt:1900},
 ];
+const APHORISMS=[
+  {t:'Cuando veas una buena jugada, busca una mejor.', a:'Emanuel Lasker'},
+  {t:'El peón es el alma del ajedrez.', a:'A. Philidor'},
+  {t:'Una amenaza es más fuerte que su ejecución.', a:'A. Nimzowitsch'},
+  {t:'Antes del final, los dioses crearon el medio juego.', a:'S. Tarrasch'},
+  {t:'Ayuda a tus piezas y ellas te ayudarán.', a:'Paul Morphy'},
+  {t:'El ajedrez es la lucha contra el error.', a:'J. Zukertort'},
+  {t:'Domina el centro y dominarás la partida.', a:'Principio clásico'},
+  {t:'Un caballo al borde es un caballo pobre.', a:'Proverbio'},
+  {t:'El método es tan importante como el cálculo.', a:'M. Botvinnik'},
+  {t:'Quien no arriesga, rara vez conquista el reino.', a:'JuanFerland'},
+];
+let qi=-1, qTimer=null;
+function rotateQuote(){ const el=document.getElementById('quote'); if(!el) return;
+  qi=(qi+1)%APHORISMS.length; const q=APHORISMS[qi];
+  el.style.opacity='0'; setTimeout(()=>{ el.innerHTML=`“${q.t}” <b>— ${q.a}</b>`; el.style.opacity='1'; },160); }
+function startQuotes(){ if(qTimer) clearInterval(qTimer); qi=-1; rotateQuote(); qTimer=setInterval(rotateQuote,9000); }
 const BOARD_W=472, BOARD_H=536, ASPECT=BOARD_W/BOARD_H, FILES='abcdefgh';
 
 let mode='2p', level=LEVELS[1];
@@ -229,7 +251,7 @@ function startGame(m){
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; flipped=false;
   $('start').classList.add('hidden'); $('app').style.display='flex';
   if(mode==='ai') boot();
-  render(); status();
+  render(); status(); startQuotes();
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); });
 }
 function backToStart(){
