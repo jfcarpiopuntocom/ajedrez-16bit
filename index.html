@@ -11,7 +11,7 @@
 <meta property="og:description" content="¿Quién ganará la batalla por su control? Ajedrez 16-bit: juega con un amigo o contra la IA (5 niveles, hasta Bobby Fischer).">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://jfcarpiopuntocom.github.io/ajedrez-16bit/">
-<meta property="og:image" content="https://jfcarpiopuntocom.github.io/ajedrez-16bit/assets/og.png?v=18">
+<meta property="og:image" content="https://jfcarpiopuntocom.github.io/ajedrez-16bit/assets/og.png?v=19">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <style>
@@ -80,21 +80,22 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .coord.files{ flex-direction:row } .coord.files span{ flex:1; text-align:center }
 .coord.ranks{ flex-direction:column } .coord.ranks span{ flex:1; display:flex; align-items:center; justify-content:center }
 
-.board{ position:relative; width:200px; height:226px; background:url("assets/board.png?v=18") center/100% 100% no-repeat;
+.board{ position:relative; width:200px; height:226px; background:url("assets/board.png?v=19") center/100% 100% no-repeat;
   border:3px solid var(--gold); border-radius:3px; box-shadow:0 10px 26px rgba(0,0,0,.55) }
 .board .dot{ position:absolute; width:5px; height:5px; margin:-2.5px 0 0 -2.5px; border-radius:50%; background:#C9A24B; box-shadow:0 0 1px rgba(0,0,0,.7); z-index:0; pointer-events:none }
 .grid{ position:absolute; inset:0; z-index:1; display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(8,1fr); touch-action:none }
-.cell{ position:relative; display:flex; align-items:flex-end; justify-content:center; cursor:grab; overflow:hidden }
-/* Tight-trimmed sprites: height % per type = visual hierarchy */
-.cell img{ width:auto; height:88%; object-fit:contain; display:block; max-width:100%;
-  filter:drop-shadow(0 2px 2px rgba(0,0,0,.5)); pointer-events:none }
-.cell img[data-t="p"]{ height:72% }
-.cell img[data-t="r"]{ height:84% }
-.cell img[data-t="b"]{ height:84% }
+.cell{ position:relative; cursor:grab; overflow:hidden }
+/* Absolute-positioned sprites pinned to cell bottom — guaranteed alignment */
+.cell img{ position:absolute; left:50%; bottom:0; transform:translateX(-50%);
+  width:auto; height:88%; object-fit:contain; display:block; max-width:96%;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.55)); pointer-events:none }
+.cell img[data-t="p"]{ height:68% }
+.cell img[data-t="r"]{ height:79% }
+.cell img[data-t="b"]{ height:89% }
 .cell img[data-t="n"]{ height:92% }
 .cell img[data-t="q"]{ height:94% }
 .cell img[data-t="k"]{ height:98% }
-.cell img.flip{ transform:scaleX(-1) }
+.cell img.flip{ transform:translateX(-50%) scaleX(-1) }
 .cell.last{ background:rgba(232,160,32,.20) }
 .cell.check::after{ content:""; position:absolute; inset:5%; border:3px solid #ff5252; border-radius:7px; box-shadow:0 0 12px #ff2020 }
 
@@ -160,7 +161,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
 <!-- ===== START SCREEN ===== -->
 <div class="start" id="start">
-  <img class="banner" src="assets/title.png?v=18" alt="El Reino de JuanFerland">
+  <img class="banner" src="assets/title.png?v=19" alt="El Reino de JuanFerland">
   <h2 id="startH2">¿Cómo quieres jugar?</h2>
   <div class="choices">
     <button class="bigbtn" id="btn2p">👥 Con un amigo</button>
@@ -170,15 +171,15 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   <div class="kingpick" id="kingpick">
     <div class="kingrow" data-side="w">
       <span class="lbl">Rey Azul:</span>
-      <button data-k="k_bkA" class="active"><img src="assets/pieces/k_bkA_hi.png?v=18" alt="Rey azul 1"></button>
-      <button data-k="k_bkB"><img src="assets/pieces/k_bkB_hi.png?v=18" alt="Rey azul 2"></button>
-      <button data-k="k_bkC"><img src="assets/pieces/k_bkC_hi.png?v=18" alt="Rey azul 3"></button>
+      <button data-k="k_bkA" class="active"><img src="assets/pieces/k_bkA_hi.png?v=19" alt="Rey azul 1"></button>
+      <button data-k="k_bkB"><img src="assets/pieces/k_bkB_hi.png?v=19" alt="Rey azul 2"></button>
+      <button data-k="k_bkC"><img src="assets/pieces/k_bkC_hi.png?v=19" alt="Rey azul 3"></button>
     </div>
     <div class="kingrow" data-side="b">
       <span class="lbl">Rey Rojo:</span>
-      <button data-k="k_rkA" class="active"><img src="assets/pieces/k_rkA_hi.png?v=18" alt="Rey rojo 1"></button>
-      <button data-k="k_rkB"><img src="assets/pieces/k_rkB_hi.png?v=18" alt="Rey rojo 2"></button>
-      <button data-k="k_rkC"><img src="assets/pieces/k_rkC_hi.png?v=18" alt="Rey rojo 3"></button>
+      <button data-k="k_rkA" class="active"><img src="assets/pieces/k_rkA_hi.png?v=19" alt="Rey rojo 1"></button>
+      <button data-k="k_rkB"><img src="assets/pieces/k_rkB_hi.png?v=19" alt="Rey rojo 2"></button>
+      <button data-k="k_rkC"><img src="assets/pieces/k_rkC_hi.png?v=19" alt="Rey rojo 3"></button>
     </div>
   </div>
   <button class="back" id="backBtn" style="display:none">← volver</button>
@@ -186,7 +187,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
 <!-- ===== GAME ===== -->
 <div class="app" id="app" style="display:none">
-  <img class="title-img" src="assets/title.png?v=18" alt="El Reino de JuanFerland">
+  <img class="title-img" src="assets/title.png?v=19" alt="El Reino de JuanFerland">
   <div class="status" id="status"></div>
 
   <div class="stage">
@@ -221,7 +222,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=18';
+const V='?v=19';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
