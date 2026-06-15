@@ -234,13 +234,13 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   <div class="note" id="note"></div>
 </div>
 
-<footer class="site-credit">by <a href="https://jfcarpio.com" target="_blank" rel="noopener">jfcarpio.com</a></footer>
+<footer class="site-credit">by <a id="credit" href="#" rel="noopener">jfcarpio.com</a></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/chess.js@0.12.1/chess.min.js"></script>
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=43';
+const V='?v=44';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -249,8 +249,8 @@ const LEVELS=[
   {key:'medio',  name:'Medio',         elo:1200, skill:3,  mt:400},
   {key:'alto',   name:'Alto calibre',  elo:1600, skill:8,  mt:600},
   {key:'master', name:'Chess Master',  elo:2100, skill:14, mt:900},
-  {key:'gm',     name:'Grandmaster',   elo:2600, skill:20, mt:1300},
-  {key:'fischer',name:'Bobby Fischer', elo:null, skill:20, mt:1900},
+  {key:'gm',     name:'Grandmaster',   elo:2600, skill:20, mt:1500},
+  {key:'fischer',name:'Bobby Fischer', elo:null, skill:20, mt:4500},
 ];
 const APHORISMS=[
   {t:'Cuando veas una buena jugada, busca una mejor.', a:'Emanuel Lasker'},
@@ -519,6 +519,9 @@ function configEngine(){ note.textContent=(fallback?'IA local · ':'Stockfish ·
   if(level.elo){ engine.postMessage('setoption name UCI_LimitStrength value true'); engine.postMessage('setoption name UCI_Elo value '+level.elo); }
   else engine.postMessage('setoption name UCI_LimitStrength value false');
   engine.postMessage('setoption name Skill Level value '+level.skill);
+  /* max out the engine: bigger transposition table = stronger search */
+  engine.postMessage('setoption name Hash value 128');
+  engine.postMessage('setoption name Threads value 1');
 }
 function aiMove(){ if(game.game_over()) return; busy=true; status();
   if(fallback||!engine){ setTimeout(fbMove,260); return; }
@@ -577,6 +580,19 @@ function maybeShowRematch(){ $('rematch').style.display=game.game_over()?'':'non
 
 let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(fitBoard,90); });
 window.addEventListener('orientationchange',()=>setTimeout(fitBoard,200));
+
+/* footer mail link, obfuscated: (1) base64, (2) string reversed, (3) the address
+   and the scheme are assembled only on click — the static DOM/source contains
+   no e-mail address and no scheme literal, so scrapers get nothing. */
+(function(){
+  var c=document.getElementById('credit'); if(!c) return;
+  var enc='t92YuwWah12ZA9WawJXYjZma';
+  c.addEventListener('click', function(e){
+    e.preventDefault();
+    var addr=atob(enc.split('').reverse().join(''));
+    window.location.href=['mai','lto',':'].join('')+addr;
+  });
+})();
 </script>
 </body>
 </html>
