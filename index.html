@@ -85,10 +85,12 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   border:3px solid var(--gold); border-radius:3px; box-shadow:0 10px 26px rgba(0,0,0,.55) }
 .board .dot{ position:absolute; width:5px; height:5px; margin:-2.5px 0 0 -2.5px; border-radius:50%; background:#C9A24B; box-shadow:0 0 1px rgba(0,0,0,.7); z-index:0; pointer-events:none }
 .grid{ position:absolute; inset:0; z-index:1; display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(8,1fr); touch-action:none }
-.cell{ position:relative; cursor:grab; overflow:hidden }
-/* Absolute-positioned sprites pinned to cell bottom — guaranteed alignment */
+/* SUBSYSTEM: Grid Containment — no piece escapes its cell */
+.cell{ position:relative; cursor:grab; overflow:hidden; contain:layout paint }
+/* SUBSYSTEM: Sprite Symmetry — identical positioning for both teams */
 .cell img{ position:absolute; left:50%; bottom:0; transform:translateX(-50%);
-  width:auto; height:88%; object-fit:contain; display:block; max-width:96%;
+  width:auto; height:88%; object-fit:contain; display:block;
+  max-width:96%; max-height:100%;
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.55)); pointer-events:none }
 .cell img[data-t="p"]{ height:62% }
 .cell img[data-t="r"]{ height:79% }
@@ -223,7 +225,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=24';
+const V='?v=25';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
