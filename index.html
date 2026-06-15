@@ -55,10 +55,11 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .kingrow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center }
 .kingrow .lbl{ font-size:14px; font-weight:800; min-width:78px; text-align:right;
   color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
-.kingrow button{ background:#16223f; border:2px solid var(--gold); border-radius:10px; padding:2px 4px; min-height:54px; cursor:pointer }
+.kingrow button{ background:#16223f; border:2px solid var(--gold); border-radius:10px; padding:0; cursor:pointer;
+  width:62px; height:62px; display:flex; align-items:center; justify-content:center; overflow:hidden }
 .kingrow[data-side="b"] button{ background:#2a0e12 }
 .kingrow button.active{ border-color:var(--gold2); box-shadow:0 0 10px var(--gold) }
-.kingrow button img{ height:44px; width:auto; display:block }
+.kingrow button img{ max-height:54px; max-width:54px; width:auto; height:auto; object-fit:contain; display:block }
 .back{ font-size:14px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; background:transparent; border:none; cursor:pointer; padding:6px }
 
 /* ---------- Title (top, prominent) ---------- */
