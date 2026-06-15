@@ -105,7 +105,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .cell img[data-t="n"]{ height:92% }
 /* mago: limitado por ALTURA (max-width:100%) para que rojo y azul rindan la
    misma altura visible pese a sus distintos aspect ratios. Levita. */
-.cell img[data-t="b"]{ height:93%; max-width:109%; bottom:6% }
+.cell img[data-t="b"]{ height:96%; max-width:109%; bottom:3% }
 .cell img[data-t="q"]{ height:96% }
 .cell img[data-t="k"]{ height:99% }
 .cell img.flip{ transform:translateX(-50%) scaleX(-1) }
@@ -235,7 +235,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=40';
+const V='?v=41';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
