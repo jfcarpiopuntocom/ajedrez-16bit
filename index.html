@@ -174,7 +174,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
 <!-- ===== START SCREEN ===== -->
 <div class="start" id="start">
-  <img class="banner" src="assets/title.png?v=22" alt="El Reino de JuanFerland">
+  <img class="banner" src="assets/title.png?v=42" alt="Dragones y Leones: ¡Ajedrez extra divertido!">
   <h2 id="startH2">¿Cómo quieres jugar?</h2>
   <div class="choices">
     <button class="bigbtn" id="btn2p">👥 Con un amigo</button>
@@ -200,7 +200,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
 <!-- ===== GAME ===== -->
 <div class="app" id="app" style="display:none">
-  <img class="title-img" src="assets/title.png?v=22" alt="El Reino de JuanFerland">
+  <img class="title-img" src="assets/title.png?v=42" alt="Dragones y Leones: ¡Ajedrez extra divertido!">
   <div class="status" id="status"></div>
 
   <div class="stage">
@@ -235,7 +235,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=41';
+const V='?v=42';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
