@@ -11,7 +11,7 @@
 <meta property="og:description" content="¿Quién ganará la batalla por su control? Ajedrez 16-bit: juega con un amigo o contra la IA (5 niveles, hasta Bobby Fischer).">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://jfcarpiopuntocom.github.io/ajedrez-16bit/">
-<meta property="og:image" content="https://jfcarpiopuntocom.github.io/ajedrez-16bit/assets/og.png?v=13">
+<meta property="og:image" content="https://jfcarpiopuntocom.github.io/ajedrez-16bit/assets/og.png?v=14">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <style>
@@ -80,15 +80,27 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .coord.files{ flex-direction:row } .coord.files span{ flex:1; text-align:center }
 .coord.ranks{ flex-direction:column } .coord.ranks span{ flex:1; display:flex; align-items:center; justify-content:center }
 
-.board{ position:relative; width:200px; height:226px; background:url("assets/board.png?v=13") center/100% 100% no-repeat;
+.board{ position:relative; width:200px; height:226px; background:url("assets/board.png?v=14") center/100% 100% no-repeat;
   border:3px solid var(--gold); border-radius:3px; box-shadow:0 10px 26px rgba(0,0,0,.55) }
 .board .dot{ position:absolute; width:5px; height:5px; margin:-2.5px 0 0 -2.5px; border-radius:50%; background:#C9A24B; box-shadow:0 0 1px rgba(0,0,0,.7); z-index:0; pointer-events:none }
 .grid{ position:absolute; inset:0; z-index:1; display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(8,1fr); touch-action:none }
 .cell{ position:relative; display:flex; align-items:center; justify-content:center; cursor:grab }
 .cell img{ width:92%; height:92%; object-fit:contain; object-position:bottom; filter:drop-shadow(0 2px 2px rgba(0,0,0,.5)); pointer-events:none }
+.cell img[data-t="p"]{ width:100%; height:100% }
+.cell img[data-t="n"]{ width:100%; height:100% }
 .cell img.flip{ transform:scaleX(-1) }
 .cell.last{ background:rgba(232,160,32,.20) }
 .cell.check::after{ content:""; position:absolute; inset:5%; border:3px solid #ff5252; border-radius:7px; box-shadow:0 0 12px #ff2020 }
+
+/* ---------- History / Sound panel ---------- */
+.history{ position:fixed; top:6px; right:6px; z-index:50; width:152px; max-height:54vh; overflow-y:auto;
+  background:linear-gradient(160deg,#241a10,#140d07); border:2px solid var(--gold); border-radius:10px; padding:6px 8px;
+  font-size:12px; line-height:1.5; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; display:none }
+.history.show{ display:block }
+.history h4{ margin:0 0 4px; font-size:12px; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center }
+.history ol{ margin:0; padding-left:22px } .history li{ margin:0 }
+.history li span{ display:inline-block; min-width:46px }
+.history li span.r{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .drag-ghost{ position:fixed; pointer-events:none; z-index:60; transform:translate(-50%,-58%); will-change:left,top }
 .drag-ghost img{ width:auto; filter:drop-shadow(0 10px 9px rgba(0,0,0,.6)) }
 .drag-ghost img.flip{ transform:scaleX(-1) }
@@ -109,8 +121,9 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .hud button.gold{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
 .note{ flex:0 0 auto; text-align:center; font-size:13px; min-height:15px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
 .quote{ flex:0 0 auto; width:100%; max-width:430px; text-align:center; font-style:italic; font-size:13px; line-height:1.35;
-  color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; padding:1px 8px; min-height:17px; transition:opacity .35s }
-.quote b{ font-style:normal; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+  color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; padding:1px 8px; min-height:17px; transition:opacity .35s;
+  font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif; word-wrap:break-word; overflow-wrap:break-word }
+.quote b{ font-style:normal; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; display:block; margin-top:4px }
 
 /* ---------- Desktop / tablet ---------- */
 @media (min-width:900px){
@@ -139,7 +152,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
 <!-- ===== START SCREEN ===== -->
 <div class="start" id="start">
-  <img class="banner" src="assets/title.png?v=13" alt="El Reino de JuanFerland">
+  <img class="banner" src="assets/title.png?v=14" alt="El Reino de JuanFerland">
   <h2 id="startH2">¿Cómo quieres jugar?</h2>
   <div class="choices">
     <button class="bigbtn" id="btn2p">👥 Con un amigo</button>
@@ -149,15 +162,15 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   <div class="kingpick" id="kingpick">
     <div class="kingrow" data-side="w">
       <span class="lbl">Rey Azul:</span>
-      <button data-k="k_bkA" class="active"><img src="assets/pieces/k_bkA_hi.png?v=12" alt="Rey azul 1"></button>
-      <button data-k="k_bkB"><img src="assets/pieces/k_bkB_hi.png?v=12" alt="Rey azul 2"></button>
-      <button data-k="k_bkC"><img src="assets/pieces/k_bkC_hi.png?v=12" alt="Rey azul 3"></button>
+      <button data-k="k_bkA" class="active"><img src="assets/pieces/k_bkA_hi.png?v=14" alt="Rey azul 1"></button>
+      <button data-k="k_bkB"><img src="assets/pieces/k_bkB_hi.png?v=14" alt="Rey azul 2"></button>
+      <button data-k="k_bkC"><img src="assets/pieces/k_bkC_hi.png?v=14" alt="Rey azul 3"></button>
     </div>
     <div class="kingrow" data-side="b">
       <span class="lbl">Rey Rojo:</span>
-      <button data-k="k_rkA" class="active"><img src="assets/pieces/k_rkA_hi.png?v=12" alt="Rey rojo 1"></button>
-      <button data-k="k_rkB"><img src="assets/pieces/k_rkB_hi.png?v=12" alt="Rey rojo 2"></button>
-      <button data-k="k_rkC"><img src="assets/pieces/k_rkC_hi.png?v=12" alt="Rey rojo 3"></button>
+      <button data-k="k_rkA" class="active"><img src="assets/pieces/k_rkA_hi.png?v=14" alt="Rey rojo 1"></button>
+      <button data-k="k_rkB"><img src="assets/pieces/k_rkB_hi.png?v=14" alt="Rey rojo 2"></button>
+      <button data-k="k_rkC"><img src="assets/pieces/k_rkC_hi.png?v=14" alt="Rey rojo 3"></button>
     </div>
   </div>
   <button class="back" id="backBtn" style="display:none">← volver</button>
@@ -165,7 +178,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
 <!-- ===== GAME ===== -->
 <div class="app" id="app" style="display:none">
-  <img class="title-img" src="assets/title.png?v=13" alt="El Reino de JuanFerland">
+  <img class="title-img" src="assets/title.png?v=14" alt="El Reino de JuanFerland">
   <div class="status" id="status"></div>
 
   <div class="stage">
@@ -185,16 +198,21 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
   <div class="hud">
     <button class="gold" id="newgame">Nueva Partida</button>
-    <button id="undo">Deshacer Jugada</button>
+    <button id="undo">Deshacer</button>
+    <button id="redo">Rehacer</button>
+    <button id="rematch" style="display:none">Revancha</button>
+    <button id="histbtn" title="Historial de jugadas">📜</button>
+    <button id="mutebtn" title="Sonido">🔊</button>
   </div>
   <div class="note" id="note"></div>
+  <aside class="history" id="history"><h4>Jugadas</h4><ol id="histlist"></ol></aside>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chess.js@0.12.1/chess.min.js"></script>
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=12';
+const V='?v=14';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -230,13 +248,36 @@ const APHORISMS=[
 let qi=-1, qTimer=null;
 function rotateQuote(){ const el=document.getElementById('quote'); if(!el) return;
   qi=(qi+1)%APHORISMS.length; const q=APHORISMS[qi];
-  el.style.opacity='0'; setTimeout(()=>{ el.innerHTML=`“${q.t}” <b>— ${q.a}</b>`; el.style.opacity='1'; },160); }
+  el.style.opacity='0'; setTimeout(()=>{ el.innerHTML='&ldquo;'+q.t+'&rdquo; <b>&mdash; '+q.a+'</b>'; el.style.opacity='1'; },160); }
 function startQuotes(){ if(qTimer) clearInterval(qTimer); qi=-1; rotateQuote(); qTimer=setInterval(rotateQuote,9000); }
 const BOARD_W=472, BOARD_H=536, ASPECT=BOARD_W/BOARD_H, FILES='abcdefgh';
 
 let mode='2p', level=LEVELS[1];
 let started=false, flipped=false, lastMove=null, busy=false, healing=false;
 const game=new Chess(); const capW=[], capB=[];
+let muted=false, redoStack=[];
+
+/* ===== Audio (medieval, Web Audio, no files) ===== */
+let actx=null;
+function actxInit(){ try{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+function tone(freq,dur,type='sine',vol=0.18,when=0){
+  if(muted||!actx) return;
+  try{
+    const o=actx.createOscillator(), g=actx.createGain(), f=actx.createBiquadFilter();
+    o.type=type; o.frequency.value=freq; f.type='lowpass'; f.frequency.value=1800;
+    const t=actx.currentTime+when;
+    g.gain.setValueAtTime(0.001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    o.connect(f); f.connect(g); g.connect(actx.destination);
+    o.start(t); o.stop(t+dur+0.02);
+  }catch(e){}
+}
+const SFX={
+  move:    ()=>{ tone(320,0.06,'triangle',0.12); tone(420,0.05,'triangle',0.10,0.04); },
+  capture: ()=>{ tone(220,0.10,'sawtooth',0.14); tone(140,0.12,'square',0.10,0.04); },
+  check:   ()=>{ tone(660,0.08,'square',0.14); tone(880,0.10,'square',0.14,0.08); tone(660,0.10,'square',0.14,0.18); },
+  mate:    ()=>{ [523,659,784,1046].forEach((f,i)=>tone(f,0.20,'triangle',0.18,i*0.13)); }
+};
 
 const $=id=>document.getElementById(id);
 const gridEl=$('grid'), boardEl=$('board'), statusEl=$('status'), note=$('note'), boardAreaEl=document.querySelector('.board-area');
@@ -255,10 +296,11 @@ $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[dat
 
 function startGame(m){
   mode=m; started=true;
-  game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; flipped=false;
+  game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; flipped=false; redoStack.length=0;
   $('start').classList.add('hidden'); $('app').style.display='flex';
+  $('rematch').style.display='none';
   if(mode==='ai') boot();
-  render(); status(); startQuotes();
+  render(); status(); startQuotes(); renderHistory();
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); });
 }
 function backToStart(){
@@ -377,7 +419,13 @@ function doMove(mv){
   const res=game.move({from:mv.from,to:mv.to,promotion:mv.promotion||undefined});
   if(!res){ render(); return; }
   if(res.captured) (res.color==='w'?capW:capB).push({color:res.color==='w'?'b':'w',type:res.captured});
-  lastMove={from:res.from,to:res.to}; render(); status();
+  lastMove={from:res.from,to:res.to}; redoStack.length=0;
+  actxInit();
+  if(game.in_checkmate()) SFX.mate();
+  else if(game.in_check()) SFX.check();
+  else if(res.captured) SFX.capture();
+  else SFX.move();
+  render(); status(); renderHistory(); maybeShowRematch();
   if(mode==='ai' && !game.game_over() && game.turn()==='b') setTimeout(aiMove,200);
 }
 
@@ -427,7 +475,13 @@ function engMove(uci){ const from=uci.slice(0,2), to=uci.slice(2,4), promo=uci.l
   const res=game.move({from,to,promotion:promo}); busy=false;
   if(!res){ render(); status(); return; }
   if(res.captured) capB.push({color:'w',type:res.captured});
-  lastMove={from:res.from,to:res.to}; render(); status();
+  lastMove={from:res.from,to:res.to};
+  actxInit();
+  if(game.in_checkmate()) SFX.mate();
+  else if(game.in_check()) SFX.check();
+  else if(res.captured) SFX.capture();
+  else SFX.move();
+  render(); status(); renderHistory(); maybeShowRematch();
 }
 function fbMove(){ const ms=game.moves({verbose:true}); if(!ms.length){ busy=false; return; }
   ms.sort((a,b)=>(b.captured?VAL[b.captured]:0)-(a.captured?VAL[a.captured]:0));
@@ -436,9 +490,38 @@ function fbMove(){ const ms=game.moves({verbose:true}); if(!ms.length){ busy=fal
 
 /* ===== Controls ===== */
 $('newgame').onclick=()=>backToStart();
-$('undo').onclick=()=>{ if(busy) return; game.undo(); if(mode==='ai') game.undo();
-  capW.length=0; capB.length=0; game.history({verbose:true}).forEach(m=>{ if(m.captured) (m.color==='w'?capW:capB).push({color:m.color==='w'?'b':'w',type:m.captured}); });
-  const h=game.history({verbose:true}); lastMove=h.length?{from:h[h.length-1].from,to:h[h.length-1].to}:null; render(); status(); };
+function rebuildCaptures(){ capW.length=0; capB.length=0;
+  game.history({verbose:true}).forEach(m=>{ if(m.captured) (m.color==='w'?capW:capB).push({color:m.color==='w'?'b':'w',type:m.captured}); });
+  const h=game.history({verbose:true}); lastMove=h.length?{from:h[h.length-1].from,to:h[h.length-1].to}:null;
+}
+$('undo').onclick=()=>{ if(busy) return;
+  const u1=game.undo(); if(u1) redoStack.push(u1);
+  if(mode==='ai'){ const u2=game.undo(); if(u2) redoStack.push(u2); }
+  rebuildCaptures(); render(); status(); renderHistory(); maybeShowRematch(); };
+$('redo').onclick=()=>{ if(busy||!redoStack.length) return;
+  const steps=mode==='ai'?2:1;
+  for(let i=0;i<steps && redoStack.length;i++){
+    const mv=redoStack.pop();
+    game.move({from:mv.from,to:mv.to,promotion:mv.promotion});
+  }
+  rebuildCaptures(); render(); status(); renderHistory(); maybeShowRematch(); };
+$('rematch').onclick=()=>{ game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0;
+  $('rematch').style.display='none'; render(); status(); renderHistory();
+  if(mode==='ai') boot(); };
+$('histbtn').onclick=()=>{ $('history').classList.toggle('show'); };
+$('mutebtn').onclick=()=>{ muted=!muted; $('mutebtn').textContent=muted?'🔇':'🔊'; actxInit(); };
+
+function renderHistory(){
+  const h=game.history(); const ol=$('histlist'); ol.innerHTML='';
+  for(let i=0;i<h.length;i+=2){
+    const li=document.createElement('li');
+    const w=h[i]||''; const b=h[i+1]||'';
+    li.innerHTML=`<span>${w}</span><span class="r">${b}</span>`;
+    ol.appendChild(li);
+  }
+  ol.parentElement.scrollTop=ol.parentElement.scrollHeight;
+}
+function maybeShowRematch(){ $('rematch').style.display=game.game_over()?'':'none'; }
 
 let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(fitBoard,90); });
 window.addEventListener('orientationchange',()=>setTimeout(fitBoard,200));
