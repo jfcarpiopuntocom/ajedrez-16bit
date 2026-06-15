@@ -92,7 +92,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   width:auto; height:88%; object-fit:contain; display:block;
   max-width:96%; max-height:100%;
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.55)); pointer-events:none }
-.cell img[data-t="p"]{ height:62% }
+.cell img[data-t="p"]{ height:58% }
 .cell img[data-t="r"]{ height:79% }
 .cell img[data-t="b"]{ height:89% }
 .cell img[data-t="n"]{ height:92% }
@@ -225,7 +225,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=25';
+const V='?v=26';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
