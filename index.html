@@ -31,12 +31,12 @@ body{ font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif;
 img{ -webkit-user-drag:none; user-select:none }
 h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
-.app{ height:100vh; height:100svh; max-width:1180px; margin:0 auto; padding:5px 6px;
+.app{ height:calc(100vh - 28px); height:calc(100svh - 28px); max-width:1180px; margin:0 auto; padding:5px 6px;
   display:flex; flex-direction:column; gap:4px; overflow:hidden }
 
 /* ---------- START SCREEN ---------- */
 .start{ position:fixed; inset:0; z-index:100; background:radial-gradient(1100px 700px at 50% -6%, #3a2a1a 0%, #160f08 60%, #0a0604 100%);
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px; overflow:auto }
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px 16px 44px; overflow:auto }
 .start.hidden{ display:none }
 .start img.banner{ width:100%; max-width:560px; height:auto; max-height:22vh; object-fit:contain }
 .start h2{ margin:0; font-size:18px; font-weight:800; text-align:center; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
@@ -64,8 +64,19 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
 /* ---------- Title (top, prominent) ---------- */
 .title-img{ flex:0 0 auto; display:block; margin:0 auto; width:auto; max-width:100%; max-height:9vh; max-height:9svh; pointer-events:none }
-.site-credit{ text-align:center; padding:18px 12px 28px; color:#CCCCCC; font-size:14px; font-size:.9rem; letter-spacing:.3px }
-.site-credit a{ color:#E8A020; text-decoration:none; font-weight:600 }
+/* Title splendor: melt the flat banner edges into the page + warm golden glow + gentle float */
+@keyframes titleFloat{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-3px) } }
+.banner, .title-img{
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
+          mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
+  filter:drop-shadow(0 6px 16px rgba(0,0,0,.55)) drop-shadow(0 0 20px rgba(232,160,32,.32));
+  animation:titleFloat 5s ease-in-out infinite; }
+/* Footer: fixed bottom bar, always visible over both screens */
+.site-credit{ position:fixed; left:0; right:0; bottom:0; z-index:200; height:28px;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--bg); border-top:1px solid rgba(232,160,32,.25);
+  color:#CCCCCC; font-size:13px; letter-spacing:.3px }
+.site-credit a{ color:#E8A020; text-decoration:none; font-weight:700; margin-left:5px }
 .site-credit a:hover{ text-decoration:underline }
 
 /* ---------- Turn / status ---------- */
@@ -203,7 +214,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
 <!-- ===== GAME ===== -->
 <div class="app" id="app" style="display:none">
-  <img class="title-img" src="assets/title.png?v=42" alt="Dragones y Leones: ¡Ajedrez extra divertido!">
+  <img class="title-img" src="assets/title.png" alt="Los Dos Reinos: ¡ajedrez fantástico!">
   <div class="status" id="status"></div>
 
   <div class="stage">
@@ -240,7 +251,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=44';
+const V='?v=46';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -251,6 +262,7 @@ const LEVELS=[
   {key:'master', name:'Chess Master',  elo:2100, skill:14, mt:900},
   {key:'gm',     name:'Grandmaster',   elo:2600, skill:20, mt:1500},
   {key:'fischer',name:'Bobby Fischer', elo:null, skill:20, mt:4500},
+  {key:'novato', name:'Novato',        elo:null, skill:0,  mt:200, tag:'principiante'},
 ];
 const APHORISMS=[
   {t:'Cuando veas una buena jugada, busca una mejor.', a:'Emanuel Lasker'},
@@ -337,7 +349,7 @@ const gridEl=$('grid'), boardEl=$('board'), statusEl=$('status'), note=$('note')
 /* ===== Start screen ===== */
 const levelsEl=$('levels');
 LEVELS.forEach(l=>{ const b=document.createElement('button'); b.className='lv'; b.dataset.key=l.key;
-  b.innerHTML=`<span>${l.name}</span><span class="tag">${l.elo?('~'+l.elo+' Elo'):'máxima'}</span>`;
+  b.innerHTML=`<span>${l.name}</span><span class="tag">${l.tag?l.tag:(l.elo?('~'+l.elo+' Elo'):'máxima')}</span>`;
   b.onclick=()=>{ level=l; startGame('ai'); }; levelsEl.appendChild(b); });
 $('btn2p').onclick=()=>startGame('2p');
 $('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('startH2').textContent='Elige el nivel del Rojo'; $('backBtn').style.display='block'; };
@@ -519,9 +531,6 @@ function configEngine(){ note.textContent=(fallback?'IA local · ':'Stockfish ·
   if(level.elo){ engine.postMessage('setoption name UCI_LimitStrength value true'); engine.postMessage('setoption name UCI_Elo value '+level.elo); }
   else engine.postMessage('setoption name UCI_LimitStrength value false');
   engine.postMessage('setoption name Skill Level value '+level.skill);
-  /* max out the engine: bigger transposition table = stronger search */
-  engine.postMessage('setoption name Hash value 128');
-  engine.postMessage('setoption name Threads value 1');
 }
 function aiMove(){ if(game.game_over()) return; busy=true; status();
   if(fallback||!engine){ setTimeout(fbMove,260); return; }
