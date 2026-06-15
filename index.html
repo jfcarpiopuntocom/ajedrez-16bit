@@ -79,6 +79,13 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   color:#CCCCCC; font-size:13px; letter-spacing:.3px }
 .site-credit a{ color:#E8A020; text-decoration:none; font-weight:700; margin-left:5px }
 .site-credit a:hover{ text-decoration:underline }
+/* Zoom / focus mode: expand board, keep only board + captured pieces */
+#zoombtn{ position:fixed; top:6px; right:6px; z-index:300; width:40px; height:40px; border-radius:10px;
+  background:linear-gradient(#3a1f12,#26140b); border:2px solid var(--gold);
+  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-size:19px; line-height:1; cursor:pointer }
+body.focusmode .title-img, body.focusmode .status, body.focusmode .left-rail,
+body.focusmode .note, body.focusmode .hud, body.focusmode .site-credit{ display:none !important }
+body.focusmode .app{ height:100vh !important; height:100svh !important }
 
 /* ---------- Turn / status ---------- */
 .status{ flex:0 0 auto; text-align:center; font-size:15px; font-weight:800; min-height:24px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
@@ -124,6 +131,9 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .cell img[data-t="q"]{ height:96% }
 .cell img[data-t="k"]{ height:99% }
 .cell img.flip{ transform:translateX(-50%) scaleX(-1) }
+/* opponent pieces (top side) rotated 180 deg for face-to-face mobile/tablet play */
+.cell img.rot{ transform:translateX(-50%) rotate(180deg) }
+.cell img.flip.rot{ transform:translateX(-50%) scaleX(-1) rotate(180deg) }
 .cell.last{ background:rgba(232,160,32,.20) }
 .cell.check::after{ content:""; position:absolute; inset:5%; border:3px solid #ff5252; border-radius:7px; box-shadow:0 0 12px #ff2020 }
 
@@ -247,6 +257,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   <div class="note" id="note"></div>
 </div>
 
+<button id="zoombtn" title="Expandir tablero" style="display:none">⛶</button>
 <footer class="site-credit">by <a id="credit" href="#" rel="noopener">jfcarpio.com</a></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/chess.js@0.12.1/chess.min.js"></script>
@@ -254,7 +265,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=47';
+const V='?v=48';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -404,10 +415,16 @@ function goOnline(){
 }
 $('btnOnline').onclick=goOnline;
 
+/* Zoom / focus mode */
+$('zoombtn').onclick=()=>{ const on=document.body.classList.toggle('focusmode');
+  $('zoombtn').textContent=on?'✕':'⛶'; $('zoombtn').title=on?'Salir de zoom':'Expandir tablero';
+  requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); }); };
+
 function startGame(m){
   mode=m; started=true;
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; flipped=false; redoStack.length=0;
   if(m==='online' && net.myColor==='b') flipped=true;
+  $('zoombtn').style.display='block';
   $('start').classList.add('hidden'); $('app').style.display='flex';
   $('rematch').style.display='none';
   if(mode==='ai') boot();
@@ -415,7 +432,8 @@ function startGame(m){
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); });
 }
 function backToStart(){
-  started=false; netReset(); $('app').style.display='none'; $('start').classList.remove('hidden');
+  started=false; netReset(); document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').textContent='⛶';
+  $('app').style.display='none'; $('start').classList.remove('hidden');
   levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none';
 }
 
@@ -451,12 +469,16 @@ function sqAt(r,c){ const f=flipped?7-c:c, rk=flipped?r+1:8-r; return FILES[f]+r
 function render(){
   labels(); gridEl.innerHTML='';
   const board=game.board();
+  // In human-vs-human (2p / online) the opponent sits across: rotate their (top) pieces 180deg
+  const topColor=(mode==='2p'||mode==='online') ? (flipped?'w':'b') : null;
   for(let r=0;r<8;r++)for(let c=0;c<8;c++){
     const sq=sqAt(r,c); const cell=document.createElement('div'); cell.className='cell'; cell.dataset.sq=sq;
     const f=FILES.indexOf(sq[0]), rk=parseInt(sq[1]); const p=board[8-rk][f];
     if(p){ const img=document.createElement('img'); img.src=PIECE(p.color,p.type); img.alt=p.color+p.type;
       img.dataset.t=p.type; img.dataset.c=p.color;
-      if(needFlip(p.color,p.type)) img.classList.add('flip'); cell.appendChild(img); }
+      if(needFlip(p.color,p.type)) img.classList.add('flip');
+      if(topColor && p.color===topColor) img.classList.add('rot');
+      cell.appendChild(img); }
     if(lastMove&&(sq===lastMove.from||sq===lastMove.to)) cell.classList.add('last');
     if(p&&p.type==='k'&&p.color===game.turn()&&game.in_check()) cell.classList.add('check');
     gridEl.appendChild(cell);
