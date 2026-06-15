@@ -85,20 +85,23 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   border:3px solid var(--gold); border-radius:3px; box-shadow:0 10px 26px rgba(0,0,0,.55) }
 .board .dot{ position:absolute; width:5px; height:5px; margin:-2.5px 0 0 -2.5px; border-radius:50%; background:#C9A24B; box-shadow:0 0 1px rgba(0,0,0,.7); z-index:0; pointer-events:none }
 .grid{ position:absolute; inset:0; z-index:1; display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(8,1fr); touch-action:none }
-/* SUBSYSTEM: Grid Containment — no piece escapes its cell */
+/* SUBSYSTEM 1: Grid Containment — no piece escapes its cell */
 .cell{ position:relative; cursor:grab; overflow:hidden; contain:layout paint }
-/* SUBSYSTEM: Sprite Symmetry — identical positioning for both teams */
+/* SUBSYSTEM 2: Floor Lock — every sprite is tight-trimmed (feet at canvas
+   bottom), so bottom:0 = standing on the cell floor. No floating, no per-color
+   hacks. Only the wizard (bishop) levitates, by design. */
 .cell img{ position:absolute; left:50%; bottom:0; transform:translateX(-50%);
   width:auto; height:88%; object-fit:contain; display:block;
-  max-width:96%; max-height:100%;
+  max-width:98%; max-height:100%;
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.55)); pointer-events:none }
-.cell img[data-t="p"]{ height:68%; bottom:9% }
-.cell img[data-t="p"][data-c="b"]{ bottom:13% }
-.cell img[data-t="r"]{ height:84% }
-.cell img[data-t="b"]{ height:92% }
-.cell img[data-t="n"]{ height:95% }
-.cell img[data-t="q"]{ height:99% }
-.cell img[data-t="k"]{ height:100% }
+/* SUBSYSTEM 3: Render Scale — per-type heights so pieces fill the cell.
+   All bottom:0 (on the floor) except the wizard, which levitates. */
+.cell img[data-t="p"]{ height:84% }
+.cell img[data-t="r"]{ height:86% }
+.cell img[data-t="n"]{ height:92% }
+.cell img[data-t="b"]{ height:88%; bottom:8% }   /* mago — levita */
+.cell img[data-t="q"]{ height:96% }
+.cell img[data-t="k"]{ height:99% }
 .cell img.flip{ transform:translateX(-50%) scaleX(-1) }
 .cell.last{ background:rgba(232,160,32,.20) }
 .cell.check::after{ content:""; position:absolute; inset:5%; border:3px solid #ff5252; border-radius:7px; box-shadow:0 0 12px #ff2020 }
@@ -226,7 +229,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=31';
+const V='?v=32';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
