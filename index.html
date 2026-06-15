@@ -225,7 +225,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=29';
+const V='?v=30';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -381,6 +381,7 @@ function render(){
     const sq=sqAt(r,c); const cell=document.createElement('div'); cell.className='cell'; cell.dataset.sq=sq;
     const f=FILES.indexOf(sq[0]), rk=parseInt(sq[1]); const p=board[8-rk][f];
     if(p){ const img=document.createElement('img'); img.src=PIECE(p.color,p.type); img.alt=p.color+p.type;
+      img.dataset.t=p.type; img.dataset.c=p.color;
       if(needFlip(p.color,p.type)) img.classList.add('flip'); cell.appendChild(img); }
     if(lastMove&&(sq===lastMove.from||sq===lastMove.to)) cell.classList.add('last');
     if(p&&p.type==='k'&&p.color===game.turn()&&game.in_check()) cell.classList.add('check');
