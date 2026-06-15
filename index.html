@@ -64,6 +64,9 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
 /* ---------- Title (top, prominent) ---------- */
 .title-img{ flex:0 0 auto; display:block; margin:0 auto; width:auto; max-width:100%; max-height:9vh; max-height:9svh; pointer-events:none }
+.site-credit{ text-align:center; padding:18px 12px 28px; color:#CCCCCC; font-size:14px; font-size:.9rem; letter-spacing:.3px }
+.site-credit a{ color:#E8A020; text-decoration:none; font-weight:600 }
+.site-credit a:hover{ text-decoration:underline }
 
 /* ---------- Turn / status ---------- */
 .status{ flex:0 0 auto; text-align:center; font-size:15px; font-weight:800; min-height:24px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
@@ -231,11 +234,13 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   <div class="note" id="note"></div>
 </div>
 
+<footer class="site-credit">by <a href="https://jfcarpio.com" target="_blank" rel="noopener">jfcarpio.com</a></footer>
+
 <script src="https://cdn.jsdelivr.net/npm/chess.js@0.12.1/chess.min.js"></script>
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=42';
+const V='?v=43';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
