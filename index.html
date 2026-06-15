@@ -44,6 +44,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .bigbtn{ font-size:18px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
   border:3px solid var(--gold); border-radius:14px; padding:16px; cursor:pointer; min-height:60px; background:linear-gradient(#2c416f,#16223f) }
 .bigbtn.ai{ background:linear-gradient(#5a2a14,#3a1a0c) }
+.bigbtn.online{ background:linear-gradient(#145a3a,#0c3a26) }
 .bigbtn:active{ transform:translateY(1px) }
 .levels{ display:none; flex-direction:column; gap:8px; width:100%; max-width:360px }
 .levels.show{ display:flex }
@@ -193,6 +194,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   <div class="choices">
     <button class="bigbtn" id="btn2p">👥 Con un amigo en persona</button>
     <button class="bigbtn ai" id="btnAI">🐉 Contra la IA (5 dificultades)</button>
+    <button class="bigbtn online" id="btnOnline">🌐 Jugar online (1 vs 1)</button>
   </div>
   <div class="levels" id="levels"></div>
   <div class="kingpick" id="kingpick">
@@ -248,10 +250,11 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 <footer class="site-credit">by <a id="credit" href="#" rel="noopener">jfcarpio.com</a></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/chess.js@0.12.1/chess.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=46';
+const V='?v=47';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -352,15 +355,59 @@ LEVELS.forEach(l=>{ const b=document.createElement('button'); b.className='lv'; 
   b.innerHTML=`<span>${l.name}</span><span class="tag">${l.tag?l.tag:(l.elo?('~'+l.elo+' Elo'):'máxima')}</span>`;
   b.onclick=()=>{ level=l; startGame('ai'); }; levelsEl.appendChild(b); });
 $('btn2p').onclick=()=>startGame('2p');
-$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('startH2').textContent='Elige el nivel del Rojo'; $('backBtn').style.display='block'; };
-$('backBtn').onclick=()=>{ levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none'; };
+$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rojo'; $('backBtn').style.display='block'; };
+$('backBtn').onclick=()=>{ levelsEl.classList.remove('show'); netReset(); $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none'; };
 $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(!b) return;
   const row=b.closest('.kingrow'); if(row.dataset.side==='w') blueKing=b.dataset.k; else redKing=b.dataset.k;
   [...row.querySelectorAll('button[data-k]')].forEach(x=>x.classList.toggle('active',x===b)); });
 
+/* ===== Online 1 vs 1 (PeerJS / WebRTC P2P) ===== */
+const ROOM='jfreino-sala-1';
+const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false };
+function netReset(){
+  try{ if(net.conn) net.conn.close(); }catch(e){}
+  try{ if(net.peer) net.peer.destroy(); }catch(e){}
+  net.active=false; net.peer=null; net.conn=null; net.isHost=false; net.myColor='w';
+}
+function netSend(o){ if(net.conn && net.conn.open){ try{ net.conn.send(o); }catch(e){} } }
+function wireConn(c,onReady){
+  c.on('open',()=>{ if(onReady) onReady(); });
+  c.on('data',d=>{ if(!d||!d.t) return;
+    if(d.t==='start'){ net.active=true; startGame('online'); }
+    else if(d.t==='move'){ doMove(d.mv,true); }
+    else if(d.t==='full'){ $('startH2').textContent='La sala está llena, intenta más tarde.'; netReset(); }
+  });
+  c.on('close',()=>{ if(net.active){ statusEl.innerHTML='<span class="warn">El rival se desconectó.</span>'; net.active=false; } });
+  c.on('error',()=>{});
+}
+function goOnline(){
+  if(typeof Peer==='undefined'){ $('startH2').textContent='No se pudo cargar el modo online.'; return; }
+  $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('backBtn').style.display='block';
+  $('startH2').textContent='Buscando sala…';
+  net.peer=new Peer(ROOM);
+  net.peer.on('open',()=>{ net.isHost=true; net.myColor='w';
+    $('startH2').textContent='Sala lista. Esperando rival… (comparte la página)';
+    net.peer.on('connection',c=>{
+      if(net.conn){ c.on('open',()=>{ c.send({t:'full'}); }); return; }
+      net.conn=c; wireConn(c,()=>{ net.active=true; c.send({t:'start'}); startGame('online'); });
+    });
+  });
+  net.peer.on('error',err=>{
+    if(err && err.type==='unavailable-id'){
+      try{ net.peer.destroy(); }catch(e){}
+      net.isHost=false; net.myColor='b'; net.peer=new Peer();
+      net.peer.on('open',()=>{ $('startH2').textContent='Conectando con el anfitrión…';
+        const c=net.peer.connect(ROOM,{reliable:true}); net.conn=c; wireConn(c,null); });
+      net.peer.on('error',()=>{ $('startH2').textContent='No hay conexión online disponible ahora.'; });
+    } else { $('startH2').textContent='Error de conexión online.'; }
+  });
+}
+$('btnOnline').onclick=goOnline;
+
 function startGame(m){
   mode=m; started=true;
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; flipped=false; redoStack.length=0;
+  if(m==='online' && net.myColor==='b') flipped=true;
   $('start').classList.add('hidden'); $('app').style.display='flex';
   $('rematch').style.display='none';
   if(mode==='ai') boot();
@@ -368,8 +415,8 @@ function startGame(m){
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); });
 }
 function backToStart(){
-  started=false; $('app').style.display='none'; $('start').classList.remove('hidden');
-  levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none';
+  started=false; netReset(); $('app').style.display='none'; $('start').classList.remove('hidden');
+  levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none';
 }
 
 /* ===== Coordinates ===== */
@@ -434,7 +481,9 @@ function audit(){
 function heal(why){ if(healing) return; healing=true; try{ render(); } finally{ healing=false; } }
 
 /* ===== Pure drag ===== */
-function canDrag(color){ if(busy||game.game_over()) return false; if(color!==game.turn()) return false; return mode==='2p'?true:color==='w'; }
+function canDrag(color){ if(busy||game.game_over()) return false; if(color!==game.turn()) return false;
+  if(mode==='online') return net.active && color===net.myColor;
+  return mode==='2p'?true:color==='w'; }
 let drag=null;
 function killGhost(){ document.querySelectorAll('.drag-ghost').forEach(g=>g.remove()); }
 function cleanupDrag(){ killGhost(); gridEl.querySelectorAll('img[style*="hidden"]').forEach(i=>i.style.visibility=''); drag=null; }
@@ -480,11 +529,12 @@ function tryMove(from,to){
   if(ms.some(m=>m.promotion)){ doMove({from,to,promotion:'q'}); return; }
   doMove({from,to});
 }
-function doMove(mv){
+function doMove(mv,fromRemote){
   const res=game.move({from:mv.from,to:mv.to,promotion:mv.promotion||undefined});
   if(!res){ render(); return; }
   if(res.captured) (res.color==='w'?capW:capB).push({color:res.color==='w'?'b':'w',type:res.captured});
   lastMove={from:res.from,to:res.to}; redoStack.length=0;
+  if(mode==='online' && !fromRemote) netSend({t:'move', mv:{from:res.from,to:res.to,promotion:mv.promotion||undefined}});
   actxInit();
   if(game.in_checkmate()) SFX.mate();
   else if(game.in_check()) SFX.check();
@@ -503,6 +553,7 @@ function status(){
   else if(game.insufficient_material()) s='Tablas: material insuficiente.';
   else if(game.in_draw()) s='Tablas (50 movimientos).';
   else if(game.in_check()) s='<span class="warn">¡Jaque!</span>';
+  else if(mode==='online') s=(game.turn()===net.myColor?'<span class="chip '+(net.myColor==='w'?'azul':'rojo')+'">Tu turno</span>':'<span class="chip '+(net.myColor==='w'?'rojo':'azul')+'">Turno del rival…</span>');
   else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul">Turno Azul</span>':'<span class="chip rojo">Turno Rojo</span>');
   else s=(game.turn()==='w'?'<span class="chip azul">Tu turno</span>':'<span class="chip rojo">Piensa el Rojo…</span>');
   statusEl.innerHTML=s;
