@@ -114,6 +114,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .status .chip.rojo{ background:var(--crimson) }
 .status .warn{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .status .win{ color:var(--emerald) !important; -webkit-text-fill-color:var(--emerald) !important }
+.status .lvl{ font-size:12px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; margin-left:6px }
 
 /* ---------- Stage ---------- */
 .stage{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; align-items:center; gap:5px; width:100% }
@@ -298,7 +299,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=52';
+const V='?v=53';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -332,6 +333,43 @@ const APHORISMS=[
   {t:'La paciencia es una jugada que el rival no ve.', a:'JuanFerland'},
   {t:'Lo más caro es no planear.', a:'JuanFerland'},
   {t:'Quien no arriesga, rara vez conquista el reino.', a:'JuanFerland'},
+  {t:'En la guerra y el ajedrez, no hay lugar para el segundo.', a:'Proverbio medieval'},
+  {t:'El rey que no estudia a su rival gobierna su propia derrota.', a:'Principio feudal'},
+  {t:'Deja que el rival crea que el peón es insignificante.', a:'Estrategia'},
+  {t:'Un castillo sin guardia es una invitación.', a:'Proverbio medieval'},
+  {t:'La victoria pertenece al más perseverante.', a:'Napoleón'},
+  {t:'Divide las fuerzas del rival y caerá solo.', a:'Julio César'},
+  {t:'Un ejército de ciervos liderado por un león es más temible que uno de leones liderado por un ciervo.', a:'Proverbio árabe'},
+  {t:'No cambies de plan ante la primera dificultad.', a:'Principio militar'},
+  {t:'La torre que avanza primero llega primero a la corona.', a:'Proverbio de ajedrez'},
+  {t:'Quien controla las diagonales, controla el campo.', a:'Principio posicional'},
+  {t:'El caballero es letal cuando el tablero está cerrado.', a:'Principio táctico'},
+  {t:'El silencio antes del ataque vale más que mil gritos.', a:'Proverbio samurái'},
+  {t:'Fortifica primero; conquista después.', a:'Principio de sitio'},
+  {t:'No subestimes al peón que llega al final del camino.', a:'Proverbio de ajedrez'},
+  {t:'El general que gana muchas batallas ha hecho muchos cálculos.', a:'Sun Tzu'},
+  {t:'Golpea donde el rival es débil; retírate donde es fuerte.', a:'Sun Tzu'},
+  {t:'La suprema excelencia consiste en romper la resistencia sin luchar.', a:'Sun Tzu'},
+  {t:'Cuando eres capaz, finge incapacidad.', a:'Sun Tzu'},
+  {t:'El buen guerrero busca la victoria en la situación, no en sus soldados.', a:'Sun Tzu'},
+  {t:'Las cadenas de la esclavitud solo atan las manos; es la mente la que libera o encadena.', a:'Proverbio medieval'},
+  {t:'Más vale un sacrificio oportuno que un tesoro intacto.', a:'Sabiduría de torneo'},
+  {t:'El enroque es el escudo del rey y la espada de la torre.', a:'Principio clásico'},
+  {t:'Cada jugada enseña algo; cada derrota, todo.', a:'Savielly Tartakower'},
+  {t:'En el ajedrez, como en la vida, la mejor jugada es la que se hace.', a:'Tartakower'},
+  {t:'Los errores están ahí, esperando a ser cometidos.', a:'Tartakower'},
+  {t:'El alfil es una espada larga; el caballo, una daga en la sombra.', a:'Proverbio de ajedrez'},
+  {t:'No se conquista un reino sin perder algunos peones.', a:'Estrategia feudal'},
+  {t:'Un mal plan es mejor que ningún plan.', a:'Frank Marshall'},
+  {t:'La táctica es saber qué hacer cuando hay algo que hacer; la estrategia es saber qué hacer cuando no hay nada.', a:'Tartakower'},
+  {t:'El tiempo es el arma más letal del tablero.', a:'Principio de ajedrez'},
+  {t:'Quien mueve sin propósito, regala una jugada.', a:'Principio clásico'},
+  {t:'El trono se gana en el centro del campo, no en los bordes.', a:'Principio posicional'},
+  {t:'Protege a tu rey como protegerías tu castillo: con muros y vigías.', a:'Proverbio medieval'},
+  {t:'La dama es el relámpago; el rey, la tierra que defiende.', a:'Proverbio de ajedrez'},
+  {t:'No temas al rival grande; teme al rival preparado.', a:'Proverbio vikingo'},
+  {t:'El tablero recuerda cada error; el jugador sabio también.', a:'Principio clásico'},
+  {t:'En la batalla, el terreno decide tanto como el acero.', a:'Clausewitz'},
 ];
 /* ===== Pseudonyms for online lobby ===== */
 const _NN=['Dragon','Caballo','Torre','Alfil','Peon','Leon','Aguila','Tigre','Oso','Lobo','Gato','Buho','Fenix','Grifo','Halcon','Cuervo','Toro','Zorro','Ogro','Mago','Vikingo','Pirata','Ninja','Samurai','Gladiador','Centauro','Minotauro','Kraken'];
@@ -666,7 +704,8 @@ function status(){
   else if(game.in_check()) s='<span class="warn">¡Jaque!</span>';
   else if(mode==='online') s=(game.turn()===net.myColor?'<span class="chip '+(net.myColor==='w'?'azul':'rojo')+'">Tu turno</span>':'<span class="chip '+(net.myColor==='w'?'rojo':'azul')+'">Turno de '+(net.rivalName||'rival')+'…</span>');
   else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul"><img src="assets/shield-blue.png" class="chip-icon"> Turno Azul</span>':'<span class="chip rojo"><img src="assets/shield-red.png" class="chip-icon"> Turno Rojo</span>');
-  else s=(game.turn()===playerColor?'<span class="chip '+(playerColor==='w'?'azul':'rojo')+'">Tu turno</span>':'<span class="chip '+(playerColor==='w'?'rojo':'azul')+'">Piensa el rival…</span>');
+  else{ var ln=(fallback?'IA local':'Stockfish')+' · '+level.name;
+    s=(game.turn()===playerColor?'<span class="chip '+(playerColor==='w'?'azul':'rojo')+'">Tu turno</span> <span class="lvl">vs '+ln+'</span>':'<span class="chip '+(playerColor==='w'?'rojo':'azul')+'">Piensa el rival…</span> <span class="lvl">'+ln+'</span>'); }
   statusEl.innerHTML=s;
 }
 
@@ -685,11 +724,11 @@ async function boot(){
 }
 function toFallback(w){ if(fallback) return; fallback=true; ready=true; note.textContent='IA local ('+w+')'; }
 function onMsg(e){ const l=typeof e.data==='string'?e.data:'';
-  if((l.includes('uciok')||l.includes('readyok'))&&!ready){ ready=true; configEngine(); note.textContent='Stockfish · '+level.name;
+  if((l.includes('uciok')||l.includes('readyok'))&&!ready){ ready=true; configEngine();
     if(mode==='ai'&&!game.game_over()&&game.turn()!==playerColor) setTimeout(aiMove,200); }
   if(l.startsWith('bestmove')){ const mv=l.split(' ')[1]; if(mv&&mv!=='(none)') engMove(mv); else { busy=false; status(); } }
 }
-function configEngine(){ note.textContent=(fallback?'IA local · ':'Stockfish · ')+level.name;
+function configEngine(){ note.textContent=''; status();
   if(!engine||fallback) return;
   if(level.elo){ engine.postMessage('setoption name UCI_LimitStrength value true'); engine.postMessage('setoption name UCI_Elo value '+level.elo); }
   else{
