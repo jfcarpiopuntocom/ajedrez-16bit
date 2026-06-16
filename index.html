@@ -388,7 +388,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=66';
+const V='?v=67';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -561,7 +561,7 @@ $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[dat
 
 /* ===== Online 1 vs 1 (PeerJS / WebRTC P2P) — lobby with hub-based presence ===== */
 const HUB_ID='jfreino-lobby-hub';
-const PRESENCE_TTL=180000; // 3 minutes
+const PRESENCE_TTL=20000; // 20s (4x guest ping)
 const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'',
             hubPeer:null, hubConn:null, isHub:false, roster:[] };
 function netReset(){
@@ -691,13 +691,13 @@ function initTrysteroLobby(){
       if(trysteroSendInfo && net.peer && !net.peer.destroyed){
         try{ trysteroSendInfo({name:myPseudo,peerJsId:net.peer.id}); }catch(e){}
       }
-      // Prune ghosts: entries not refreshed within 60s
+      // Prune ghosts: entries not refreshed within 18s (6x heartbeat)
       var now=Date.now(), pruned=false;
       for(var k in trysteroPeers){
-        if(now-(trysteroPeers[k].last||0)>60000){ delete trysteroPeers[k]; pruned=true; }
+        if(now-(trysteroPeers[k].last||0)>18000){ delete trysteroPeers[k]; pruned=true; }
       }
       if(pruned) renderLobby();
-    },10000);
+    },3000);
     renderLobby();
   }catch(e){ trysteroRoom=null; }
 }
@@ -744,7 +744,7 @@ function tryClaimHub(){
       var now=Date.now(), before=net.roster.length;
       net.roster=net.roster.filter(function(p){ return p.id===net.peer.id || (now-p.last)<PRESENCE_TTL; });
       if(net.roster.length!==before) broadcastRoster();
-    },10000);
+    },3000);
     renderLobby();
   });
   hp.on('error',function(err){
@@ -764,7 +764,7 @@ function tryConnectHub(){
     opened=true;
     try{ hc.send({t:'lobby-join',id:net.peer.id,name:myPseudo}); }catch(e){}
     if(hubHeartbeat){ clearInterval(hubHeartbeat); }
-    hubHeartbeat=setInterval(function(){ if(hc.open){ try{ hc.send({t:'lobby-ping',id:net.peer.id}); }catch(e){} } },20000);
+    hubHeartbeat=setInterval(function(){ if(hc.open){ try{ hc.send({t:'lobby-ping',id:net.peer.id}); }catch(e){} } },5000);
   });
   hc.on('data',function(d){
     if(!d||!d.t) return;
