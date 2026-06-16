@@ -72,6 +72,10 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   background:#1c140d; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; text-align:center; width:100%; max-width:280px }
 .lobby-input::placeholder{ color:#999999; -webkit-text-fill-color:#999999 }
 .lobby-status{ margin:0; font-size:13px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; min-height:16px }
+/* Shield icons (inline) */
+.shield-icon{ height:28px; width:auto; vertical-align:middle; margin-right:4px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.5)) }
+.cap-icon{ height:18px; width:auto; vertical-align:middle; margin-right:3px; filter:drop-shadow(0 1px 1px rgba(0,0,0,.4)) }
+.chip-icon{ height:16px; width:auto; vertical-align:middle; margin-right:3px }
 /* Color picker (AI) */
 .colorpick{ display:none; gap:10px; width:100%; max-width:360px; justify-content:center }
 .colorpick.show{ display:flex }
@@ -224,8 +228,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   </div>
   <div class="levels" id="levels"></div>
   <div class="colorpick" id="colorpick">
-    <button class="bigbtn" id="pickBlue">&#129409; Azul</button>
-    <button class="bigbtn ai" id="pickRed">&#128009; Rojo</button>
+    <button class="bigbtn" id="pickBlue"><img src="assets/shield-blue.png" class="shield-icon"> Azul</button>
+    <button class="bigbtn ai" id="pickRed"><img src="assets/shield-red.png" class="shield-icon"> Rojo</button>
   </div>
   <div class="kingpick" id="kingpick">
     <div class="kingrow" data-side="w">
@@ -257,7 +261,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   <div class="status" id="status"></div>
 
   <div class="stage">
-    <section class="cap red"><h3>&#128009; Capturas Rojo <span class="score" id="scoreB"></span></h3><div class="slots" id="capB"></div></section>
+    <section class="cap red"><h3><img src="assets/shield-red.png" class="cap-icon"> Capturas Rojo <span class="score" id="scoreB"></span></h3><div class="slots" id="capB"></div></section>
     <div class="board-area">
       <div class="board-frame">
         <div></div><div class="coord files" id="filesTop"></div><div></div>
@@ -267,7 +271,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
         <div></div><div class="coord files" id="filesBot"></div><div></div>
       </div>
     </div>
-    <section class="cap blue"><h3>&#129409; Capturas Azul <span class="score" id="scoreW"></span></h3><div class="slots" id="capW"></div></section>
+    <section class="cap blue"><h3><img src="assets/shield-blue.png" class="cap-icon"> Capturas Azul <span class="score" id="scoreW"></span></h3><div class="slots" id="capW"></div></section>
     <div class="left-rail">
       <div class="quote" id="quote"></div>
       <aside class="history" id="history"><h4>Jugadas</h4><ol id="histlist"></ol></aside>
@@ -294,7 +298,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=51';
+const V='?v=52';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -661,7 +665,7 @@ function status(){
   else if(game.in_draw()) s='Tablas (50 movimientos).';
   else if(game.in_check()) s='<span class="warn">¡Jaque!</span>';
   else if(mode==='online') s=(game.turn()===net.myColor?'<span class="chip '+(net.myColor==='w'?'azul':'rojo')+'">Tu turno</span>':'<span class="chip '+(net.myColor==='w'?'rojo':'azul')+'">Turno de '+(net.rivalName||'rival')+'…</span>');
-  else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul">&#129409; Turno Azul</span>':'<span class="chip rojo">&#128009; Turno Rojo</span>');
+  else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul"><img src="assets/shield-blue.png" class="chip-icon"> Turno Azul</span>':'<span class="chip rojo"><img src="assets/shield-red.png" class="chip-icon"> Turno Rojo</span>');
   else s=(game.turn()===playerColor?'<span class="chip '+(playerColor==='w'?'azul':'rojo')+'">Tu turno</span>':'<span class="chip '+(playerColor==='w'?'rojo':'azul')+'">Piensa el rival…</span>');
   statusEl.innerHTML=s;
 }
