@@ -57,6 +57,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 /* Splash mini-board with king + queen flanks */
 .splashBoard{ display:flex; align-items:center; justify-content:center; gap:14px; margin:6px 0 4px }
 .splashBoard.hidden{ display:none }
+.lobby-resume.hidden,.lobby-resume-msg.hidden{ display:none }
 .splash-side{ display:flex; flex-direction:column; gap:4px; align-items:center }
 .splash-side img{ height:58px; width:auto; filter:drop-shadow(0 2px 4px rgba(0,0,0,.6)) }
 .splash-mini-board{ width:96px; height:96px; border:3px solid var(--gold); border-radius:6px;
@@ -153,6 +154,27 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .status .warn{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .status .win{ color:var(--emerald) !important; -webkit-text-fill-color:var(--emerald) !important }
 .status .lvl{ font-size:13px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; margin-left:6px }
+.status .lvl.tablero-tag{ display:block; margin-left:0; margin-top:2px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:13px }
+.status .lvl.tablero-tag b{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; letter-spacing:1px }
+/* Tablero themes - background applied to .app */
+.app.t-capablanca{ background:radial-gradient(900px 600px at 50% 0%,#1a3a3a 0%,#0a1a1a 60%,#050a0a 100%) }
+.app.t-fischer{    background:radial-gradient(900px 600px at 50% 0%,#1f2a3a 0%,#0a121e 60%,#050810 100%) }
+.app.t-tal{        background:radial-gradient(900px 600px at 50% 0%,#3a1a1a 0%,#1a0808 60%,#0c0303 100%) }
+.app.t-polgar{     background:radial-gradient(900px 600px at 50% 0%,#2a1a3a 0%,#150a1e 60%,#0a0512 100%) }
+.app.t-carlsen{    background:radial-gradient(900px 600px at 50% 0%,#0a1f3a 0%,#050f1c 60%,#02080e 100%) }
+.app.t-morphy{     background:radial-gradient(900px 600px at 50% 0%,#3a2e1a 0%,#1e180a 60%,#0e0c05 100%) }
+.app.t-kasparov{   background:radial-gradient(900px 600px at 50% 0%,#3a0a0a 0%,#1c0505 60%,#0e0202 100%) }
+.app.t-alekhine{   background:radial-gradient(900px 600px at 50% 0%,#0a2a3a 0%,#05151e 60%,#020a0e 100%) }
+/* Lobby resume by code */
+.lobby-resume{ display:flex; gap:6px; width:100%; max-width:360px; align-items:center }
+.lobby-resume input{ flex:1; font-size:15px; font-weight:800; padding:8px 10px; min-height:40px; border:2px solid var(--gold); border-radius:10px;
+  background:#1c140d; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; text-align:center; text-transform:uppercase; letter-spacing:2px }
+.lobby-resume input::placeholder{ color:#777 !important; -webkit-text-fill-color:#777 !important; letter-spacing:0 }
+.lobby-resume button{ font-size:14px; font-weight:800; padding:8px 12px; min-height:40px; border-radius:10px; border:2px solid var(--gold);
+  background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important; cursor:pointer }
+.lobby-resume button:disabled{ background:#2a1a0c; color:#777 !important; -webkit-text-fill-color:#777 !important; cursor:not-allowed }
+.lobby-resume-msg{ margin:0; font-size:12px; min-height:14px; color:#FF8888 !important; -webkit-text-fill-color:#FF8888 !important; text-align:center }
+.lobby-resume-msg.ok{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 
 /* ---------- Stage ---------- */
 .stage{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; align-items:center; gap:5px; width:100% }
@@ -290,6 +312,11 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
       <img src="assets/pieces/bQ.png" alt="Reina rojo">
     </div>
   </div>
+  <div class="lobby-resume" id="resumeRow">
+    <input type="text" id="resumeCode" placeholder="Tienes un código? Reanuda partida" maxlength="6" autocomplete="off" spellcheck="false">
+    <button id="resumeBtn" disabled>▶ Ir</button>
+  </div>
+  <p class="lobby-resume-msg" id="resumeMsg"></p>
   <div class="levels" id="levels"></div>
   <div class="colorpick" id="colorpick">
     <button class="bigbtn" id="pickBlue"><img src="assets/shield-blue.png" class="shield-icon"> Azul</button>
@@ -388,7 +415,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=67';
+const V='?v=68';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -464,7 +491,47 @@ const APHORISMS=[
 const _NN=['Dragon','Caballo','Torre','Alfil','Peon','Leon','Aguila','Tigre','Oso','Lobo','Gato','Buho','Fenix','Grifo','Halcon','Cuervo','Toro','Zorro','Ogro','Mago','Vikingo','Pirata','Ninja','Samurai','Gladiador','Centauro','Minotauro','Kraken'];
 const _AJ=['Feroz','Loco','Valiente','Dorado','Nocturno','Veloz','Sabio','Bravo','Fugaz','Epico','Furioso','Invicto','Temible','Astuto','Audaz','Oscuro','Solar','Eterno'];
 function genPseudo(){ return _NN[Math.floor(Math.random()*_NN.length)]+_AJ[Math.floor(Math.random()*_AJ.length)]; }
-let myPseudo=genPseudo();
+
+/* ===== Tableros (named board themes) + match continue codes ===== */
+const TABLEROS=[
+  {key:'capablanca',name:'Capablanca'},
+  {key:'fischer',   name:'Fischer'},
+  {key:'tal',       name:'Tal'},
+  {key:'polgar',    name:'Polgar'},
+  {key:'carlsen',   name:'Carlsen'},
+  {key:'morphy',    name:'Morphy'},
+  {key:'kasparov',  name:'Kasparov'},
+  {key:'alekhine',  name:'Alekhine'},
+];
+function genCode(){ var s='',c='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; for(var i=0;i<6;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }
+function pickTablero(){ return TABLEROS[Math.floor(Math.random()*TABLEROS.length)]; }
+function tableroFromKey(k){ for(var i=0;i<TABLEROS.length;i++) if(TABLEROS[i].key===k) return TABLEROS[i]; return TABLEROS[0]; }
+let currentTablero=null, matchCode=null;
+const MATCH_KEY='losdosreinos_match_';
+function saveMatch(){
+  if(!matchCode||!started||game.game_over()||resigned||mode==='online') return;
+  try{
+    var data={fen:game.fen(),tab:currentTablero.key,m:mode,col:playerColor,bk:blueKing,rk:redKing,lvl:level?level.key:null,ts:Date.now()};
+    localStorage.setItem(MATCH_KEY+matchCode,JSON.stringify(data));
+  }catch(e){}
+}
+function loadMatch(code){
+  try{
+    var raw=localStorage.getItem(MATCH_KEY+code.toUpperCase().trim());
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+
+/* ===== Identity (persistent pseudonym across reloads) ===== */
+const ID_KEY='losdosreinos_identity_v1';
+let myPseudo;
+try{
+  var stored=localStorage.getItem(ID_KEY);
+  if(stored){ myPseudo=JSON.parse(stored).pseudo||genPseudo(); }
+  else { myPseudo=genPseudo(); localStorage.setItem(ID_KEY,JSON.stringify({pseudo:myPseudo})); }
+}catch(e){ myPseudo=genPseudo(); }
+function saveIdentity(){ try{ localStorage.setItem(ID_KEY,JSON.stringify({pseudo:myPseudo})); }catch(e){} }
 
 let qi=-1, qTimer=null;
 function rotateQuote(){ const el=document.getElementById('quote'); if(!el) return;
@@ -533,8 +600,8 @@ LEVELS.forEach(l=>{ const b=document.createElement('button'); b.className='lv'; 
   b.innerHTML=`<span>${l.name}</span><span class="tag">${l.tag?l.tag:(l.elo?('~'+l.elo+' Elo'):'máxima')}</span>`;
   b.onclick=()=>{ level=l; showColorPick(); }; levelsEl.appendChild(b); });
 $('btn2p').onclick=()=>startGame('2p');
-$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rival'; $('backBtn').style.display='block'; $('kingpick').classList.remove('show-step'); $('splashBoard').classList.add('hidden'); };
-function showColorPick(){ levelsEl.classList.remove('show'); $('colorpick').classList.add('show'); $('kingpick').classList.add('show-step'); $('splashBoard').classList.add('hidden'); $('startH2').textContent='¿De qué lado juegas?'; }
+$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rival'; $('backBtn').style.display='block'; $('kingpick').classList.remove('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); };
+function showColorPick(){ levelsEl.classList.remove('show'); $('colorpick').classList.add('show'); $('kingpick').classList.add('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('startH2').textContent='¿De qué lado juegas?'; }
 $('pickBlue').addEventListener('mouseenter',()=>$('kingpick').classList.add('focus-blue'));
 $('pickBlue').addEventListener('mouseleave',()=>$('kingpick').classList.remove('focus-blue'));
 $('pickRed').addEventListener('mouseenter',()=>$('kingpick').classList.add('focus-red'));
@@ -553,7 +620,7 @@ $('pickBlue').onclick=()=>{ playerColor='w'; $('colorpick').classList.remove('sh
 $('pickRed').onclick=()=>{ playerColor='b'; $('colorpick').classList.remove('show'); $('kingpick').classList.remove('focus-blue','focus-red'); startGame('ai'); };
 $('backBtn').onclick=()=>{
   if($('colorpick').classList.contains('show')){ $('colorpick').classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); levelsEl.classList.add('show'); $('startH2').textContent='Elige el nivel del Rival'; return; }
-  levelsEl.classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
+  levelsEl.classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
   $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none'; };
 $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(!b) return;
   const row=b.closest('.kingrow'); if(row.dataset.side==='w') blueKing=b.dataset.k; else redKing=b.dataset.k;
@@ -792,7 +859,7 @@ function goOnline(){
   if(typeof Peer==='undefined'){ $('startH2').textContent='No se pudo cargar el modo online.'; return; }
   $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
-  $('splashBoard').classList.add('hidden');
+  $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden');
   $('startH2').textContent='Lobby Online';
   $('myName').textContent=myPseudo;
   var peerId='jfreino-'+myPseudo.toLowerCase();
@@ -840,6 +907,22 @@ function lobbyConnect(targetId,name){
 }
 
 $('btnOnline').onclick=goOnline;
+$('resumeCode').addEventListener('input',function(){
+  this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+  $('resumeBtn').disabled=this.value.length!==6;
+  $('resumeMsg').textContent=''; $('resumeMsg').classList.remove('ok');
+});
+$('resumeCode').addEventListener('keydown',function(e){ if(e.key==='Enter' && !$('resumeBtn').disabled) $('resumeBtn').click(); });
+$('resumeBtn').onclick=function(){
+  var code=$('resumeCode').value.trim().toUpperCase();
+  if(code.length!==6) return;
+  var d=loadMatch(code);
+  if(!d){ $('resumeMsg').textContent='Código no encontrado en este dispositivo'; $('resumeMsg').classList.remove('ok'); return; }
+  $('resumeMsg').textContent='Cargando Tablero '+(tableroFromKey(d.tab).name)+'...'; $('resumeMsg').classList.add('ok');
+  pendingResume={data:d,code:code};
+  if(d.lvl){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].key===d.lvl){ level=LEVELS[i]; break; } }
+  setTimeout(function(){ startGame(d.m||'ai'); $('resumeCode').value=''; $('resumeBtn').disabled=true; $('resumeMsg').textContent=''; },350);
+};
 $('lobbyShare').onclick=function(){
   var url='https://jfcarpiopuntocom.github.io/ajedrez-16bit/';
   var b=$('lobbyShare'); var orig=b.innerHTML;
@@ -856,7 +939,7 @@ $('lobbyShare').onclick=function(){
 };
 $('renamePseudo').onclick=function(){
   if(!net.peer||net.conn) return;
-  netReset(); myPseudo=genPseudo(); $('myName').textContent=myPseudo;
+  netReset(); myPseudo=genPseudo(); saveIdentity(); $('myName').textContent=myPseudo;
   setTimeout(goOnline,300);
 };
 
@@ -865,9 +948,25 @@ $('zoombtn').onclick=()=>{ const on=document.body.classList.toggle('focusmode');
   $('zoombtn').textContent=on?'✕':'⛶'; $('zoombtn').title=on?'Salir de zoom':'Expandir tablero';
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); }); };
 
+let pendingResume=null;
+function applyTablero(t){
+  TABLEROS.forEach(function(x){ $('app').classList.remove('t-'+x.key); });
+  $('app').classList.add('t-'+t.key);
+}
 function startGame(m){
   mode=m; started=true; resigned=false;
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; flipped=false; redoStack.length=0;
+  if(pendingResume && pendingResume.data){
+    var d=pendingResume.data;
+    try{ game.load(d.fen); }catch(e){}
+    currentTablero=tableroFromKey(d.tab); matchCode=pendingResume.code;
+    if(d.bk) blueKing=d.bk; if(d.rk) redKing=d.rk;
+    if(d.col) playerColor=d.col;
+    pendingResume=null;
+  } else {
+    currentTablero=pickTablero(); matchCode=genCode();
+  }
+  applyTablero(currentTablero);
   if(m==='online' && net.myColor==='b') flipped=true;
   if(m==='ai' && playerColor==='b') flipped=true;
   $('zoombtn').style.display='block';
@@ -877,7 +976,7 @@ function startGame(m){
   $('resign').style.display='';
   $('drawbtn').style.display=m==='ai'?'none':'';
   if(mode==='ai'){ boot(); if(playerColor==='b'&&(ready||fallback)) setTimeout(aiMove,400); }
-  render(); status(); startQuotes(); renderHistory();
+  render(); status(); startQuotes(); renderHistory(); saveMatch();
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); });
 }
 function backToStart(){
@@ -885,9 +984,10 @@ function backToStart(){
   $('app').style.display='none'; $('start').classList.remove('hidden');
   $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
   $('colorpick').classList.remove('show'); playerColor='w';
-  $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden');
+  $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden');
   levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none';
-  myPseudo=genPseudo();
+  TABLEROS.forEach(function(x){ $('app').classList.remove('t-'+x.key); });
+  currentTablero=null; matchCode=null;
 }
 
 /* ===== Coordinates ===== */
@@ -1017,7 +1117,7 @@ function doMove(mv,fromRemote){
   else if(game.in_check()) SFX.check();
   else if(res.captured) SFX.capture();
   else SFX.move();
-  render(); status(); renderHistory(); maybeShowRematch();
+  render(); status(); renderHistory(); maybeShowRematch(); saveMatch();
   if(mode==='ai' && !game.game_over() && game.turn()!==playerColor) setTimeout(aiMove,200);
 }
 
@@ -1034,6 +1134,9 @@ function status(){
   else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul"><img src="assets/shield-blue.png" class="chip-icon"> Turno Azul</span>':'<span class="chip rojo"><img src="assets/shield-red.png" class="chip-icon"> Turno Rojo</span>');
   else{ var eng=fallback?'IA local':'Stockfish'; var ln=level.name+' &middot; powered by '+eng;
     s=(game.turn()===playerColor?'<span class="chip '+(playerColor==='w'?'azul':'rojo')+'">Tu turno</span> <span class="lvl">vs. '+ln+'</span>':'<span class="chip '+(playerColor==='w'?'rojo':'azul')+'">Piensa el rival…</span> <span class="lvl">'+ln+'</span>'); }
+  if(currentTablero && matchCode && mode!=='online'){
+    s+=' <span class="lvl tablero-tag">Tablero '+currentTablero.name+' &middot; Código <b>'+matchCode+'</b></span>';
+  }
   statusEl.innerHTML=s;
 }
 
@@ -1123,7 +1226,7 @@ function backToLobby(){
   $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
   $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
-  $('splashBoard').classList.add('hidden');
+  $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden');
   $('startH2').textContent='Lobby Online'; $('myName').textContent=myPseudo;
   if(net.peer && !net.peer.destroyed){
     $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
