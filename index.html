@@ -94,6 +94,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .lobby-name strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:22px }
 .lobby-room{ margin:0; font-size:15px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; display:flex; align-items:center; gap:6px }
 .lobby-room strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:20px; letter-spacing:2px; font-family:Georgia,"Times New Roman",serif }
+.lobby-para{ display:inline-block; margin-top:6px; font-size:12px; font-weight:700; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; font-style:italic; line-height:1.4 }
 .lobby-rename{ background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; transition:color .15s,-webkit-text-fill-color .15s }
 .lobby-rename:hover{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
 .lobby-hint{ margin:0; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:center }
@@ -478,7 +479,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=71';
+const V='?v=72';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -574,7 +575,9 @@ const MATCH_KEY='losdosreinos_match_';
 function saveMatch(){
   if(!matchCode||!started||game.game_over()||resigned||mode==='online') return;
   try{
-    var data={fen:game.fen(),tab:currentTablero.key,m:mode,col:playerColor,bk:blueKing,rk:redKing,lvl:level?level.key:null,ts:Date.now()};
+    var data={fen:game.fen(),tab:currentTablero.key,m:mode,col:playerColor,bk:blueKing,rk:redKing,
+              lvl:level?level.key:null,creator:myPseudo,
+              caps:{w:capW.slice(),b:capB.slice()},ts:Date.now()};
     localStorage.setItem(MATCH_KEY+matchCode,JSON.stringify(data));
   }catch(e){}
 }
@@ -720,9 +723,35 @@ function wireConn(c){
   c.on('data',d=>{ if(!d||!d.t) return;
     if(d.t==='hello'){
       net.rivalName=d.name||'???';
-      if(net.isHost){ net.active=true; c.send({t:'start',name:myPseudo}); startGame('online'); }
+      if(net.isHost){
+        net.active=true;
+        // If the room code matches a saved local match (vs AI), open parallel universe:
+        // - Host keeps the AI universe alive in localStorage
+        // - Online universe starts from that exact FEN, host takes color, guest takes what was the AI's color
+        var snap=currentRoom?loadMatch(currentRoom):null;
+        if(snap && snap.m==='ai'){
+          var hostColor=snap.col||'w';
+          var guestColor=hostColor==='w'?'b':'w';
+          net.myColor=hostColor;
+          c.send({t:'start',name:myPseudo,takeover:{fen:snap.fen,tab:snap.tab,bk:snap.bk,rk:snap.rk,guestColor:guestColor,creator:snap.creator||myPseudo,fromCode:currentRoom}});
+          pendingResume={data:{fen:snap.fen,tab:snap.tab,m:'online',col:hostColor,bk:snap.bk,rk:snap.rk,caps:snap.caps},code:genCode()};
+          startGame('online');
+        } else {
+          c.send({t:'start',name:myPseudo});
+          startGame('online');
+        }
+      }
     }
-    else if(d.t==='start'){ net.rivalName=d.name||'???'; net.active=true; startGame('online'); }
+    else if(d.t==='start'){
+      net.rivalName=d.name||'???'; net.active=true;
+      if(d.takeover){
+        var t=d.takeover;
+        net.myColor=t.guestColor||'b';
+        pendingResume={data:{fen:t.fen,tab:t.tab,m:'online',col:net.myColor,bk:t.bk,rk:t.rk},code:genCode()};
+        statusEl && (statusEl.innerHTML='<span class="warn">Universo paralelo abierto desde '+(t.creator||'tu amigo')+'</span>');
+      }
+      startGame('online');
+    }
     else if(d.t==='move'){ doMove(d.mv,true); }
     else if(d.t==='full'){ $('lobbyStatus').textContent='Ese jugador ya tiene rival.'; }
     else if(d.t==='resign'){
@@ -785,9 +814,13 @@ function renderLobby(){
   for(var id in map){ if(map[id].self) selfEntry={id:id,name:map[id].name}; else others.push({id:id,name:map[id].name}); }
   var hubTag=net.isHub?' &middot; tú eres el anfitrión de la partida':'';
   var netTag=trysteroRoom?' &middot; powered by '+(window.__trystero?window.__trystero.kind:'p2p'):'';
-  $('lobbyStatus').innerHTML=others.length>0
+  var saved=currentRoom?loadMatch(currentRoom):null;
+  var isPara=saved && saved.m==='ai';
+  var paraTag=isPara?'<br><span class="lobby-para">Universo paralelo listo: cuando llegue tu rival, tomará el lugar de la IA en la posición guardada</span>':'';
+  $('lobbyShare').innerHTML=isPara?'&#10024; Compartir universo paralelo':'&#128279; Copiar link de esta sala';
+  $('lobbyStatus').innerHTML=(others.length>0
     ?'<span class="lobby-searching">'+others.length+' rival'+(others.length>1?'es':'')+' conectado'+(others.length>1?'s':'')+hubTag+netTag+'</span>'
-    :'<span class="lobby-searching">Esperando que se conecten rivales...'+hubTag+netTag+'</span>';
+    :'<span class="lobby-searching">Esperando que se conecten rivales...'+hubTag+netTag+'</span>')+paraTag;
   if(selfEntry) ul.appendChild(mkLi(selfEntry.id,selfEntry.name,'assets/shield-blue.png',true));
   others.forEach(function(p,i){
     var shield=i%2===0?'assets/shield-red.png':'assets/shield-blue.png';
@@ -1046,6 +1079,10 @@ function startGame(m){
     currentTablero=tableroFromKey(d.tab); matchCode=pendingResume.code;
     if(d.bk) blueKing=d.bk; if(d.rk) redKing=d.rk;
     if(d.col) playerColor=d.col;
+    if(d.caps){
+      if(Array.isArray(d.caps.w)) for(var i=0;i<d.caps.w.length;i++) capW.push(d.caps.w[i]);
+      if(Array.isArray(d.caps.b)) for(var j=0;j<d.caps.b.length;j++) capB.push(d.caps.b[j]);
+    }
     pendingResume=null;
   } else {
     currentTablero=pickTablero(); matchCode=genCode();
