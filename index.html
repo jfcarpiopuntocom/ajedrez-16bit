@@ -67,8 +67,8 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .lobby.show{ display:flex }
 .lobby-name{ margin:0; font-size:16px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; display:flex; align-items:center; gap:6px }
 .lobby-name strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:22px }
-.lobby-rename{ background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; opacity:.7; transition:opacity .15s }
-.lobby-rename:hover{ opacity:1 }
+.lobby-rename{ background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; transition:color .15s,-webkit-text-fill-color .15s }
+.lobby-rename:hover{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
 .lobby-hint{ margin:0; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:center }
 .lobby-status{ margin:0; font-size:14px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; min-height:18px; font-weight:700 }
 .lobby-count{ font-weight:400; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; font-size:13px; margin-left:4px }
@@ -80,7 +80,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .lobby-list li .li-name{ flex:1 }
 .lobby-list li .li-arrow{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:18px; flex-shrink:0 }
 .lobby-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:20px 0 }
-@keyframes lobbyPulse{ 0%{opacity:1} 50%{opacity:.6} 100%{opacity:1} }
+@keyframes lobbyPulse{ 0%{color:var(--gold2);-webkit-text-fill-color:var(--gold2)} 50%{color:#8A6A10;-webkit-text-fill-color:#8A6A10} 100%{color:var(--gold2);-webkit-text-fill-color:var(--gold2)} }
 .lobby-searching{ animation:lobbyPulse 1.5s ease-in-out infinite }
 /* Shield icons (inline) */
 .shield-icon{ height:36px; width:auto; vertical-align:middle; margin-right:6px; filter:drop-shadow(0 2px 3px rgba(0,0,0,.5)) }
@@ -124,7 +124,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .status .chip.rojo{ background:var(--crimson) }
 .status .warn{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .status .win{ color:var(--emerald) !important; -webkit-text-fill-color:var(--emerald) !important }
-.status .lvl{ font-size:12px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; margin-left:6px }
+.status .lvl{ font-size:13px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; margin-left:6px }
 
 /* ---------- Stage ---------- */
 .stage{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; align-items:center; gap:5px; width:100% }
@@ -308,7 +308,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=55';
+const V='?v=56';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -523,7 +523,10 @@ function refreshLobby(){
         var name=id.slice(prefix.length); name=name.charAt(0).toUpperCase()+name.slice(1);
         var shield=i%2===0?'assets/shield-blue.png':'assets/shield-red.png';
         var li=document.createElement('li');
-        li.innerHTML='<img class="li-shield" src="'+shield+'"><span class="li-name">'+name+'</span><span class="li-arrow">&#9876;</span>';
+        var img=document.createElement('img'); img.className='li-shield'; img.src=shield;
+        var sp=document.createElement('span'); sp.className='li-name'; sp.textContent=name;
+        var ar=document.createElement('span'); ar.className='li-arrow'; ar.innerHTML='&#9876;';
+        li.appendChild(img); li.appendChild(sp); li.appendChild(ar);
         li.dataset.pid=id;
         li.onclick=function(){ lobbyConnect(id,name); };
         ul.appendChild(li);
@@ -564,7 +567,7 @@ function lobbyConnect(targetId,name){
   net.isHost=false; net.myColor='b';
   var c=net.peer.connect(targetId,{reliable:true}); net.conn=c; wireConn(c);
   c.on('open',function(){ c.send({t:'hello',name:myPseudo}); });
-  setTimeout(function(){ if(!net.active){ $('lobbyStatus').innerHTML='<span class="lobby-searching">'+name+' no respondio. Volviendo al lobby...</span>'; net.conn=null; lobbyTimer=setInterval(refreshLobby,3000); refreshLobby(); } },8000);
+  setTimeout(function(){ if(!net.active){ try{if(net.conn)net.conn.close();}catch(e){} $('lobbyStatus').innerHTML='<span class="lobby-searching">'+name+' no respondio. Volviendo al lobby...</span>'; net.conn=null; lobbyTimer=setInterval(refreshLobby,3000); refreshLobby(); } },8000);
 }
 $('btnOnline').onclick=goOnline;
 $('renamePseudo').onclick=function(){
