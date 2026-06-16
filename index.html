@@ -76,6 +76,10 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .lobby-list li{ font-size:16px; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
   background:#1c140d; border:2px solid var(--gold); border-radius:10px; padding:12px 16px; cursor:pointer; text-align:left; transition:background .15s,border-color .15s; display:flex; align-items:center; gap:8px }
 .lobby-list li:hover,.lobby-list li:active{ background:#2a1f12; border-color:#FFD060 }
+.lobby-list li.self{ background:linear-gradient(var(--gold2),var(--gold)) !important; color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important; cursor:default; border-color:#FFD060 }
+.lobby-list li.self:hover{ background:linear-gradient(var(--gold2),var(--gold)) !important }
+.lobby-list li.self .li-name{ color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
+.lobby-list li.self .li-arrow{ color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important; font-size:14px }
 .lobby-list li .li-shield{ height:22px; width:auto; flex-shrink:0 }
 .lobby-list li .li-name{ flex:1 }
 .lobby-list li .li-arrow{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:18px; flex-shrink:0 }
@@ -307,10 +311,25 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 
 <script src="https://cdn.jsdelivr.net/npm/chess.js@0.12.1/chess.min.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script type="module">
+  // Trystero — open P2P lobby presence over public Nostr relays + BitTorrent trackers
+  try {
+    const nostrMod = await import('https://esm.sh/trystero@0.20.0/nostr');
+    window.__trystero = { joinRoom: nostrMod.joinRoom, kind: 'nostr' };
+  } catch(e) {
+    try {
+      const torrentMod = await import('https://esm.sh/trystero@0.20.0/torrent');
+      window.__trystero = { joinRoom: torrentMod.joinRoom, kind: 'torrent' };
+    } catch(e2) {
+      window.__trystero = null;
+    }
+  }
+  window.dispatchEvent(new Event('trystero-ready'));
+</script>
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=59';
+const V='?v=60';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -481,6 +500,7 @@ function netReset(){
   net.hubPeer=null; net.hubConn=null; net.isHub=false; net.roster=[];
   if(lobbyTimer){ clearInterval(lobbyTimer); lobbyTimer=null; }
   if(hubHeartbeat){ clearInterval(hubHeartbeat); hubHeartbeat=null; }
+  trysteroLeave();
 }
 function netSend(o){ if(net.conn && net.conn.open){ try{ net.conn.send(o); }catch(e){} } }
 function wireConn(c){
@@ -515,27 +535,97 @@ function wireConn(c){
   c.on('error',()=>{});
 }
 let lobbyTimer=null, hubHeartbeat=null;
+const trysteroPeers={}; // trysteroId -> {name, peerJsId}
+let trysteroRoom=null, trysteroSendInfo=null, trysteroHeartbeat=null;
+
+function mkLi(id,name,shield,isSelf){
+  var li=document.createElement('li');
+  if(isSelf) li.className='self';
+  var img=document.createElement('img'); img.className='li-shield'; img.src=shield;
+  var sp=document.createElement('span'); sp.className='li-name'; sp.textContent=isSelf?(name+' (tu)'):name;
+  var ar=document.createElement('span'); ar.className='li-arrow'; ar.innerHTML=isSelf?'&#9733;':'&#9876;';
+  li.appendChild(img); li.appendChild(sp); li.appendChild(ar);
+  li.dataset.pid=id;
+  if(!isSelf) li.onclick=function(){ lobbyConnect(id,name); };
+  return li;
+}
 
 function renderLobby(){
-  var others=net.roster.filter(function(p){ return p.id!==(net.peer&&net.peer.id); });
-  var ul=$('lobbyList'); var n=others.length;
-  var hubTag=net.isHub?' &middot; tu eres el anfitrion':'';
-  $('lobbyStatus').innerHTML=n>0
-    ?'<span class="lobby-searching">'+n+' rival'+(n>1?'es':'')+' en el lobby'+hubTag+'</span>'
-    :'<span class="lobby-searching">Buscando rivales...'+hubTag+'</span>';
-  if(n===0){ ul.innerHTML='<li class="lobby-empty">Nadie en el lobby todavia... comparte el link!</li>'; return; }
-  ul.innerHTML='';
-  others.forEach(function(p,i){
-    var shield=i%2===0?'assets/shield-blue.png':'assets/shield-red.png';
-    var li=document.createElement('li');
-    var img=document.createElement('img'); img.className='li-shield'; img.src=shield;
-    var sp=document.createElement('span'); sp.className='li-name'; sp.textContent=p.name;
-    var ar=document.createElement('span'); ar.className='li-arrow'; ar.innerHTML='&#9876;';
-    li.appendChild(img); li.appendChild(sp); li.appendChild(ar);
-    li.dataset.pid=p.id;
-    li.onclick=function(){ lobbyConnect(p.id,p.name); };
-    ul.appendChild(li);
+  var selfId=net.peer&&net.peer.id;
+  var map={}; // peerJsId -> name
+  // Add self always
+  if(selfId) map[selfId]={name:myPseudo,self:true};
+  // Hub roster
+  net.roster.forEach(function(p){
+    if(p.id && p.id!==selfId && !map[p.id]) map[p.id]={name:p.name,self:false};
   });
+  // Trystero peers
+  Object.values(trysteroPeers).forEach(function(p){
+    if(p && p.peerJsId && p.peerJsId!==selfId && !map[p.peerJsId]){
+      map[p.peerJsId]={name:p.name,self:false};
+    }
+  });
+  var ul=$('lobbyList'); ul.innerHTML='';
+  var others=[]; var selfEntry=null;
+  for(var id in map){ if(map[id].self) selfEntry={id:id,name:map[id].name}; else others.push({id:id,name:map[id].name}); }
+  var hubTag=net.isHub?' &middot; tu eres anfitrion':'';
+  var netTag=trysteroRoom?' &middot; '+(window.__trystero?window.__trystero.kind:'p2p'):'';
+  $('lobbyStatus').innerHTML=others.length>0
+    ?'<span class="lobby-searching">'+others.length+' rival'+(others.length>1?'es':'')+' conectado'+(others.length>1?'s':'')+hubTag+netTag+'</span>'
+    :'<span class="lobby-searching">Esperando que se conecten rivales...'+hubTag+netTag+'</span>';
+  if(selfEntry) ul.appendChild(mkLi(selfEntry.id,selfEntry.name,'assets/shield-blue.png',true));
+  others.forEach(function(p,i){
+    var shield=i%2===0?'assets/shield-red.png':'assets/shield-blue.png';
+    ul.appendChild(mkLi(p.id,p.name,shield,false));
+  });
+  if(others.length===0){
+    var li=document.createElement('li'); li.className='lobby-empty';
+    li.textContent='Comparte el link por WhatsApp para encontrar rivales';
+    ul.appendChild(li);
+  }
+}
+
+function initTrysteroLobby(){
+  if(!window.__trystero || !window.__trystero.joinRoom){
+    window.addEventListener('trystero-ready',initTrysteroLobby,{once:true}); return;
+  }
+  if(trysteroRoom || !net.peer || net.peer.destroyed) return;
+  try{
+    trysteroRoom=window.__trystero.joinRoom({appId:'losdosreinos-v1'},'lobby-global');
+    var act=trysteroRoom.makeAction('info');
+    trysteroSendInfo=act[0]; var onInfo=act[1];
+    onInfo(function(data,peerId){
+      if(!data||typeof data!=='object') return;
+      var nm=String(data.name||'???').slice(0,30);
+      var pid=String(data.peerJsId||'').slice(0,80);
+      if(!pid) return;
+      trysteroPeers[peerId]={name:nm,peerJsId:pid};
+      renderLobby();
+    });
+    trysteroRoom.onPeerJoin(function(peerId){
+      if(trysteroSendInfo && net.peer && !net.peer.destroyed){
+        try{ trysteroSendInfo({name:myPseudo,peerJsId:net.peer.id},peerId); }catch(e){}
+      }
+    });
+    trysteroRoom.onPeerLeave(function(peerId){
+      delete trysteroPeers[peerId]; renderLobby();
+    });
+    // Periodic broadcast (covers late joiners that missed initial onPeerJoin)
+    if(trysteroHeartbeat) clearInterval(trysteroHeartbeat);
+    trysteroHeartbeat=setInterval(function(){
+      if(trysteroSendInfo && net.peer && !net.peer.destroyed){
+        try{ trysteroSendInfo({name:myPseudo,peerJsId:net.peer.id}); }catch(e){}
+      }
+    },10000);
+    renderLobby();
+  }catch(e){ trysteroRoom=null; }
+}
+
+function trysteroLeave(){
+  try{ if(trysteroRoom && trysteroRoom.leave) trysteroRoom.leave(); }catch(e){}
+  trysteroRoom=null; trysteroSendInfo=null;
+  if(trysteroHeartbeat){ clearInterval(trysteroHeartbeat); trysteroHeartbeat=null; }
+  for(var k in trysteroPeers) delete trysteroPeers[k];
 }
 
 function broadcastRoster(){
@@ -631,7 +721,9 @@ function goOnline(){
       if(net.conn){ c.on('open',function(){ try{ c.send({t:'full'}); }catch(e){} }); return; }
       net.conn=c; net.isHost=true; net.myColor='w'; wireConn(c);
     });
+    renderLobby(); // shows self immediately
     tryConnectHub();
+    initTrysteroLobby();
   });
   net.peer.on('error',function(err){
     if(!err) return;
@@ -940,6 +1032,8 @@ function backToLobby(){
     if(net.isHub){ renderLobby(); }
     else if(net.hubConn && net.hubConn.open){ renderLobby(); try{ net.hubConn.send({t:'lobby-ping',id:net.peer.id}); }catch(e){} }
     else { tryConnectHub(); }
+    if(!trysteroRoom) initTrysteroLobby();
+    else renderLobby();
   } else { goOnline(); }
 }
 $('backLobbyBtn').onclick=backToLobby;
