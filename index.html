@@ -296,6 +296,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <button id="drawbtn" style="display:none">&#129309; Tablas</button>
     <button id="resign" style="display:none">&#127987; Rendirse</button>
     <button id="rematch" style="display:none">Revancha</button>
+    <button id="backLobbyBtn" style="display:none">&larr; Lobby</button>
     <button id="mutebtn" title="Sonido">🔊</button>
   </div>
   <div class="note" id="note"></div>
@@ -309,7 +310,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=57';
+const V='?v=58';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -503,7 +504,7 @@ function wireConn(c){
       statusEl.innerHTML+=' <span class="warn">(rechazadas)</span>';
     }
   });
-  c.on('close',()=>{ if(net.active){ statusEl.innerHTML='<span class="warn">'+net.rivalName+' se desconectó.</span>'; net.active=false; } });
+  c.on('close',()=>{ if(net.active){ statusEl.innerHTML='<span class="warn">'+net.rivalName+' se desconectó.</span>'; net.active=false; if(typeof showEndButtons==='function') showEndButtons(); } });
   c.on('error',()=>{});
 }
 let lobbyTimer=null;
@@ -560,13 +561,15 @@ function goOnline(){
       myPseudo=genPseudo(); $('myName').textContent=myPseudo;
       setTimeout(goOnline,300); return;
     }
-    var recoverable={'peer-unavailable':1,'network':1,'disconnected':1,'server-error':1,'socket-closed':1};
-    if(recoverable[err.type]){
+    // Recoverable: just keep the lobby running, reconnect if needed
+    var silent={'peer-unavailable':1,'network':1,'disconnected':1,'server-error':1,'socket-closed':1,'socket-error':1};
+    if(silent[err.type]){
       try{ if(net.peer && net.peer.disconnected && !net.peer.destroyed) net.peer.reconnect(); }catch(e){}
       return;
     }
-    $('lobbyStatus').innerHTML='<span class="lobby-searching">Reconectando...</span>';
-    setTimeout(function(){ try{ if(net.peer) net.peer.destroy(); }catch(e){} goOnline(); },2000);
+    // Anything else: silent retry to keep lobby alive
+    $('lobbyStatus').innerHTML='<span class="lobby-searching">Reconectando al lobby...</span>';
+    setTimeout(function(){ try{ if(net.peer) net.peer.destroy(); }catch(e){} goOnline(); },2500);
   });
 }
 function lobbyConnect(targetId,name){
@@ -828,15 +831,33 @@ $('redo').onclick=()=>{ if(busy||!redoStack.length) return;
     game.move({from:mv.from,to:mv.to,promotion:mv.promotion});
   }
   rebuildCaptures(); render(); status(); renderHistory(); maybeShowRematch(); };
-$('rematch').onclick=()=>{ game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0;
-  $('rematch').style.display='none'; render(); status(); renderHistory();
+$('rematch').onclick=()=>{ game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0; resigned=false;
+  $('rematch').style.display='none'; $('backLobbyBtn').style.display='none'; render(); status(); renderHistory();
   if(mode==='ai') boot(); };
 $('mutebtn').onclick=()=>{ muted=!muted; $('mutebtn').textContent=muted?'🔇':'🔊'; actxInit(); };
 
 /* ===== Resign / Draw ===== */
 function showEndButtons(){
   $('resign').style.display='none'; $('drawbtn').style.display='none'; $('rematch').style.display='';
+  $('backLobbyBtn').style.display=(mode==='online')?'':'none';
 }
+function backToLobby(){
+  try{ if(net.conn) net.conn.close(); }catch(e){}
+  net.conn=null; net.active=false; net.isHost=false; net.myColor='w'; net.rivalName='';
+  resigned=false; started=false;
+  game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0;
+  document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').textContent='⛶';
+  $('app').style.display='none'; $('start').classList.remove('hidden');
+  $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
+  $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
+  $('backBtn').style.display='block'; $('lobby').classList.add('show');
+  $('startH2').textContent='Lobby Online'; $('myName').textContent=myPseudo;
+  if(net.peer && !net.peer.destroyed){
+    $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
+    refreshLobby(); if(lobbyTimer){ clearInterval(lobbyTimer); } lobbyTimer=setInterval(refreshLobby,3000);
+  } else { goOnline(); }
+}
+$('backLobbyBtn').onclick=backToLobby;
 function doResign(){
   if(game.game_over()||busy||resigned) return;
   if(!confirm('¿Rendirse?')) return;
