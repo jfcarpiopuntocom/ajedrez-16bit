@@ -95,6 +95,28 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .lobby-room{ margin:0; font-size:15px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; display:flex; align-items:center; gap:6px }
 .lobby-room strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:20px; letter-spacing:2px; font-family:Georgia,"Times New Roman",serif }
 .lobby-para{ display:inline-block; margin-top:6px; font-size:12px; font-weight:700; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; font-style:italic; line-height:1.4 }
+.lobby-name-input{ font-size:18px; font-weight:800; padding:4px 8px; min-width:130px; max-width:180px; border:2px solid var(--gold); border-radius:8px;
+  background:#1c140d; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; font-family:inherit }
+.lobby-name-input:focus{ outline:none; border-color:#FFD060; box-shadow:0 0 8px var(--gold) }
+/* Splash Universo Paralelo callout */
+.universo-callout{ width:100%; max-width:430px; margin:6px auto 2px; padding:10px 14px; border:2px solid #28ECAA; border-radius:12px;
+  background:linear-gradient(160deg,#0a2a1f,#051a12); text-align:center }
+.universo-callout h3{ margin:0 0 4px; font-size:14px; font-weight:900; letter-spacing:1.5px; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; text-transform:uppercase }
+.universo-callout p{ margin:0; font-size:12px; line-height:1.4; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.universo-callout p .pop{ color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; font-weight:800 }
+.universo-callout.hidden{ display:none }
+/* Matches modal */
+.matches-modal{ max-width:480px; max-height:80vh; overflow-y:auto; padding:18px 18px 14px }
+.matches-modal h2{ margin:0 0 4px; font-size:20px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center }
+.matches-modal .sub{ margin:0 0 12px; font-size:12px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:center; font-style:italic; font-weight:600 }
+.matches-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px }
+.matches-list li{ background:#1c140d; border:2px solid var(--gold); border-radius:10px; padding:9px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer; transition:background .15s }
+.matches-list li:hover{ background:#2a1f12 }
+.matches-list li .mleft{ display:flex; flex-direction:column; gap:1px; text-align:left }
+.matches-list li .mcode{ font-size:16px; font-weight:900; letter-spacing:2px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-family:Georgia,"Times New Roman",serif }
+.matches-list li .mmeta{ font-size:11px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+.matches-list li .mright{ font-size:11px; font-weight:700; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:right; min-width:70px }
+.matches-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:18px 0; font-weight:600 }
 .lobby-rename{ background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; transition:color .15s,-webkit-text-fill-color .15s }
 .lobby-rename:hover{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
 .lobby-hint{ margin:0; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:center }
@@ -336,10 +358,13 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <h3>Trucos del tablero</h3>
     <p>Arrastra una pieza al destino. Las casillas legales se iluminan al levantarla.</p>
     <p>El botón <span class="accent">⛶</span> maximiza el tablero para concentración total. Deshacer y Rehacer reescriben jugadas hasta el mate.</p>
-    <p>Cada partida guarda un <span class="accent">código de seis caracteres tipo NES</span>. Anótalo, sal, y vuelve después tipeándolo en la pantalla inicial. Cargas la posición exacta con su tablero y nivel.</p>
+    <p>Cada partida guarda un <span class="accent">código de seis caracteres tipo NES</span>. Cada jugada se respalda en localStorage e IndexedDB del dispositivo. Anótalo, sal, vuelve después y entra el código en la pantalla inicial. Cargas la posición exacta con su tablero, nivel, capturas y todo.</p>
+
+    <h3>&#10024; Universo Paralelo (el feature)</h3>
+    <p>El código de partida no es solo para resumir local. Pásaselo a un amigo: él pega el código en su pantalla inicial o abre el link de la sala, y <span class="accent">toma el lugar de la IA</span> desde la posición exacta. Ahora hay dos líneas temporales: la tuya vs la máquina (la original sigue intacta en localStorage) y la nueva vs tu amigo, online. Cada una sigue su curso.</p>
 
     <h3>Lobby online</h3>
-    <p>Tu seudónimo es persistente y solo tuyo. Vive en este navegador. Quien gana se queda en el lobby y elige al siguiente: estilo king of the hill.</p>
+    <p>Tu seudónimo es editable, persistente y solo tuyo. Vive en este navegador. Quien gana se queda en el lobby y elige al siguiente: estilo king of the hill. Cada sala tiene un link único compartible.</p>
 
     <h3>Próximamente</h3>
     <p>Más tableros: <span class="accent">el espacio</span> y <span class="accent">la selva</span>. Cada uno con su propio fondo y atmósfera.</p>
@@ -352,6 +377,14 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
       <p class="help-thanks">Gracias por jugar.</p>
       <button class="no help-close" id="helpClose">Cerrar</button>
     </div>
+  </div>
+</div>
+<div class="modal-veil" id="matchesVeil" role="dialog" aria-modal="true">
+  <div class="modal-card matches-modal">
+    <h2>Mis partidas guardadas</h2>
+    <p class="sub">Doble respaldo: localStorage + IndexedDB en este dispositivo.</p>
+    <ul class="matches-list" id="matchesList"></ul>
+    <button class="no" id="matchesClose" style="margin-top:12px;align-self:center">Cerrar</button>
   </div>
 </div>
 
@@ -374,6 +407,10 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
       <img src="assets/pieces/k_rkA.png" alt="Rey rojo">
       <img src="assets/pieces/bQ.png" alt="Reina rojo">
     </div>
+  </div>
+  <div class="universo-callout" id="uniCallout">
+    <h3>&#10024; Universo Paralelo</h3>
+    <p>Cada partida guarda <span class="pop">FEN, tablero, IA y capturas</span> bajo un código único. Resúmela tú, o pásale el código a un amigo y él <span class="pop">toma el lugar de la IA</span> desde la posición exacta. La línea original sigue viva en paralelo.</p>
   </div>
   <div class="lobby-resume" id="resumeRow">
     <input type="text" id="resumeCode" placeholder="Tienes un código? Reanuda partida" maxlength="6" autocomplete="off" spellcheck="false">
@@ -400,7 +437,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     </div>
   </div>
   <div class="lobby" id="lobby">
-    <p class="lobby-name">Tu nombre: <strong id="myName">---</strong> <button class="lobby-rename" id="renamePseudo" title="Cambiar nombre">&#x21bb;</button></p>
+    <p class="lobby-name">Tu nombre: <input class="lobby-name-input" id="myName" maxlength="30" autocomplete="off" spellcheck="false"> <button class="lobby-rename" id="renamePseudo" title="Generar al azar">&#x21bb;</button> <button class="lobby-rename" id="savePseudo" title="Guardar nombre">&#10003;</button></p>
+    <button class="lobby-share" id="myMatches" style="background:linear-gradient(#2a1a0c,#1a100a)">&#128218; Mis partidas guardadas</button>
     <p class="lobby-room">Sala: <strong id="roomCode">------</strong> <button class="lobby-rename" id="newRoom" title="Nueva sala">&#x21bb;</button></p>
     <p class="lobby-hint">Comparte el link de la sala por WhatsApp. Quien gana se queda y elige rival.</p>
     <button class="lobby-share" id="lobbyShare">&#128279; Copiar link de esta sala</button>
@@ -479,7 +517,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=72';
+const V='?v=73';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -572,14 +610,52 @@ function pickTablero(){ return TABLEROS[Math.floor(Math.random()*TABLEROS.length
 function tableroFromKey(k){ for(var i=0;i<TABLEROS.length;i++) if(TABLEROS[i].key===k) return TABLEROS[i]; return TABLEROS[0]; }
 let currentTablero=null, matchCode=null;
 const MATCH_KEY='losdosreinos_match_';
+const IDX_KEY='losdosreinos_index';
+/* ===== Tier-2 backup: IndexedDB (larger capacity, structured) ===== */
+function idbOpen(){
+  return new Promise(function(res,rej){
+    var r=indexedDB.open('losdosreinos',1);
+    r.onupgradeneeded=function(){ r.result.createObjectStore('matches'); };
+    r.onsuccess=function(){ res(r.result); };
+    r.onerror=function(){ rej(r.error); };
+  });
+}
+function idbPut(key,data){ return idbOpen().then(function(db){
+  return new Promise(function(res){
+    try{ var tx=db.transaction('matches','readwrite'); tx.objectStore('matches').put(data,key);
+      tx.oncomplete=res; tx.onerror=res; }catch(e){ res(); }
+  });
+}).catch(function(){}); }
+function idbGetAll(){ return idbOpen().then(function(db){
+  return new Promise(function(res){
+    try{ var tx=db.transaction('matches','readonly'); var st=tx.objectStore('matches');
+      var rkeys=st.getAllKeys(), rvals=st.getAll(); var k,v;
+      rkeys.onsuccess=function(){ k=rkeys.result; if(v) finish(); };
+      rvals.onsuccess=function(){ v=rvals.result; if(k) finish(); };
+      function finish(){ var out=[]; for(var i=0;i<k.length;i++) out.push({code:k[i],data:v[i]}); res(out); }
+      tx.onerror=function(){ res([]); };
+    }catch(e){ res([]); }
+  });
+}).catch(function(){ return []; }); }
+function indexAdd(code){
+  try{ var raw=localStorage.getItem(IDX_KEY); var arr=raw?JSON.parse(raw):[];
+    arr=arr.filter(function(c){ return c!==code; }); arr.unshift(code);
+    if(arr.length>40) arr.length=40;
+    localStorage.setItem(IDX_KEY,JSON.stringify(arr));
+  }catch(e){}
+}
+function indexList(){
+  try{ var raw=localStorage.getItem(IDX_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; }
+}
 function saveMatch(){
   if(!matchCode||!started||game.game_over()||resigned||mode==='online') return;
-  try{
-    var data={fen:game.fen(),tab:currentTablero.key,m:mode,col:playerColor,bk:blueKing,rk:redKing,
-              lvl:level?level.key:null,creator:myPseudo,
-              caps:{w:capW.slice(),b:capB.slice()},ts:Date.now()};
-    localStorage.setItem(MATCH_KEY+matchCode,JSON.stringify(data));
-  }catch(e){}
+  var data={fen:game.fen(),tab:currentTablero.key,m:mode,col:playerColor,bk:blueKing,rk:redKing,
+            lvl:level?level.key:null,creator:myPseudo,
+            caps:{w:capW.slice(),b:capB.slice()},ts:Date.now()};
+  // Tier 1: localStorage (synchronous, instant)
+  try{ localStorage.setItem(MATCH_KEY+matchCode,JSON.stringify(data)); indexAdd(matchCode); }catch(e){}
+  // Tier 2: IndexedDB (async, redundant backup)
+  idbPut(matchCode,data);
 }
 function loadMatch(code){
   try{
@@ -666,8 +742,8 @@ LEVELS.forEach(l=>{ const b=document.createElement('button'); b.className='lv'; 
   b.innerHTML=`<span>${l.name}</span><span class="tag">${l.tag?l.tag:(l.elo?('~'+l.elo+' Elo'):'máxima')}</span>`;
   b.onclick=()=>{ level=l; showColorPick(); }; levelsEl.appendChild(b); });
 $('btn2p').onclick=()=>startGame('2p');
-$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rival'; $('backBtn').style.display='block'; $('kingpick').classList.remove('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); };
-function showColorPick(){ levelsEl.classList.remove('show'); $('colorpick').classList.add('show'); $('kingpick').classList.add('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('startH2').textContent='¿De qué lado juegas?'; }
+$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rival'; $('backBtn').style.display='block'; $('kingpick').classList.remove('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden'); };
+function showColorPick(){ levelsEl.classList.remove('show'); $('colorpick').classList.add('show'); $('kingpick').classList.add('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden'); $('startH2').textContent='¿De qué lado juegas?'; }
 $('pickBlue').addEventListener('mouseenter',()=>$('kingpick').classList.add('focus-blue'));
 $('pickBlue').addEventListener('mouseleave',()=>$('kingpick').classList.remove('focus-blue'));
 $('pickRed').addEventListener('mouseenter',()=>$('kingpick').classList.add('focus-red'));
@@ -686,7 +762,7 @@ $('pickBlue').onclick=()=>{ playerColor='w'; $('colorpick').classList.remove('sh
 $('pickRed').onclick=()=>{ playerColor='b'; $('colorpick').classList.remove('show'); $('kingpick').classList.remove('focus-blue','focus-red'); startGame('ai'); };
 $('backBtn').onclick=()=>{
   if($('colorpick').classList.contains('show')){ $('colorpick').classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); levelsEl.classList.add('show'); $('startH2').textContent='Elige el nivel del Rival'; return; }
-  levelsEl.classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
+  levelsEl.classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden'); $('uniCallout').classList.remove('hidden'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
   $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none'; };
 $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(!b) return;
   const row=b.closest('.kingrow'); if(row.dataset.side==='w') blueKing=b.dataset.k; else redKing=b.dataset.k;
@@ -966,12 +1042,12 @@ function goOnline(){
   if(typeof Peer==='undefined'){ $('startH2').textContent='No se pudo cargar el modo online.'; return; }
   $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
-  $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden');
+  $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
   $('startH2').textContent='Lobby Online';
   if(!currentRoom){ currentRoom=roomFromUrl()||genCode(); }
   setRoomInUrl(currentRoom);
   $('roomCode').textContent=currentRoom;
-  $('myName').textContent=myPseudo;
+  $('myName').value=myPseudo;
   var peerId='jfreino-'+myPseudo.toLowerCase()+'-'+currentRoom.toLowerCase().slice(0,4);
   net.peer=new Peer(peerId);
   net.peer.on('open',function(){
@@ -988,7 +1064,7 @@ function goOnline(){
     if(!err) return;
     if(err.type==='unavailable-id'){
       try{ net.peer.destroy(); }catch(e){}
-      myPseudo=genPseudo(); $('myName').textContent=myPseudo;
+      myPseudo=genPseudo(); $('myName').value=myPseudo;
       setTimeout(goOnline,300); return;
     }
     var silent={'peer-unavailable':1,'network':1,'disconnected':1,'server-error':1,'socket-closed':1,'socket-error':1};
@@ -1051,7 +1127,7 @@ $('lobbyShare').onclick=function(){
 };
 $('renamePseudo').onclick=function(){
   if(!net.peer||net.conn) return;
-  netReset(); myPseudo=genPseudo(); saveIdentity(); $('myName').textContent=myPseudo;
+  netReset(); myPseudo=genPseudo(); saveIdentity(); $('myName').value=myPseudo;
   setTimeout(goOnline,300);
 };
 $('newRoom').onclick=function(){
@@ -1059,6 +1135,51 @@ $('newRoom').onclick=function(){
   netReset(); currentRoom=genCode();
   setTimeout(goOnline,300);
 };
+function commitPseudo(){
+  var v=($('myName').value||'').trim().replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ0-9 ]/g,'').slice(0,30);
+  if(!v){ v=genPseudo(); $('myName').value=v; }
+  if(v===myPseudo) return;
+  myPseudo=v; saveIdentity();
+  if(net.peer && !net.conn){ netReset(); setTimeout(goOnline,300); }
+}
+$('myName').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); $('myName').blur(); commitPseudo(); } });
+$('savePseudo').onclick=commitPseudo;
+$('myMatches').onclick=function(){
+  var ul=$('matchesList'); ul.innerHTML='';
+  var codes=indexList();
+  if(codes.length===0){
+    var li=document.createElement('li'); li.className='matches-empty';
+    li.textContent='Aún no tienes partidas guardadas. Juega y vuelve.';
+    ul.appendChild(li);
+  } else {
+    codes.forEach(function(code){
+      var d=loadMatch(code); if(!d) return;
+      var li=document.createElement('li');
+      var left=document.createElement('div'); left.className='mleft';
+      var c=document.createElement('span'); c.className='mcode'; c.textContent=code;
+      var meta=document.createElement('span'); meta.className='mmeta';
+      var modeLbl=d.m==='ai'?('vs IA '+(d.lvl||'?')):d.m;
+      var tabLbl=d.tab?(' &middot; Tablero '+tableroFromKey(d.tab).name):'';
+      meta.innerHTML=modeLbl+tabLbl;
+      left.appendChild(c); left.appendChild(meta);
+      var right=document.createElement('div'); right.className='mright';
+      var age=d.ts?Math.floor((Date.now()-d.ts)/60000):0;
+      right.textContent=age<1?'recién':(age<60?(age+' min'):(Math.floor(age/60)+' h'));
+      li.appendChild(left); li.appendChild(right);
+      li.onclick=function(){
+        $('matchesVeil').classList.remove('show');
+        pendingResume={data:d,code:code};
+        if(d.lvl){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].key===d.lvl){ level=LEVELS[i]; break; } }
+        setTimeout(function(){ startGame(d.m||'ai'); },200);
+      };
+      ul.appendChild(li);
+    });
+  }
+  $('matchesVeil').classList.add('show');
+};
+$('matchesClose').onclick=function(){ $('matchesVeil').classList.remove('show'); };
+$('matchesVeil').addEventListener('click',function(e){ if(e.target===$('matchesVeil')) $('matchesVeil').classList.remove('show'); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape' && $('matchesVeil').classList.contains('show')) $('matchesVeil').classList.remove('show'); });
 
 /* Zoom / focus mode */
 $('zoombtn').onclick=()=>{ const on=document.body.classList.toggle('focusmode');
@@ -1105,7 +1226,7 @@ function backToStart(){
   $('app').style.display='none'; $('start').classList.remove('hidden');
   $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
   $('colorpick').classList.remove('show'); playerColor='w';
-  $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden');
+  $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden'); $('uniCallout').classList.remove('hidden');
   levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none';
   TABLEROS.forEach(function(x){ $('app').classList.remove('t-'+x.key); });
   currentTablero=null; matchCode=null;
@@ -1347,8 +1468,8 @@ function backToLobby(){
   $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
   $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
-  $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden');
-  $('startH2').textContent='Lobby Online'; $('myName').textContent=myPseudo;
+  $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
+  $('startH2').textContent='Lobby Online'; $('myName').value=myPseudo;
   if(net.peer && !net.peer.destroyed){
     $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
     if(net.isHub){ renderLobby(); }
