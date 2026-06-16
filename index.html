@@ -52,7 +52,13 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   border:2px solid var(--gold); border-radius:11px; padding:8px 6px; cursor:pointer; min-height:44px;
   background:linear-gradient(#3a1f12,#26140b); display:flex; flex-direction:column; align-items:center; text-align:center; gap:1px }
 .levels .lv .tag{ font-size:12px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
-.kingpick{ display:flex; flex-direction:column; gap:7px; align-items:center }
+.kingpick{ display:flex; flex-direction:column; gap:7px; align-items:center; transition:opacity .25s }
+.kingpick.hidden-step{ display:none }
+.kingpick .kingrow button{ transition:filter .25s,transform .15s }
+.kingpick.focus-blue .kingrow[data-side="b"] button{ filter:grayscale(1) brightness(.45) }
+.kingpick.focus-red .kingrow[data-side="w"] button{ filter:grayscale(1) brightness(.45) }
+.kingpick.focus-blue .kingrow[data-side="w"] button.active,
+.kingpick.focus-red .kingrow[data-side="b"] button.active{ transform:scale(1.06) }
 .kingrow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center }
 .kingrow .lbl{ font-size:14px; font-weight:800; min-width:78px; text-align:right;
   color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
@@ -329,7 +335,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=61';
+const V='?v=62';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -474,13 +480,19 @@ LEVELS.forEach(l=>{ const b=document.createElement('button'); b.className='lv'; 
   b.innerHTML=`<span>${l.name}</span><span class="tag">${l.tag?l.tag:(l.elo?('~'+l.elo+' Elo'):'máxima')}</span>`;
   b.onclick=()=>{ level=l; showColorPick(); }; levelsEl.appendChild(b); });
 $('btn2p').onclick=()=>startGame('2p');
-$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rival'; $('backBtn').style.display='block'; };
-function showColorPick(){ levelsEl.classList.remove('show'); $('colorpick').classList.add('show'); $('startH2').textContent='¿De qué lado juegas?'; }
-$('pickBlue').onclick=()=>{ playerColor='w'; $('colorpick').classList.remove('show'); startGame('ai'); };
-$('pickRed').onclick=()=>{ playerColor='b'; $('colorpick').classList.remove('show'); startGame('ai'); };
+$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rival'; $('backBtn').style.display='block'; $('kingpick').classList.add('hidden-step'); };
+function showColorPick(){ levelsEl.classList.remove('show'); $('colorpick').classList.add('show'); $('kingpick').classList.remove('hidden-step'); $('startH2').textContent='¿De qué lado juegas?'; }
+$('pickBlue').addEventListener('mouseenter',()=>$('kingpick').classList.add('focus-blue'));
+$('pickBlue').addEventListener('mouseleave',()=>$('kingpick').classList.remove('focus-blue'));
+$('pickRed').addEventListener('mouseenter',()=>$('kingpick').classList.add('focus-red'));
+$('pickRed').addEventListener('mouseleave',()=>$('kingpick').classList.remove('focus-red'));
+$('pickBlue').addEventListener('touchstart',()=>{ $('kingpick').classList.remove('focus-red'); $('kingpick').classList.add('focus-blue'); },{passive:true});
+$('pickRed').addEventListener('touchstart',()=>{ $('kingpick').classList.remove('focus-blue'); $('kingpick').classList.add('focus-red'); },{passive:true});
+$('pickBlue').onclick=()=>{ playerColor='w'; $('colorpick').classList.remove('show'); $('kingpick').classList.remove('focus-blue','focus-red'); startGame('ai'); };
+$('pickRed').onclick=()=>{ playerColor='b'; $('colorpick').classList.remove('show'); $('kingpick').classList.remove('focus-blue','focus-red'); startGame('ai'); };
 $('backBtn').onclick=()=>{
-  if($('colorpick').classList.contains('show')){ $('colorpick').classList.remove('show'); levelsEl.classList.add('show'); $('startH2').textContent='Elige el nivel del Rival'; return; }
-  levelsEl.classList.remove('show'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
+  if($('colorpick').classList.contains('show')){ $('colorpick').classList.remove('show'); $('kingpick').classList.add('hidden-step'); $('kingpick').classList.remove('focus-blue','focus-red'); levelsEl.classList.add('show'); $('startH2').textContent='Elige el nivel del Rival'; return; }
+  levelsEl.classList.remove('show'); $('kingpick').classList.remove('hidden-step'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
   $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none'; };
 $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(!b) return;
   const row=b.closest('.kingrow'); if(row.dataset.side==='w') blueKing=b.dataset.k; else redKing=b.dataset.k;
@@ -789,6 +801,7 @@ function backToStart(){
   $('app').style.display='none'; $('start').classList.remove('hidden');
   $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
   $('colorpick').classList.remove('show'); playerColor='w';
+  $('kingpick').classList.remove('hidden-step','focus-blue','focus-red');
   levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none';
   myPseudo=genPseudo();
 }
