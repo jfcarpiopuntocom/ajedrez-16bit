@@ -92,6 +92,8 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .lobby.show{ display:flex }
 .lobby-name{ margin:0; font-size:16px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; display:flex; align-items:center; gap:6px }
 .lobby-name strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:22px }
+.lobby-room{ margin:0; font-size:15px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; display:flex; align-items:center; gap:6px }
+.lobby-room strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:20px; letter-spacing:2px; font-family:Georgia,"Times New Roman",serif }
 .lobby-rename{ background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; transition:color .15s,-webkit-text-fill-color .15s }
 .lobby-rename:hover{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
 .lobby-hint{ margin:0; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:center }
@@ -398,8 +400,9 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   </div>
   <div class="lobby" id="lobby">
     <p class="lobby-name">Tu nombre: <strong id="myName">---</strong> <button class="lobby-rename" id="renamePseudo" title="Cambiar nombre">&#x21bb;</button></p>
-    <p class="lobby-hint">Comparte tu nombre por WhatsApp para que te encuentren</p>
-    <button class="lobby-share" id="lobbyShare">&#128279; Copiar link del juego</button>
+    <p class="lobby-room">Sala: <strong id="roomCode">------</strong> <button class="lobby-rename" id="newRoom" title="Nueva sala">&#x21bb;</button></p>
+    <p class="lobby-hint">Comparte el link de la sala por WhatsApp. Quien gana se queda y elige rival.</p>
+    <button class="lobby-share" id="lobbyShare">&#128279; Copiar link de esta sala</button>
     <p class="lobby-status" id="lobbyStatus"><span class="lobby-searching">Buscando rivales...</span></p>
     <h3 class="lobby-h">Jugadores Conectados</h3>
     <ul class="lobby-list" id="lobbyList"></ul>
@@ -475,7 +478,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=70';
+const V='?v=71';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -687,7 +690,17 @@ $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[dat
   [...row.querySelectorAll('button[data-k]')].forEach(x=>x.classList.toggle('active',x===b)); });
 
 /* ===== Online 1 vs 1 (PeerJS / WebRTC P2P) — lobby with hub-based presence ===== */
-const HUB_ID='jfreino-lobby-hub';
+const HUB_ID_BASE='jfreino-lobby-hub';
+let currentRoom=null; // 6-char room id; set by entering online flow
+function roomFromUrl(){
+  var m=(location.hash||'').match(/room=([A-Z0-9]{4,8})/i);
+  return m?m[1].toUpperCase():null;
+}
+function setRoomInUrl(code){
+  try{ history.replaceState(null,'','#room='+code); }catch(e){ location.hash='room='+code; }
+}
+function hubIdFor(code){ return HUB_ID_BASE+'-'+code.toLowerCase(); }
+function roomLink(code){ return 'https://jfcarpiopuntocom.github.io/ajedrez-16bit/#room='+code; }
 const PRESENCE_TTL=20000; // 20s (4x guest ping)
 const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'',
             hubPeer:null, hubConn:null, isHub:false, roster:[] };
@@ -793,7 +806,8 @@ function initTrysteroLobby(){
   }
   if(trysteroRoom || !net.peer || net.peer.destroyed) return;
   try{
-    trysteroRoom=window.__trystero.joinRoom({appId:'losdosreinos-v1'},'lobby-global');
+    var roomName=currentRoom?('lobby-'+currentRoom):'lobby-global';
+    trysteroRoom=window.__trystero.joinRoom({appId:'losdosreinos-v1'},roomName);
     var act=trysteroRoom.makeAction('info');
     trysteroSendInfo=act[0]; var onInfo=act[1];
     onInfo(function(data,peerId){
@@ -846,8 +860,8 @@ function broadcastRoster(){
 }
 
 function tryClaimHub(){
-  if(!net.peer||net.peer.destroyed||net.isHub||net.hubPeer||net.conn) return;
-  var hp=new Peer(HUB_ID); net.hubPeer=hp;
+  if(!net.peer||net.peer.destroyed||net.isHub||net.hubPeer||net.conn||!currentRoom) return;
+  var hp=new Peer(hubIdFor(currentRoom)); net.hubPeer=hp;
   hp.on('open',function(){
     net.isHub=true;
     net.roster=[{id:net.peer.id,name:myPseudo,last:Date.now(),conn:null}];
@@ -884,8 +898,8 @@ function tryClaimHub(){
 }
 
 function tryConnectHub(){
-  if(!net.peer||net.peer.destroyed||net.peer.id===HUB_ID||net.hubConn||net.conn) return;
-  var hc=net.peer.connect(HUB_ID,{reliable:true,metadata:{type:'lobby'}}); net.hubConn=hc;
+  if(!net.peer||net.peer.destroyed||!currentRoom||net.peer.id===hubIdFor(currentRoom)||net.hubConn||net.conn) return;
+  var hc=net.peer.connect(hubIdFor(currentRoom),{reliable:true,metadata:{type:'lobby'}}); net.hubConn=hc;
   var opened=false;
   hc.on('open',function(){
     opened=true;
@@ -921,8 +935,11 @@ function goOnline(){
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
   $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden');
   $('startH2').textContent='Lobby Online';
+  if(!currentRoom){ currentRoom=roomFromUrl()||genCode(); }
+  setRoomInUrl(currentRoom);
+  $('roomCode').textContent=currentRoom;
   $('myName').textContent=myPseudo;
-  var peerId='jfreino-'+myPseudo.toLowerCase();
+  var peerId='jfreino-'+myPseudo.toLowerCase()+'-'+currentRoom.toLowerCase().slice(0,4);
   net.peer=new Peer(peerId);
   net.peer.on('open',function(){
     $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
@@ -967,6 +984,8 @@ function lobbyConnect(targetId,name){
 }
 
 $('btnOnline').onclick=goOnline;
+// Auto-enter online lobby if URL carries a room id
+(function(){ var rc=roomFromUrl(); if(rc){ currentRoom=rc; setTimeout(goOnline,200); } })();
 $('resumeCode').addEventListener('input',function(){
   this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
   $('resumeBtn').disabled=this.value.length!==6;
@@ -984,7 +1003,7 @@ $('resumeBtn').onclick=function(){
   setTimeout(function(){ startGame(d.m||'ai'); $('resumeCode').value=''; $('resumeBtn').disabled=true; $('resumeMsg').textContent=''; },350);
 };
 $('lobbyShare').onclick=function(){
-  var url='https://jfcarpiopuntocom.github.io/ajedrez-16bit/';
+  var url=currentRoom?roomLink(currentRoom):'https://jfcarpiopuntocom.github.io/ajedrez-16bit/';
   var b=$('lobbyShare'); var orig=b.innerHTML;
   var done=function(){ b.classList.add('copied'); b.textContent='✓ Link copiado!'; setTimeout(function(){ b.classList.remove('copied'); b.innerHTML=orig; },1800); };
   if(navigator.clipboard && navigator.clipboard.writeText){
@@ -1000,6 +1019,11 @@ $('lobbyShare').onclick=function(){
 $('renamePseudo').onclick=function(){
   if(!net.peer||net.conn) return;
   netReset(); myPseudo=genPseudo(); saveIdentity(); $('myName').textContent=myPseudo;
+  setTimeout(goOnline,300);
+};
+$('newRoom').onclick=function(){
+  if(!net.peer||net.conn) return;
+  netReset(); currentRoom=genCode();
   setTimeout(goOnline,300);
 };
 
