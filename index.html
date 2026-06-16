@@ -63,21 +63,29 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .kingrow button img{ max-height:54px; max-width:54px; width:auto; height:auto; object-fit:contain; display:block }
 .back{ font-size:14px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; background:transparent; border:none; cursor:pointer; padding:6px }
 /* Lobby (online) */
-.lobby{ display:none; flex-direction:column; align-items:center; gap:8px; width:100%; max-width:360px }
+.lobby{ display:none; flex-direction:column; align-items:center; gap:10px; width:100%; max-width:380px }
 .lobby.show{ display:flex }
-.lobby-name{ margin:0; font-size:15px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
-.lobby-name strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:20px }
+.lobby-name{ margin:0; font-size:16px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; display:flex; align-items:center; gap:6px }
+.lobby-name strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:22px }
+.lobby-rename{ background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; opacity:.7; transition:opacity .15s }
+.lobby-rename:hover{ opacity:1 }
 .lobby-hint{ margin:0; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:center }
-.lobby-status{ margin:0; font-size:13px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; min-height:16px }
-.lobby-list{ list-style:none; margin:0; padding:0; width:100%; max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:4px }
-.lobby-list li{ font-size:15px; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
-  background:#1c140d; border:2px solid var(--gold); border-radius:10px; padding:10px 14px; cursor:pointer; text-align:center; transition:background .15s }
-.lobby-list li:hover,.lobby-list li:active{ background:#2a1f12 }
-.lobby-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:16px 0 }
+.lobby-status{ margin:0; font-size:14px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; min-height:18px; font-weight:700 }
+.lobby-count{ font-weight:400; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; font-size:13px; margin-left:4px }
+.lobby-list{ list-style:none; margin:0; padding:0; width:100%; max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:5px }
+.lobby-list li{ font-size:16px; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  background:#1c140d; border:2px solid var(--gold); border-radius:10px; padding:12px 16px; cursor:pointer; text-align:left; transition:background .15s,border-color .15s; display:flex; align-items:center; gap:8px }
+.lobby-list li:hover,.lobby-list li:active{ background:#2a1f12; border-color:#FFD060 }
+.lobby-list li .li-shield{ height:22px; width:auto; flex-shrink:0 }
+.lobby-list li .li-name{ flex:1 }
+.lobby-list li .li-arrow{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:18px; flex-shrink:0 }
+.lobby-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:20px 0 }
+@keyframes lobbyPulse{ 0%{opacity:1} 50%{opacity:.6} 100%{opacity:1} }
+.lobby-searching{ animation:lobbyPulse 1.5s ease-in-out infinite }
 /* Shield icons (inline) */
-.shield-icon{ height:28px; width:auto; vertical-align:middle; margin-right:4px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.5)) }
-.cap-icon{ height:18px; width:auto; vertical-align:middle; margin-right:3px; filter:drop-shadow(0 1px 1px rgba(0,0,0,.4)) }
-.chip-icon{ height:16px; width:auto; vertical-align:middle; margin-right:3px }
+.shield-icon{ height:36px; width:auto; vertical-align:middle; margin-right:6px; filter:drop-shadow(0 2px 3px rgba(0,0,0,.5)) }
+.cap-icon{ height:24px; width:auto; vertical-align:middle; margin-right:4px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.4)) }
+.chip-icon{ height:20px; width:auto; vertical-align:middle; margin-right:4px }
 /* Color picker (AI) */
 .colorpick{ display:none; gap:10px; width:100%; max-width:360px; justify-content:center }
 .colorpick.show{ display:flex }
@@ -249,9 +257,9 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     </div>
   </div>
   <div class="lobby" id="lobby">
-    <p class="lobby-name">Tu nombre: <strong id="myName">---</strong></p>
+    <p class="lobby-name">Tu nombre: <strong id="myName">---</strong> <button class="lobby-rename" id="renamePseudo" title="Cambiar nombre">&#x21bb;</button></p>
     <p class="lobby-hint">Comparte tu nombre por WhatsApp para que te encuentren</p>
-    <p class="lobby-status" id="lobbyStatus"></p>
+    <p class="lobby-status" id="lobbyStatus"><span class="lobby-searching">Buscando rivales...</span></p>
     <ul class="lobby-list" id="lobbyList"></ul>
   </div>
   <button class="back" id="backBtn" style="display:none">&larr; volver</button>
@@ -300,7 +308,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=54';
+const V='?v=55';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -505,11 +513,18 @@ function refreshLobby(){
       var prefix='jfreino-';
       var others=ids.filter(function(id){ return id.indexOf(prefix)===0 && id!==net.peer.id; });
       var ul=$('lobbyList');
-      if(others.length===0){ ul.innerHTML='<li class="lobby-empty">Nadie en el lobby todavia...</li>'; return; }
+      var n=others.length;
+      $('lobbyStatus').innerHTML=n>0
+        ?'<span class="lobby-searching">'+n+' rival'+(n>1?'es':'')+' en el lobby</span>'
+        :'<span class="lobby-searching">Buscando rivales...</span>';
+      if(n===0){ ul.innerHTML='<li class="lobby-empty">Nadie en el lobby todavia... comparte el link!</li>'; return; }
       ul.innerHTML='';
-      others.forEach(function(id){
+      others.forEach(function(id,i){
         var name=id.slice(prefix.length); name=name.charAt(0).toUpperCase()+name.slice(1);
-        var li=document.createElement('li'); li.textContent=name; li.dataset.pid=id;
+        var shield=i%2===0?'assets/shield-blue.png':'assets/shield-red.png';
+        var li=document.createElement('li');
+        li.innerHTML='<img class="li-shield" src="'+shield+'"><span class="li-name">'+name+'</span><span class="li-arrow">&#9876;</span>';
+        li.dataset.pid=id;
         li.onclick=function(){ lobbyConnect(id,name); };
         ul.appendChild(li);
       });
@@ -525,9 +540,9 @@ function goOnline(){
   var peerId='jfreino-'+myPseudo.toLowerCase();
   net.peer=new Peer(peerId);
   net.peer.on('open',function(){
-    $('lobbyStatus').textContent='Buscando rivales...';
+    $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
     refreshLobby();
-    lobbyTimer=setInterval(refreshLobby,4000);
+    lobbyTimer=setInterval(refreshLobby,3000);
     net.peer.on('connection',function(c){
       if(net.conn){ c.on('open',function(){ c.send({t:'full'}); }); return; }
       net.conn=c; net.isHost=true; net.myColor='w'; wireConn(c);
@@ -549,9 +564,15 @@ function lobbyConnect(targetId,name){
   net.isHost=false; net.myColor='b';
   var c=net.peer.connect(targetId,{reliable:true}); net.conn=c; wireConn(c);
   c.on('open',function(){ c.send({t:'hello',name:myPseudo}); });
-  setTimeout(function(){ if(!net.active){ $('lobbyStatus').textContent=name+' no respondio. Reintentando...'; net.conn=null; lobbyTimer=setInterval(refreshLobby,4000); refreshLobby(); } },8000);
+  setTimeout(function(){ if(!net.active){ $('lobbyStatus').innerHTML='<span class="lobby-searching">'+name+' no respondio. Volviendo al lobby...</span>'; net.conn=null; lobbyTimer=setInterval(refreshLobby,3000); refreshLobby(); } },8000);
 }
 $('btnOnline').onclick=goOnline;
+$('renamePseudo').onclick=function(){
+  if(!net.peer||net.conn) return;
+  try{ net.peer.destroy(); }catch(e){}
+  myPseudo=genPseudo(); $('myName').textContent=myPseudo;
+  setTimeout(goOnline,300);
+};
 
 /* Zoom / focus mode */
 $('zoombtn').onclick=()=>{ const on=document.body.classList.toggle('focusmode');
