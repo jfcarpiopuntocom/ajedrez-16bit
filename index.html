@@ -72,6 +72,10 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   background:#1c140d; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; text-align:center; width:100%; max-width:280px }
 .lobby-input::placeholder{ color:#999999; -webkit-text-fill-color:#999999 }
 .lobby-status{ margin:0; font-size:13px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; min-height:16px }
+/* Color picker (AI) */
+.colorpick{ display:none; gap:10px; width:100%; max-width:360px; justify-content:center }
+.colorpick.show{ display:flex }
+.colorpick button{ flex:1 }
 /* Capture bar rotation for face-to-face */
 .cap.rotcap{ transform:rotate(180deg) }
 
@@ -219,6 +223,10 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <button class="bigbtn online" id="btnOnline">🌐 Jugar online (1 vs 1)</button>
   </div>
   <div class="levels" id="levels"></div>
+  <div class="colorpick" id="colorpick">
+    <button class="bigbtn" id="pickBlue">&#129409; Azul</button>
+    <button class="bigbtn ai" id="pickRed">&#128009; Rojo</button>
+  </div>
   <div class="kingpick" id="kingpick">
     <div class="kingrow" data-side="w">
       <span class="lbl">Elegir Rey Azul:</span>
@@ -249,7 +257,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   <div class="status" id="status"></div>
 
   <div class="stage">
-    <section class="cap red"><h3>Capturas Rojo <span class="score" id="scoreB"></span></h3><div class="slots" id="capB"></div></section>
+    <section class="cap red"><h3>&#128009; Capturas Rojo <span class="score" id="scoreB"></span></h3><div class="slots" id="capB"></div></section>
     <div class="board-area">
       <div class="board-frame">
         <div></div><div class="coord files" id="filesTop"></div><div></div>
@@ -259,7 +267,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
         <div></div><div class="coord files" id="filesBot"></div><div></div>
       </div>
     </div>
-    <section class="cap blue"><h3>Capturas Azul <span class="score" id="scoreW"></span></h3><div class="slots" id="capW"></div></section>
+    <section class="cap blue"><h3>&#129409; Capturas Azul <span class="score" id="scoreW"></span></h3><div class="slots" id="capW"></div></section>
     <div class="left-rail">
       <div class="quote" id="quote"></div>
       <aside class="history" id="history"><h4>Jugadas</h4><ol id="histlist"></ol></aside>
@@ -286,14 +294,14 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=50';
+const V='?v=51';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
 const VAL={p:1,n:3,b:3,r:5,q:9,k:0};
 const LEVELS=[
-  {key:'casual', name:'Casual',            elo:600,  skill:0,  mt:150, tag:'para calentar'},
-  {key:'novato', name:'Novato',            elo:800,  skill:1,  mt:200, tag:'principiante'},
+  {key:'casual', name:'Casual',            elo:null, skill:0,  mt:150, tag:'~333 Elo'},
+  {key:'novato', name:'Novato',            elo:null, skill:1,  mt:200, tag:'~600 Elo'},
   {key:'medio',  name:'Medio',             elo:1200, skill:3,  mt:400},
   {key:'alto',   name:'Alto calibre',      elo:1600, skill:8,  mt:600},
   {key:'master', name:'Chess Master',      elo:2100, skill:14, mt:900},
@@ -335,7 +343,7 @@ function startQuotes(){ if(qTimer) clearInterval(qTimer); qi=-1; rotateQuote(); 
 const BOARD_W=472, BOARD_H=536, ASPECT=BOARD_W/BOARD_H, FILES='abcdefgh';
 
 let mode='2p', level=LEVELS[1];
-let started=false, flipped=false, lastMove=null, busy=false, healing=false, resigned=false;
+let started=false, flipped=false, lastMove=null, busy=false, healing=false, resigned=false, playerColor='w';
 const game=new Chess(); const capW=[], capB=[];
 let muted=false, redoStack=[];
 
@@ -392,10 +400,15 @@ const gridEl=$('grid'), boardEl=$('board'), statusEl=$('status'), note=$('note')
 const levelsEl=$('levels');
 LEVELS.forEach(l=>{ const b=document.createElement('button'); b.className='lv'; b.dataset.key=l.key;
   b.innerHTML=`<span>${l.name}</span><span class="tag">${l.tag?l.tag:(l.elo?('~'+l.elo+' Elo'):'máxima')}</span>`;
-  b.onclick=()=>{ level=l; startGame('ai'); }; levelsEl.appendChild(b); });
+  b.onclick=()=>{ level=l; showColorPick(); }; levelsEl.appendChild(b); });
 $('btn2p').onclick=()=>startGame('2p');
-$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rojo'; $('backBtn').style.display='block'; };
-$('backBtn').onclick=()=>{ levelsEl.classList.remove('show'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('rivalName').value='';
+$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rival'; $('backBtn').style.display='block'; };
+function showColorPick(){ levelsEl.classList.remove('show'); $('colorpick').classList.add('show'); $('startH2').textContent='¿De qué lado juegas?'; }
+$('pickBlue').onclick=()=>{ playerColor='w'; $('colorpick').classList.remove('show'); startGame('ai'); };
+$('pickRed').onclick=()=>{ playerColor='b'; $('colorpick').classList.remove('show'); startGame('ai'); };
+$('backBtn').onclick=()=>{
+  if($('colorpick').classList.contains('show')){ $('colorpick').classList.remove('show'); levelsEl.classList.add('show'); $('startH2').textContent='Elige el nivel del Rival'; return; }
+  levelsEl.classList.remove('show'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('rivalName').value='';
   $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none'; };
 $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(!b) return;
   const row=b.closest('.kingrow'); if(row.dataset.side==='w') blueKing=b.dataset.k; else redKing=b.dataset.k;
@@ -487,13 +500,14 @@ function startGame(m){
   mode=m; started=true; resigned=false;
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; flipped=false; redoStack.length=0;
   if(m==='online' && net.myColor==='b') flipped=true;
+  if(m==='ai' && playerColor==='b') flipped=true;
   $('zoombtn').style.display='block';
   $('start').classList.add('hidden'); $('app').style.display='flex';
-  $('lobby').classList.remove('show');
+  $('lobby').classList.remove('show'); $('colorpick').classList.remove('show');
   $('rematch').style.display='none';
   $('resign').style.display='';
   $('drawbtn').style.display=m==='ai'?'none':'';
-  if(mode==='ai') boot();
+  if(mode==='ai'){ boot(); if(playerColor==='b'&&(ready||fallback)) setTimeout(aiMove,400); }
   render(); status(); startQuotes(); renderHistory();
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); });
 }
@@ -501,6 +515,7 @@ function backToStart(){
   started=false; resigned=false; netReset(); document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').textContent='⛶';
   $('app').style.display='none'; $('start').classList.remove('hidden');
   $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('rivalName').value='';
+  $('colorpick').classList.remove('show'); playerColor='w';
   levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none';
   myPseudo=genPseudo();
 }
@@ -575,7 +590,7 @@ function heal(why){ if(healing) return; healing=true; try{ render(); } finally{ 
 /* ===== Pure drag ===== */
 function canDrag(color){ if(busy||game.game_over()||resigned) return false; if(color!==game.turn()) return false;
   if(mode==='online') return net.active && color===net.myColor;
-  return mode==='2p'?true:color==='w'; }
+  return mode==='2p'?true:color===playerColor; }
 let drag=null;
 function killGhost(){ document.querySelectorAll('.drag-ghost').forEach(g=>g.remove()); }
 function cleanupDrag(){ killGhost(); gridEl.querySelectorAll('img[style*="hidden"]').forEach(i=>i.style.visibility=''); drag=null; }
@@ -633,7 +648,7 @@ function doMove(mv,fromRemote){
   else if(res.captured) SFX.capture();
   else SFX.move();
   render(); status(); renderHistory(); maybeShowRematch();
-  if(mode==='ai' && !game.game_over() && game.turn()==='b') setTimeout(aiMove,200);
+  if(mode==='ai' && !game.game_over() && game.turn()!==playerColor) setTimeout(aiMove,200);
 }
 
 /* ===== Status ===== */
@@ -646,8 +661,8 @@ function status(){
   else if(game.in_draw()) s='Tablas (50 movimientos).';
   else if(game.in_check()) s='<span class="warn">¡Jaque!</span>';
   else if(mode==='online') s=(game.turn()===net.myColor?'<span class="chip '+(net.myColor==='w'?'azul':'rojo')+'">Tu turno</span>':'<span class="chip '+(net.myColor==='w'?'rojo':'azul')+'">Turno de '+(net.rivalName||'rival')+'…</span>');
-  else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul">Turno Azul</span>':'<span class="chip rojo">Turno Rojo</span>');
-  else s=(game.turn()==='w'?'<span class="chip azul">Tu turno</span>':'<span class="chip rojo">Piensa el Rojo…</span>');
+  else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul">&#129409; Turno Azul</span>':'<span class="chip rojo">&#128009; Turno Rojo</span>');
+  else s=(game.turn()===playerColor?'<span class="chip '+(playerColor==='w'?'azul':'rojo')+'">Tu turno</span>':'<span class="chip '+(playerColor==='w'?'rojo':'azul')+'">Piensa el rival…</span>');
   statusEl.innerHTML=s;
 }
 
@@ -666,7 +681,8 @@ async function boot(){
 }
 function toFallback(w){ if(fallback) return; fallback=true; ready=true; note.textContent='IA local ('+w+')'; }
 function onMsg(e){ const l=typeof e.data==='string'?e.data:'';
-  if((l.includes('uciok')||l.includes('readyok'))&&!ready){ ready=true; configEngine(); note.textContent='Stockfish · '+level.name; }
+  if((l.includes('uciok')||l.includes('readyok'))&&!ready){ ready=true; configEngine(); note.textContent='Stockfish · '+level.name;
+    if(mode==='ai'&&!game.game_over()&&game.turn()!==playerColor) setTimeout(aiMove,200); }
   if(l.startsWith('bestmove')){ const mv=l.split(' ')[1]; if(mv&&mv!=='(none)') engMove(mv); else { busy=false; status(); } }
 }
 function configEngine(){ note.textContent=(fallback?'IA local · ':'Stockfish · ')+level.name;
@@ -685,7 +701,7 @@ function aiMove(){ if(game.game_over()) return; busy=true; status();
 function engMove(uci){ const from=uci.slice(0,2), to=uci.slice(2,4), promo=uci.length>4?uci[4]:undefined;
   const res=game.move({from,to,promotion:promo}); busy=false;
   if(!res){ render(); status(); return; }
-  if(res.captured) capB.push({color:'w',type:res.captured});
+  if(res.captured) (res.color==='w'?capW:capB).push({color:res.color==='w'?'b':'w',type:res.captured});
   lastMove={from:res.from,to:res.to};
   actxInit();
   if(game.in_checkmate()) SFX.mate();
