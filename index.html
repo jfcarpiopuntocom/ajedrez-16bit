@@ -329,7 +329,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=60';
+const V='?v=61';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -569,7 +569,7 @@ function renderLobby(){
   var others=[]; var selfEntry=null;
   for(var id in map){ if(map[id].self) selfEntry={id:id,name:map[id].name}; else others.push({id:id,name:map[id].name}); }
   var hubTag=net.isHub?' &middot; tu eres anfitrion':'';
-  var netTag=trysteroRoom?' &middot; '+(window.__trystero?window.__trystero.kind:'p2p'):'';
+  var netTag=trysteroRoom?' &middot; powered by '+(window.__trystero?window.__trystero.kind:'p2p'):'';
   $('lobbyStatus').innerHTML=others.length>0
     ?'<span class="lobby-searching">'+others.length+' rival'+(others.length>1?'es':'')+' conectado'+(others.length>1?'s':'')+hubTag+netTag+'</span>'
     :'<span class="lobby-searching">Esperando que se conecten rivales...'+hubTag+netTag+'</span>';
