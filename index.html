@@ -310,7 +310,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=58';
+const V='?v=59';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -467,13 +467,20 @@ $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[dat
   const row=b.closest('.kingrow'); if(row.dataset.side==='w') blueKing=b.dataset.k; else redKing=b.dataset.k;
   [...row.querySelectorAll('button[data-k]')].forEach(x=>x.classList.toggle('active',x===b)); });
 
-/* ===== Online 1 vs 1 (PeerJS / WebRTC P2P) — lobby with pseudonyms ===== */
-const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'' };
+/* ===== Online 1 vs 1 (PeerJS / WebRTC P2P) — lobby with hub-based presence ===== */
+const HUB_ID='jfreino-lobby-hub';
+const PRESENCE_TTL=180000; // 3 minutes
+const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'',
+            hubPeer:null, hubConn:null, isHub:false, roster:[] };
 function netReset(){
   try{ if(net.conn) net.conn.close(); }catch(e){}
+  try{ if(net.hubConn) net.hubConn.close(); }catch(e){}
+  try{ if(net.hubPeer) net.hubPeer.destroy(); }catch(e){}
   try{ if(net.peer) net.peer.destroy(); }catch(e){}
   net.active=false; net.peer=null; net.conn=null; net.isHost=false; net.myColor='w'; net.rivalName='';
+  net.hubPeer=null; net.hubConn=null; net.isHub=false; net.roster=[];
   if(lobbyTimer){ clearInterval(lobbyTimer); lobbyTimer=null; }
+  if(hubHeartbeat){ clearInterval(hubHeartbeat); hubHeartbeat=null; }
 }
 function netSend(o){ if(net.conn && net.conn.open){ try{ net.conn.send(o); }catch(e){} } }
 function wireConn(c){
@@ -507,35 +514,109 @@ function wireConn(c){
   c.on('close',()=>{ if(net.active){ statusEl.innerHTML='<span class="warn">'+net.rivalName+' se desconectó.</span>'; net.active=false; if(typeof showEndButtons==='function') showEndButtons(); } });
   c.on('error',()=>{});
 }
-let lobbyTimer=null;
-function refreshLobby(){
-  if(!net.peer||net.peer.destroyed||net.conn) return;
-  try{
-    net.peer.listAllPeers(function(ids){
-      var prefix='jfreino-';
-      var others=ids.filter(function(id){ return id.indexOf(prefix)===0 && id!==net.peer.id; });
-      var ul=$('lobbyList');
-      var n=others.length;
-      $('lobbyStatus').innerHTML=n>0
-        ?'<span class="lobby-searching">'+n+' rival'+(n>1?'es':'')+' en el lobby</span>'
-        :'<span class="lobby-searching">Buscando rivales...</span>';
-      if(n===0){ ul.innerHTML='<li class="lobby-empty">Nadie en el lobby todavia... comparte el link!</li>'; return; }
-      ul.innerHTML='';
-      others.forEach(function(id,i){
-        var name=id.slice(prefix.length); name=name.charAt(0).toUpperCase()+name.slice(1);
-        var shield=i%2===0?'assets/shield-blue.png':'assets/shield-red.png';
-        var li=document.createElement('li');
-        var img=document.createElement('img'); img.className='li-shield'; img.src=shield;
-        var sp=document.createElement('span'); sp.className='li-name'; sp.textContent=name;
-        var ar=document.createElement('span'); ar.className='li-arrow'; ar.innerHTML='&#9876;';
-        li.appendChild(img); li.appendChild(sp); li.appendChild(ar);
-        li.dataset.pid=id;
-        li.onclick=function(){ lobbyConnect(id,name); };
-        ul.appendChild(li);
-      });
-    });
-  }catch(e){}
+let lobbyTimer=null, hubHeartbeat=null;
+
+function renderLobby(){
+  var others=net.roster.filter(function(p){ return p.id!==(net.peer&&net.peer.id); });
+  var ul=$('lobbyList'); var n=others.length;
+  var hubTag=net.isHub?' &middot; tu eres el anfitrion':'';
+  $('lobbyStatus').innerHTML=n>0
+    ?'<span class="lobby-searching">'+n+' rival'+(n>1?'es':'')+' en el lobby'+hubTag+'</span>'
+    :'<span class="lobby-searching">Buscando rivales...'+hubTag+'</span>';
+  if(n===0){ ul.innerHTML='<li class="lobby-empty">Nadie en el lobby todavia... comparte el link!</li>'; return; }
+  ul.innerHTML='';
+  others.forEach(function(p,i){
+    var shield=i%2===0?'assets/shield-blue.png':'assets/shield-red.png';
+    var li=document.createElement('li');
+    var img=document.createElement('img'); img.className='li-shield'; img.src=shield;
+    var sp=document.createElement('span'); sp.className='li-name'; sp.textContent=p.name;
+    var ar=document.createElement('span'); ar.className='li-arrow'; ar.innerHTML='&#9876;';
+    li.appendChild(img); li.appendChild(sp); li.appendChild(ar);
+    li.dataset.pid=p.id;
+    li.onclick=function(){ lobbyConnect(p.id,p.name); };
+    ul.appendChild(li);
+  });
 }
+
+function broadcastRoster(){
+  if(!net.isHub) return;
+  var publicList=net.roster.map(function(p){ return {id:p.id,name:p.name}; });
+  net.roster.forEach(function(p){
+    if(p.conn && p.conn.open){ try{ p.conn.send({t:'lobby-roster',list:publicList}); }catch(e){} }
+  });
+  renderLobby();
+}
+
+function tryClaimHub(){
+  if(!net.peer||net.peer.destroyed||net.isHub||net.hubPeer||net.conn) return;
+  var hp=new Peer(HUB_ID); net.hubPeer=hp;
+  hp.on('open',function(){
+    net.isHub=true;
+    net.roster=[{id:net.peer.id,name:myPseudo,last:Date.now(),conn:null}];
+    hp.on('connection',function(c){
+      var entry=null;
+      c.on('data',function(d){
+        if(!d||!d.t) return;
+        if(d.t==='lobby-join'){
+          net.roster=net.roster.filter(function(p){ return p.id!==d.id; });
+          entry={id:d.id,name:String(d.name||'???').slice(0,30),last:Date.now(),conn:c};
+          net.roster.push(entry); broadcastRoster();
+        } else if(d.t==='lobby-ping' && entry){ entry.last=Date.now(); }
+      });
+      c.on('close',function(){
+        if(entry){ net.roster=net.roster.filter(function(p){ return p.id!==entry.id; }); broadcastRoster(); }
+      });
+      c.on('error',function(){});
+    });
+    if(hubHeartbeat){ clearInterval(hubHeartbeat); }
+    hubHeartbeat=setInterval(function(){
+      var now=Date.now(), before=net.roster.length;
+      net.roster=net.roster.filter(function(p){ return p.id===net.peer.id || (now-p.last)<PRESENCE_TTL; });
+      if(net.roster.length!==before) broadcastRoster();
+    },10000);
+    renderLobby();
+  });
+  hp.on('error',function(err){
+    if(err && err.type==='unavailable-id'){
+      try{ hp.destroy(); }catch(e){}
+      net.hubPeer=null; net.isHub=false;
+      setTimeout(tryConnectHub,600);
+    }
+  });
+}
+
+function tryConnectHub(){
+  if(!net.peer||net.peer.destroyed||net.peer.id===HUB_ID||net.hubConn||net.conn) return;
+  var hc=net.peer.connect(HUB_ID,{reliable:true,metadata:{type:'lobby'}}); net.hubConn=hc;
+  var opened=false;
+  hc.on('open',function(){
+    opened=true;
+    try{ hc.send({t:'lobby-join',id:net.peer.id,name:myPseudo}); }catch(e){}
+    if(hubHeartbeat){ clearInterval(hubHeartbeat); }
+    hubHeartbeat=setInterval(function(){ if(hc.open){ try{ hc.send({t:'lobby-ping',id:net.peer.id}); }catch(e){} } },20000);
+  });
+  hc.on('data',function(d){
+    if(!d||!d.t) return;
+    if(d.t==='lobby-roster'){
+      net.roster=(d.list||[]).map(function(p){ return {id:p.id,name:p.name,last:Date.now(),conn:null}; });
+      renderLobby();
+    }
+  });
+  hc.on('close',function(){
+    net.hubConn=null;
+    if(hubHeartbeat){ clearInterval(hubHeartbeat); hubHeartbeat=null; }
+    if(!net.active && net.peer && !net.peer.destroyed){
+      setTimeout(tryClaimHub,800);
+    }
+  });
+  hc.on('error',function(){});
+  setTimeout(function(){
+    if(!opened && net.peer && !net.peer.destroyed){
+      try{ hc.close(); }catch(e){} net.hubConn=null; tryClaimHub();
+    }
+  },5000);
+}
+
 function goOnline(){
   if(typeof Peer==='undefined'){ $('startH2').textContent='No se pudo cargar el modo online.'; return; }
   $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
@@ -546,13 +627,11 @@ function goOnline(){
   net.peer=new Peer(peerId);
   net.peer.on('open',function(){
     $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
-    refreshLobby();
-    lobbyTimer=setInterval(refreshLobby,3000);
     net.peer.on('connection',function(c){
-      if(net.conn){ c.on('open',function(){ c.send({t:'full'}); }); return; }
+      if(net.conn){ c.on('open',function(){ try{ c.send({t:'full'}); }catch(e){} }); return; }
       net.conn=c; net.isHost=true; net.myColor='w'; wireConn(c);
-      clearInterval(lobbyTimer); lobbyTimer=null;
     });
+    tryConnectHub();
   });
   net.peer.on('error',function(err){
     if(!err) return;
@@ -561,31 +640,35 @@ function goOnline(){
       myPseudo=genPseudo(); $('myName').textContent=myPseudo;
       setTimeout(goOnline,300); return;
     }
-    // Recoverable: just keep the lobby running, reconnect if needed
     var silent={'peer-unavailable':1,'network':1,'disconnected':1,'server-error':1,'socket-closed':1,'socket-error':1};
     if(silent[err.type]){
       try{ if(net.peer && net.peer.disconnected && !net.peer.destroyed) net.peer.reconnect(); }catch(e){}
       return;
     }
-    // Anything else: silent retry to keep lobby alive
     $('lobbyStatus').innerHTML='<span class="lobby-searching">Reconectando al lobby...</span>';
-    setTimeout(function(){ try{ if(net.peer) net.peer.destroy(); }catch(e){} goOnline(); },2500);
+    setTimeout(function(){ netReset(); goOnline(); },2500);
   });
 }
+
 function lobbyConnect(targetId,name){
   if(!net.peer||net.conn) return;
-  $('lobbyStatus').textContent='Conectando con '+name+'...';
-  clearInterval(lobbyTimer); lobbyTimer=null;
+  $('lobbyStatus').innerHTML='<span class="lobby-searching">Conectando con '+name+'...</span>';
   net.isHost=false; net.myColor='b';
   var c=net.peer.connect(targetId,{reliable:true}); net.conn=c; wireConn(c);
-  c.on('open',function(){ c.send({t:'hello',name:myPseudo}); });
-  setTimeout(function(){ if(!net.active){ try{if(net.conn)net.conn.close();}catch(e){} $('lobbyStatus').innerHTML='<span class="lobby-searching">'+name+' no respondio. Volviendo al lobby...</span>'; net.conn=null; lobbyTimer=setInterval(refreshLobby,3000); refreshLobby(); } },8000);
+  c.on('open',function(){ try{ c.send({t:'hello',name:myPseudo}); }catch(e){} });
+  setTimeout(function(){
+    if(!net.active){
+      try{ if(net.conn) net.conn.close(); }catch(e){} net.conn=null;
+      $('lobbyStatus').innerHTML='<span class="lobby-searching">'+name+' no respondio. Vuelve al lobby.</span>';
+      renderLobby();
+    }
+  },8000);
 }
+
 $('btnOnline').onclick=goOnline;
 $('renamePseudo').onclick=function(){
   if(!net.peer||net.conn) return;
-  try{ net.peer.destroy(); }catch(e){}
-  myPseudo=genPseudo(); $('myName').textContent=myPseudo;
+  netReset(); myPseudo=genPseudo(); $('myName').textContent=myPseudo;
   setTimeout(goOnline,300);
 };
 
@@ -854,7 +937,9 @@ function backToLobby(){
   $('startH2').textContent='Lobby Online'; $('myName').textContent=myPseudo;
   if(net.peer && !net.peer.destroyed){
     $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
-    refreshLobby(); if(lobbyTimer){ clearInterval(lobbyTimer); } lobbyTimer=setInterval(refreshLobby,3000);
+    if(net.isHub){ renderLobby(); }
+    else if(net.hubConn && net.hubConn.open){ renderLobby(); try{ net.hubConn.send({t:'lobby-ping',id:net.peer.id}); }catch(e){} }
+    else { tryConnectHub(); }
   } else { goOnline(); }
 }
 $('backLobbyBtn').onclick=backToLobby;
