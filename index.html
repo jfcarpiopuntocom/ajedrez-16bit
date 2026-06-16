@@ -366,7 +366,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=63';
+const V='?v=64';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -994,8 +994,8 @@ function status(){
   else if(game.in_check()) s='<span class="warn">¡Jaque!</span>';
   else if(mode==='online') s=(game.turn()===net.myColor?'<span class="chip '+(net.myColor==='w'?'azul':'rojo')+'">Tu turno</span>':'<span class="chip '+(net.myColor==='w'?'rojo':'azul')+'">Turno de '+(net.rivalName||'rival')+'…</span>');
   else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul"><img src="assets/shield-blue.png" class="chip-icon"> Turno Azul</span>':'<span class="chip rojo"><img src="assets/shield-red.png" class="chip-icon"> Turno Rojo</span>');
-  else{ var ln=(fallback?'IA local':'Stockfish')+' · '+level.name;
-    s=(game.turn()===playerColor?'<span class="chip '+(playerColor==='w'?'azul':'rojo')+'">Tu turno</span> <span class="lvl">vs '+ln+'</span>':'<span class="chip '+(playerColor==='w'?'rojo':'azul')+'">Piensa el rival…</span> <span class="lvl">'+ln+'</span>'); }
+  else{ var eng=fallback?'IA local':'Stockfish'; var ln=level.name+' &middot; powered by '+eng;
+    s=(game.turn()===playerColor?'<span class="chip '+(playerColor==='w'?'azul':'rojo')+'">Tu turno</span> <span class="lvl">vs. '+ln+'</span>':'<span class="chip '+(playerColor==='w'?'rojo':'azul')+'">Piensa el rival…</span> <span class="lvl">'+ln+'</span>'); }
   statusEl.innerHTML=s;
 }
 
