@@ -388,7 +388,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=65';
+const V='?v=66';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -541,6 +541,14 @@ $('pickRed').addEventListener('mouseenter',()=>$('kingpick').classList.add('focu
 $('pickRed').addEventListener('mouseleave',()=>$('kingpick').classList.remove('focus-red'));
 $('pickBlue').addEventListener('touchstart',()=>{ $('kingpick').classList.remove('focus-red'); $('kingpick').classList.add('focus-blue'); },{passive:true});
 $('pickRed').addEventListener('touchstart',()=>{ $('kingpick').classList.remove('focus-blue'); $('kingpick').classList.add('focus-red'); },{passive:true});
+var __clearPickFocus=()=>$('kingpick').classList.remove('focus-blue','focus-red');
+$('pickBlue').addEventListener('touchcancel',__clearPickFocus,{passive:true});
+$('pickRed').addEventListener('touchcancel',__clearPickFocus,{passive:true});
+$('colorpick').addEventListener('touchmove',(e)=>{
+  var t=e.touches[0]; if(!t) return;
+  var el=document.elementFromPoint(t.clientX,t.clientY);
+  if(!el || (!el.closest('#pickBlue') && !el.closest('#pickRed'))) __clearPickFocus();
+},{passive:true});
 $('pickBlue').onclick=()=>{ playerColor='w'; $('colorpick').classList.remove('show'); $('kingpick').classList.remove('focus-blue','focus-red'); startGame('ai'); };
 $('pickRed').onclick=()=>{ playerColor='b'; $('colorpick').classList.remove('show'); $('kingpick').classList.remove('focus-blue','focus-red'); startGame('ai'); };
 $('backBtn').onclick=()=>{
@@ -666,7 +674,7 @@ function initTrysteroLobby(){
       var nm=String(data.name||'???').slice(0,30);
       var pid=String(data.peerJsId||'').slice(0,80);
       if(!pid) return;
-      trysteroPeers[peerId]={name:nm,peerJsId:pid};
+      trysteroPeers[peerId]={name:nm,peerJsId:pid,last:Date.now()};
       renderLobby();
     });
     trysteroRoom.onPeerJoin(function(peerId){
@@ -683,6 +691,12 @@ function initTrysteroLobby(){
       if(trysteroSendInfo && net.peer && !net.peer.destroyed){
         try{ trysteroSendInfo({name:myPseudo,peerJsId:net.peer.id}); }catch(e){}
       }
+      // Prune ghosts: entries not refreshed within 60s
+      var now=Date.now(), pruned=false;
+      for(var k in trysteroPeers){
+        if(now-(trysteroPeers[k].last||0)>60000){ delete trysteroPeers[k]; pruned=true; }
+      }
+      if(pruned) renderLobby();
     },10000);
     renderLobby();
   }catch(e){ trysteroRoom=null; }
