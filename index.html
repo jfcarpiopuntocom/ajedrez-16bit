@@ -190,10 +190,11 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .cap .slots img{ height:20px; width:auto }
 
 /* ---------- Buttons (bottom) ---------- */
-.hud{ flex:0 0 auto; display:flex; gap:10px; justify-content:center; align-items:center }
-.hud button{ font-size:15px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
-  background:linear-gradient(#5a2a14,#3a1a0c); border:2px solid var(--gold); border-radius:10px; padding:9px 18px; min-height:44px; cursor:pointer }
+.hud{ flex:0 0 auto; display:flex; flex-wrap:wrap; gap:6px; justify-content:center; align-items:center; padding:0 4px 4px }
+.hud button{ font-size:13px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  background:linear-gradient(#5a2a14,#3a1a0c); border:2px solid var(--gold); border-radius:10px; padding:8px 10px; min-height:44px; cursor:pointer; flex:0 0 auto }
 .hud button.gold{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
+@media (min-width:600px){ .hud{ gap:10px } .hud button{ font-size:15px; padding:9px 18px } }
 .note{ flex:0 0 auto; text-align:center; font-size:13px; min-height:15px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
 .quote{ flex:0 0 auto; width:100%; max-width:430px; text-align:center; font-style:italic; font-size:13px; line-height:1.35;
   color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; padding:1px 8px; min-height:17px; transition:opacity .35s;
@@ -308,7 +309,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=56';
+const V='?v=57';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -553,11 +554,19 @@ function goOnline(){
     });
   });
   net.peer.on('error',function(err){
-    if(err && err.type==='unavailable-id'){
+    if(!err) return;
+    if(err.type==='unavailable-id'){
       try{ net.peer.destroy(); }catch(e){}
       myPseudo=genPseudo(); $('myName').textContent=myPseudo;
-      setTimeout(goOnline,300);
-    } else { $('lobbyStatus').textContent='Error de conexion.'; }
+      setTimeout(goOnline,300); return;
+    }
+    var recoverable={'peer-unavailable':1,'network':1,'disconnected':1,'server-error':1,'socket-closed':1};
+    if(recoverable[err.type]){
+      try{ if(net.peer && net.peer.disconnected && !net.peer.destroyed) net.peer.reconnect(); }catch(e){}
+      return;
+    }
+    $('lobbyStatus').innerHTML='<span class="lobby-searching">Reconectando...</span>';
+    setTimeout(function(){ try{ if(net.peer) net.peer.destroy(); }catch(e){} goOnline(); },2000);
   });
 }
 function lobbyConnect(targetId,name){
@@ -873,7 +882,10 @@ function maybeShowRematch(){
 }
 
 let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(fitBoard,90); });
-window.addEventListener('orientationchange',()=>setTimeout(fitBoard,200));
+function refitChain(){ fitBoard(); setTimeout(fitBoard,150); setTimeout(fitBoard,400); setTimeout(fitBoard,800); }
+window.addEventListener('orientationchange',refitChain);
+if(window.screen && window.screen.orientation){ try{ window.screen.orientation.addEventListener('change',refitChain); }catch(e){} }
+if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(fitBoard,90); }); }
 
 /* footer mail link, obfuscated: (1) base64, (2) string reversed, (3) the address
    and the scheme are assembled only on click — the static DOM/source contains
