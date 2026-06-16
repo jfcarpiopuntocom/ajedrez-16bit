@@ -36,7 +36,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
 /* ---------- START SCREEN ---------- */
 .start{ position:fixed; inset:0; z-index:100; background:radial-gradient(1100px 700px at 50% -6%, #3a2a1a 0%, #160f08 60%, #0a0604 100%);
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:10px 12px 34px; overflow:hidden }
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px 16px 44px; overflow:auto }
 .start.hidden{ display:none }
 .start img.banner{ width:100%; max-width:560px; height:auto; max-height:22vh; object-fit:contain }
 .start h2{ margin:0; font-size:18px; font-weight:800; text-align:center; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
@@ -46,12 +46,12 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .bigbtn.ai{ background:linear-gradient(#5a2a14,#3a1a0c) }
 .bigbtn.online{ background:linear-gradient(#145a3a,#0c3a26) }
 .bigbtn:active{ transform:translateY(1px) }
-.levels{ display:none; gap:6px; width:100%; max-width:380px }
-.levels.show{ display:grid; grid-template-columns:1fr 1fr }
-.levels .lv{ font-size:14px; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
-  border:2px solid var(--gold); border-radius:11px; padding:8px 6px; cursor:pointer; min-height:44px;
-  background:linear-gradient(#3a1f12,#26140b); display:flex; flex-direction:column; align-items:center; text-align:center; gap:1px }
-.levels .lv .tag{ font-size:12px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.levels{ display:none; flex-direction:column; gap:8px; width:100%; max-width:360px }
+.levels.show{ display:flex }
+.levels .lv{ font-size:16px; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  border:2px solid var(--gold); border-radius:11px; padding:12px 14px; cursor:pointer; min-height:50px;
+  background:linear-gradient(#3a1f12,#26140b); display:flex; justify-content:space-between; align-items:center }
+.levels .lv .tag{ font-size:13px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .kingpick{ display:flex; flex-direction:column; gap:7px; align-items:center }
 .kingrow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center }
 .kingrow .lbl{ font-size:14px; font-weight:800; min-width:78px; text-align:right;
@@ -62,18 +62,6 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .kingrow button.active{ border-color:var(--gold2); box-shadow:0 0 10px var(--gold) }
 .kingrow button img{ max-height:54px; max-width:54px; width:auto; height:auto; object-fit:contain; display:block }
 .back{ font-size:14px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; background:transparent; border:none; cursor:pointer; padding:6px }
-/* Lobby (online) */
-.lobby{ display:none; flex-direction:column; align-items:center; gap:8px; width:100%; max-width:360px }
-.lobby.show{ display:flex }
-.lobby-name{ margin:0; font-size:15px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
-.lobby-name strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:20px }
-.lobby-hint{ margin:0; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:center }
-.lobby-input{ font-size:16px; font-weight:700; padding:10px; border:2px solid var(--gold); border-radius:10px;
-  background:#1c140d; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; text-align:center; width:100%; max-width:280px }
-.lobby-input::placeholder{ color:#999999; -webkit-text-fill-color:#999999 }
-.lobby-status{ margin:0; font-size:13px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; min-height:16px }
-/* Capture bar rotation for face-to-face */
-.cap.rotcap{ transform:rotate(180deg) }
 
 /* ---------- Title (top, prominent) ---------- */
 .title-img{ flex:0 0 auto; display:block; margin:0 auto; width:auto; max-width:100%; max-height:9vh; max-height:9svh; pointer-events:none }
@@ -215,32 +203,25 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   <h2 id="startH2">¿Cómo quieres jugar?</h2>
   <div class="choices">
     <button class="bigbtn" id="btn2p">👥 Con un amigo en persona</button>
-    <button class="bigbtn ai" id="btnAI">🐉 Contra la IA (7 niveles)</button>
+    <button class="bigbtn ai" id="btnAI">🐉 Contra la IA (5 dificultades)</button>
     <button class="bigbtn online" id="btnOnline">🌐 Jugar online (1 vs 1)</button>
   </div>
   <div class="levels" id="levels"></div>
   <div class="kingpick" id="kingpick">
     <div class="kingrow" data-side="w">
-      <span class="lbl">Elegir Rey Azul:</span>
+      <span class="lbl">Rey Azul:</span>
       <button data-k="k_bkA" class="active"><img src="assets/pieces/k_bkA_hi.png?v=22" alt="Rey azul 1"></button>
       <button data-k="k_bkB"><img src="assets/pieces/k_bkB_hi.png?v=22" alt="Rey azul 2"></button>
       <button data-k="k_bkC"><img src="assets/pieces/k_bkC_hi.png?v=22" alt="Rey azul 3"></button>
     </div>
     <div class="kingrow" data-side="b">
-      <span class="lbl">Elegir Rey Rojo:</span>
+      <span class="lbl">Rey Rojo:</span>
       <button data-k="k_rkA" class="active"><img src="assets/pieces/k_rkA_hi.png?v=22" alt="Rey rojo 1"></button>
       <button data-k="k_rkB"><img src="assets/pieces/k_rkB_hi.png?v=22" alt="Rey rojo 2"></button>
       <button data-k="k_rkC"><img src="assets/pieces/k_rkC_hi.png?v=22" alt="Rey rojo 3"></button>
     </div>
   </div>
-  <div class="lobby" id="lobby">
-    <p class="lobby-name">Tu nombre: <strong id="myName">---</strong></p>
-    <p class="lobby-hint">Comparte tu nombre por WhatsApp y pide el de tu rival</p>
-    <input type="text" class="lobby-input" id="rivalName" placeholder="Nombre del rival" maxlength="30" autocomplete="off" spellcheck="false">
-    <button class="bigbtn online" id="lobbyGo">&#9876; Conectar</button>
-    <p class="lobby-status" id="lobbyStatus"></p>
-  </div>
-  <button class="back" id="backBtn" style="display:none">&larr; volver</button>
+  <button class="back" id="backBtn" style="display:none">← volver</button>
 </div>
 
 <!-- ===== GAME ===== -->
@@ -270,8 +251,6 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <button class="gold" id="newgame">Nueva Partida</button>
     <button id="undo">Deshacer</button>
     <button id="redo">Rehacer</button>
-    <button id="drawbtn" style="display:none">&#129309; Tablas</button>
-    <button id="resign" style="display:none">&#127987; Rendirse</button>
     <button id="rematch" style="display:none">Revancha</button>
     <button id="mutebtn" title="Sonido">🔊</button>
   </div>
@@ -286,7 +265,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=50';
+const V='?v=49';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -321,12 +300,6 @@ const APHORISMS=[
   {t:'Lo más caro es no planear.', a:'JuanFerland'},
   {t:'Quien no arriesga, rara vez conquista el reino.', a:'JuanFerland'},
 ];
-/* ===== Pseudonyms for online lobby ===== */
-const _NN=['Dragon','Caballo','Torre','Alfil','Peon','Leon','Aguila','Tigre','Oso','Lobo','Gato','Buho','Fenix','Grifo','Halcon','Cuervo','Toro','Zorro','Ogro','Mago','Vikingo','Pirata','Ninja','Samurai','Gladiador','Centauro','Minotauro','Kraken'];
-const _AJ=['Feroz','Loco','Valiente','Dorado','Nocturno','Veloz','Sabio','Bravo','Fugaz','Epico','Furioso','Invicto','Temible','Astuto','Audaz','Oscuro','Solar','Eterno'];
-function genPseudo(){ return _NN[Math.floor(Math.random()*_NN.length)]+_AJ[Math.floor(Math.random()*_AJ.length)]; }
-let myPseudo=genPseudo();
-
 let qi=-1, qTimer=null;
 function rotateQuote(){ const el=document.getElementById('quote'); if(!el) return;
   qi=(qi+1)%APHORISMS.length; const q=APHORISMS[qi];
@@ -335,7 +308,7 @@ function startQuotes(){ if(qTimer) clearInterval(qTimer); qi=-1; rotateQuote(); 
 const BOARD_W=472, BOARD_H=536, ASPECT=BOARD_W/BOARD_H, FILES='abcdefgh';
 
 let mode='2p', level=LEVELS[1];
-let started=false, flipped=false, lastMove=null, busy=false, healing=false, resigned=false;
+let started=false, flipped=false, lastMove=null, busy=false, healing=false;
 const game=new Chess(); const capW=[], capB=[];
 let muted=false, redoStack=[];
 
@@ -395,88 +368,53 @@ LEVELS.forEach(l=>{ const b=document.createElement('button'); b.className='lv'; 
   b.onclick=()=>{ level=l; startGame('ai'); }; levelsEl.appendChild(b); });
 $('btn2p').onclick=()=>startGame('2p');
 $('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rojo'; $('backBtn').style.display='block'; };
-$('backBtn').onclick=()=>{ levelsEl.classList.remove('show'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('rivalName').value='';
-  $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none'; };
+$('backBtn').onclick=()=>{ levelsEl.classList.remove('show'); netReset(); $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none'; };
 $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(!b) return;
   const row=b.closest('.kingrow'); if(row.dataset.side==='w') blueKing=b.dataset.k; else redKing=b.dataset.k;
   [...row.querySelectorAll('button[data-k]')].forEach(x=>x.classList.toggle('active',x===b)); });
 
-/* ===== Online 1 vs 1 (PeerJS / WebRTC P2P) — lobby with pseudonyms ===== */
-const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'' };
+/* ===== Online 1 vs 1 (PeerJS / WebRTC P2P) ===== */
+const ROOM='jfreino-sala-1';
+const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false };
 function netReset(){
   try{ if(net.conn) net.conn.close(); }catch(e){}
   try{ if(net.peer) net.peer.destroy(); }catch(e){}
-  net.active=false; net.peer=null; net.conn=null; net.isHost=false; net.myColor='w'; net.rivalName='';
+  net.active=false; net.peer=null; net.conn=null; net.isHost=false; net.myColor='w';
 }
 function netSend(o){ if(net.conn && net.conn.open){ try{ net.conn.send(o); }catch(e){} } }
-function wireConn(c){
+function wireConn(c,onReady){
+  c.on('open',()=>{ if(onReady) onReady(); });
   c.on('data',d=>{ if(!d||!d.t) return;
-    if(d.t==='hello'){
-      net.rivalName=d.name||'???';
-      if(net.isHost){ net.active=true; c.send({t:'start',name:myPseudo}); startGame('online'); }
-    }
-    else if(d.t==='start'){ net.rivalName=d.name||'???'; net.active=true; startGame('online'); }
+    if(d.t==='start'){ net.active=true; startGame('online'); }
     else if(d.t==='move'){ doMove(d.mv,true); }
-    else if(d.t==='full'){ $('lobbyStatus').textContent='Ese jugador ya tiene rival.'; }
-    else if(d.t==='resign'){
-      resigned=true;
-      const w=net.myColor==='w'?'Azul':'Rojo';
-      statusEl.innerHTML='<span class="win">'+net.rivalName+' se rindió. Vence el '+w+'. '+(net.myColor==='w'?'🦁':'🐉')+'</span>';
-      SFX.mate(); showEndButtons();
-    }
-    else if(d.t==='draw-offer'){
-      if(confirm(net.rivalName+' ofrece tablas. ¿Aceptar?')){
-        netSend({t:'draw-accept'}); resigned=true;
-        statusEl.innerHTML='<span class="warn">Tablas por acuerdo mutuo.</span>'; showEndButtons();
-      } else { netSend({t:'draw-decline'}); }
-    }
-    else if(d.t==='draw-accept'){
-      resigned=true; statusEl.innerHTML='<span class="warn">Tablas por acuerdo mutuo.</span>'; showEndButtons();
-    }
-    else if(d.t==='draw-decline'){
-      statusEl.innerHTML+=' <span class="warn">(rechazadas)</span>';
-    }
+    else if(d.t==='full'){ $('startH2').textContent='La sala está llena, intenta más tarde.'; netReset(); }
   });
-  c.on('close',()=>{ if(net.active){ statusEl.innerHTML='<span class="warn">'+net.rivalName+' se desconectó.</span>'; net.active=false; } });
+  c.on('close',()=>{ if(net.active){ statusEl.innerHTML='<span class="warn">El rival se desconectó.</span>'; net.active=false; } });
   c.on('error',()=>{});
 }
 function goOnline(){
   if(typeof Peer==='undefined'){ $('startH2').textContent='No se pudo cargar el modo online.'; return; }
-  $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
-  $('backBtn').style.display='block'; $('lobby').classList.add('show');
-  $('startH2').textContent='Lobby Online';
-  $('myName').textContent=myPseudo;
-  var peerId='jfreino-'+myPseudo.toLowerCase();
-  net.peer=new Peer(peerId);
-  net.peer.on('open',()=>{
-    $('lobbyStatus').textContent='Conectado. Esperando rival o escribe su nombre.';
+  $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('backBtn').style.display='block';
+  $('startH2').textContent='Buscando sala…';
+  net.peer=new Peer(ROOM);
+  net.peer.on('open',()=>{ net.isHost=true; net.myColor='w';
+    $('startH2').textContent='Sala lista. Esperando rival… (comparte la página)';
     net.peer.on('connection',c=>{
       if(net.conn){ c.on('open',()=>{ c.send({t:'full'}); }); return; }
-      net.conn=c; net.isHost=true; net.myColor='w'; wireConn(c);
+      net.conn=c; wireConn(c,()=>{ net.active=true; c.send({t:'start'}); startGame('online'); });
     });
   });
   net.peer.on('error',err=>{
     if(err && err.type==='unavailable-id'){
       try{ net.peer.destroy(); }catch(e){}
-      myPseudo=genPseudo(); $('myName').textContent=myPseudo;
-      setTimeout(goOnline,300);
-    } else { $('lobbyStatus').textContent='Error de conexión.'; }
+      net.isHost=false; net.myColor='b'; net.peer=new Peer();
+      net.peer.on('open',()=>{ $('startH2').textContent='Conectando con el anfitrión…';
+        const c=net.peer.connect(ROOM,{reliable:true}); net.conn=c; wireConn(c,null); });
+      net.peer.on('error',()=>{ $('startH2').textContent='No hay conexión online disponible ahora.'; });
+    } else { $('startH2').textContent='Error de conexión online.'; }
   });
 }
-function lobbyConnect(){
-  var name=$('rivalName').value.trim();
-  if(!name){ $('lobbyStatus').textContent='Escribe el nombre del rival.'; return; }
-  var targetId='jfreino-'+name.toLowerCase();
-  if(targetId===net.peer.id){ $('lobbyStatus').textContent='No puedes conectarte contigo mismo.'; return; }
-  $('lobbyStatus').textContent='Conectando con '+name+'...';
-  net.isHost=false; net.myColor='b';
-  var c=net.peer.connect(targetId,{reliable:true}); net.conn=c; wireConn(c);
-  c.on('open',()=>{ c.send({t:'hello',name:myPseudo}); });
-  setTimeout(()=>{ if(!net.active) $('lobbyStatus').textContent='No se encontró a "'+name+'". Verifica el nombre.'; },8000);
-}
 $('btnOnline').onclick=goOnline;
-$('lobbyGo').onclick=lobbyConnect;
-$('rivalName').addEventListener('keydown',e=>{ if(e.key==='Enter') lobbyConnect(); });
 
 /* Zoom / focus mode */
 $('zoombtn').onclick=()=>{ const on=document.body.classList.toggle('focusmode');
@@ -484,25 +422,20 @@ $('zoombtn').onclick=()=>{ const on=document.body.classList.toggle('focusmode');
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); }); };
 
 function startGame(m){
-  mode=m; started=true; resigned=false;
+  mode=m; started=true;
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; flipped=false; redoStack.length=0;
   if(m==='online' && net.myColor==='b') flipped=true;
   $('zoombtn').style.display='block';
   $('start').classList.add('hidden'); $('app').style.display='flex';
-  $('lobby').classList.remove('show');
   $('rematch').style.display='none';
-  $('resign').style.display='';
-  $('drawbtn').style.display=m==='ai'?'none':'';
   if(mode==='ai') boot();
   render(); status(); startQuotes(); renderHistory();
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); });
 }
 function backToStart(){
-  started=false; resigned=false; netReset(); document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').textContent='⛶';
+  started=false; netReset(); document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').textContent='⛶';
   $('app').style.display='none'; $('start').classList.remove('hidden');
-  $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('rivalName').value='';
   levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none';
-  myPseudo=genPseudo();
 }
 
 /* ===== Coordinates ===== */
@@ -560,8 +493,6 @@ function renderCaptured(){
     add(w,capW); add(b,capB);
     const sw=capW.reduce((a,p)=>a+VAL[p.type],0), sb=capB.reduce((a,p)=>a+VAL[p.type],0), d=sw-sb;
     $('scoreW').textContent=d>0?`+${d}`:''; $('scoreB').textContent=d<0?`+${-d}`:'';
-    const ff=mode==='2p'||mode==='online';
-    document.querySelector('.cap.red').classList.toggle('rotcap',ff);
   }catch(e){ console.warn('[cap]',e); }
 }
 function audit(){
@@ -573,7 +504,7 @@ function audit(){
 function heal(why){ if(healing) return; healing=true; try{ render(); } finally{ healing=false; } }
 
 /* ===== Pure drag ===== */
-function canDrag(color){ if(busy||game.game_over()||resigned) return false; if(color!==game.turn()) return false;
+function canDrag(color){ if(busy||game.game_over()) return false; if(color!==game.turn()) return false;
   if(mode==='online') return net.active && color===net.myColor;
   return mode==='2p'?true:color==='w'; }
 let drag=null;
@@ -645,7 +576,7 @@ function status(){
   else if(game.insufficient_material()) s='Tablas: material insuficiente.';
   else if(game.in_draw()) s='Tablas (50 movimientos).';
   else if(game.in_check()) s='<span class="warn">¡Jaque!</span>';
-  else if(mode==='online') s=(game.turn()===net.myColor?'<span class="chip '+(net.myColor==='w'?'azul':'rojo')+'">Tu turno</span>':'<span class="chip '+(net.myColor==='w'?'rojo':'azul')+'">Turno de '+(net.rivalName||'rival')+'…</span>');
+  else if(mode==='online') s=(game.turn()===net.myColor?'<span class="chip '+(net.myColor==='w'?'azul':'rojo')+'">Tu turno</span>':'<span class="chip '+(net.myColor==='w'?'rojo':'azul')+'">Turno del rival…</span>');
   else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul">Turno Azul</span>':'<span class="chip rojo">Turno Rojo</span>');
   else s=(game.turn()==='w'?'<span class="chip azul">Tu turno</span>':'<span class="chip rojo">Piensa el Rojo…</span>');
   statusEl.innerHTML=s;
@@ -721,38 +652,6 @@ $('rematch').onclick=()=>{ game.reset(); capW.length=0; capB.length=0; lastMove=
   if(mode==='ai') boot(); };
 $('mutebtn').onclick=()=>{ muted=!muted; $('mutebtn').textContent=muted?'🔇':'🔊'; actxInit(); };
 
-/* ===== Resign / Draw ===== */
-function showEndButtons(){
-  $('resign').style.display='none'; $('drawbtn').style.display='none'; $('rematch').style.display='';
-}
-function doResign(){
-  if(game.game_over()||busy||resigned) return;
-  if(!confirm('¿Rendirse?')) return;
-  resigned=true;
-  if(mode==='online') netSend({t:'resign'});
-  var loser=mode==='online'?net.myColor:game.turn();
-  statusEl.innerHTML=loser==='w'
-    ?'<span class="warn">Azul se rindió. Vence el Rojo. 🐉</span>'
-    :'<span class="win">Rojo se rindió. Vence el Azul. 🦁</span>';
-  SFX.mate(); showEndButtons();
-}
-function offerDraw(){
-  if(game.game_over()||busy||resigned) return;
-  if(mode==='ai'){ return; }
-  if(mode==='online'){
-    netSend({t:'draw-offer'});
-    statusEl.innerHTML='<span class="warn">Tablas ofrecidas a '+(net.rivalName||'rival')+'…</span>';
-    return;
-  }
-  if(confirm('¿Ambos jugadores aceptan tablas?')){
-    resigned=true;
-    statusEl.innerHTML='<span class="warn">Tablas por acuerdo mutuo.</span>';
-    showEndButtons();
-  }
-}
-$('resign').onclick=doResign;
-$('drawbtn').onclick=offerDraw;
-
 function renderHistory(){
   const h=game.history(); const ol=$('histlist'); ol.innerHTML='';
   for(let i=0;i<h.length;i+=2){
@@ -763,11 +662,7 @@ function renderHistory(){
   }
   ol.parentElement.scrollTop=ol.parentElement.scrollHeight;
 }
-function maybeShowRematch(){
-  var over=game.game_over()||resigned;
-  $('rematch').style.display=over?'':'none';
-  if(over) showEndButtons();
-}
+function maybeShowRematch(){ $('rematch').style.display=game.game_over()?'':'none'; }
 
 let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(fitBoard,90); });
 window.addEventListener('orientationchange',()=>setTimeout(fitBoard,200));
