@@ -249,6 +249,22 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-size:15px; font-weight:800; line-height:1; cursor:pointer;
   display:flex; align-items:center; gap:6px }
 #zoombtn .zi{ font-size:18px }
+/* Start-of-match flash: brief reveal, then fades so the board takes over. pointer-events:none so it never blocks input.
+   If the image is missing (.noimg), the whole overlay is skipped — never blocks gameplay. */
+.start-overlay{ position:fixed; inset:0; z-index:400; display:none; pointer-events:none; align-items:center; justify-content:center;
+  background:radial-gradient(closest-side,rgba(10,6,4,.78),rgba(10,6,4,.94)) }
+.start-overlay.noimg, .start-overlay.noimg.show{ display:none !important }
+.start-overlay img{ width:auto; max-width:88vw; height:auto; max-height:78vh; object-fit:contain;
+  border:2px solid var(--gold); border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,.6), 0 0 28px rgba(232,160,32,.35);
+  image-rendering:pixelated; filter:contrast(1.06) saturate(.95) }
+@keyframes startSplashFlash{
+  0%   { opacity:0; transform:scale(1.04) }
+  18%  { opacity:1; transform:scale(1) }
+  62%  { opacity:1; transform:scale(1) }
+  100% { opacity:0; transform:scale(.985) }
+}
+.start-overlay.show{ display:flex; animation:startSplashFlash 1.7s ease-out forwards }
+@media (prefers-reduced-motion:reduce){ .start-overlay.show{ animation-duration:.6s } }
 /* Quick-chat: always-on mini feed (last 5) + expandable reply panel. Online 1v1 only. */
 #chatPanel{ position:fixed; bottom:8px; right:8px; z-index:301; width:248px; max-width:84vw;
   background:#1c140d; border:2px solid var(--gold); border-radius:12px; box-shadow:0 6px 22px rgba(0,0,0,.6); overflow:hidden }
@@ -679,6 +695,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 </div>
 
 <button id="zoombtn" title="Expandir tablero" style="display:none"><span class="zi">⛶</span> Zoom</button>
+<!-- Start-of-match flash: dramatic reveal that fades out fast so the board owns the screen. -->
+<div class="start-overlay" id="startOverlay" aria-hidden="true"><img src="assets/splash-start.png" alt="" onerror="this.parentNode.classList.add('noimg')"></div>
 <!-- Quick-chat (online 1v1 only): preset phrases, no free text, so jamás hay insultos ni flag wars.
      Mini feed always visible (last 5); the reply panel (16 phrases) expands on demand. -->
 <div id="chatPanel" style="display:none">
@@ -1794,6 +1812,14 @@ $('zoombtn').onclick=()=>{ const on=document.body.classList.toggle('focusmode');
   $('zoombtn').innerHTML=on?'<span class="zi">✕</span> Salir':'<span class="zi">⛶</span> Zoom'; $('zoombtn').title=on?'Salir de zoom':'Expandir tablero';
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); }); };
 
+/* Start-of-match flash: cinematic reveal that fades out so the board takes over.
+   Force-restart the animation by reflowing between class toggles, then auto-remove the class. */
+function flashStartOverlay(){
+  var ov=document.getElementById('startOverlay'); if(!ov || ov.classList.contains('noimg')) return;
+  ov.classList.remove('show'); void ov.offsetWidth; ov.classList.add('show');
+  setTimeout(function(){ ov.classList.remove('show'); }, 1750);
+}
+
 /* ===== Quick-chat (online 1v1) — preset phrases only. Sin texto libre = jamás insultos ni flag wars.
    Funciona sobre el mismo canal WebRTC P2P (netSend), gratis y sin servidor. Se envía solo el índice. ===== */
 const CHAT_ITEMS=['👑 ¡Buena jugada!','⚔️ ¡A la batalla!','🛡️ Bien defendido','🤝 ¡Suerte!','👏 ¡Bravo!','🐉 Cuidado…','🦁 ¡Valiente!','🔥 ¡Qué jugada!','♟️ Tu turno','😅 ¡Uf!','🤔 Mmm…','⏳ Pensando…','🏰 Bien enrocado','🙏 Gracias','🔁 ¿Revancha?','🎉 ¡GG! Buena partida'];
@@ -1882,6 +1908,7 @@ function startGame(m){
   showChatUI(mode==='online');
   var pc=$('peaceCard'); if(pc) pc.style.display='none';
   $('start').classList.add('hidden'); $('app').style.display='flex';
+  flashStartOverlay();
   $('lobby').classList.remove('show'); $('colorpick').classList.remove('show');
   $('rematch').style.display='none';
   $('resign').style.display='';
