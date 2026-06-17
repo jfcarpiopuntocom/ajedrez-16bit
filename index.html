@@ -392,8 +392,9 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <p>El botón <span class="accent">⛶</span> maximiza el tablero para concentración total. Deshacer y Rehacer reescriben jugadas hasta el mate.</p>
     <p>Cada partida guarda un <span class="accent">código de seis caracteres tipo NES</span>. Cada jugada se respalda en localStorage e IndexedDB del dispositivo. Anótalo, sal, vuelve después y entra el código en la pantalla inicial. Cargas la posición exacta con su tablero, nivel, capturas y todo.</p>
 
-    <h3>Multiverse</h3>
-    <p><span class="accent">Empieza la partida contra la IA. Termínala con un amigo o amiga que llegue a continuarla.</span> O al revés. El código de partida captura todo el estado, así cualquiera con el código puede entrar, tomar el lugar de quien jugaba y seguir desde la posición exacta. La línea original sigue viva en paralelo. Endless multiverse fun.</p>
+    <h3>Función Multiverse</h3>
+    <p><span class="accent">Empieza la partida contra la IA. Termínala con un amigo o amiga que llegue a continuarla.</span> O al revés. El código captura todo el estado, así cualquiera con el código puede entrar, tomar el lugar de quien jugaba y seguir desde la posición exacta. La línea original sigue viva en paralelo. Endless multiverse fun.</p>
+    <p>Coleccionas posiciones célebres, retas desde cualquier nodo, y reconstruyes la genealogía completa de una partida que pasó por tres IAs y dos humanos. Cada gamestate tiene su propio ID: la partida ya no pertenece a dos jugadores, pertenece a la posición misma, y cualquiera puede tomarla.</p>
 
     <h3>La Taberna</h3>
     <p>Tu seudónimo es editable, persistente y solo tuyo. Vive en este navegador. Quien gana se queda en la Taberna y elige al siguiente: estilo king of the hill. Cada sala tiene un link compartible.</p>
@@ -454,8 +455,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     </div>
   </div>
   <div class="universo-callout" id="uniCallout">
-    <h3>Multiverse</h3>
-    <p><span class="pop">Empieza vs la IA. Termina con un amigo</span> (o al revés). El código de partida abre el estado exacto para cualquiera que llegue a seguirla. La línea original queda viva en paralelo. Endless multiverse fun.</p>
+    <h3>Función Multiverse</h3>
+    <p><span class="pop">Empieza vs la IA. Termina con un amigo</span> (o al revés). El código abre el estado exacto para cualquiera que llegue a seguirla. La línea original queda viva en paralelo. Endless multiverse fun.</p>
   </div>
   <div class="lobby-resume" id="resumeRow">
     <input type="text" id="resumeCode" placeholder="Código de partida? Continúa aquí" maxlength="7" autocomplete="off" spellcheck="false">
@@ -875,15 +876,17 @@ $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[dat
 /* ===== Online 1 vs 1 (PeerJS / WebRTC P2P) — lobby with hub-based presence ===== */
 const HUB_ID_BASE='jfreino-lobby-hub';
 let currentRoom=null; // 6-char room id; set by entering online flow
+/* URL scheme: #multiverso= is the primary form. #partida= and #room= stay readable
+   low-key so older links (incl. ones already shared on WhatsApp) never break. */
 function roomFromUrl(){
-  var m=(location.hash||'').match(/(?:partida|room)=([A-Z0-9]{4,8})/i);
+  var m=(location.hash||'').match(/(?:multiverso|partida|room)=([A-Z0-9]{4,8})/i);
   return m?m[1].toUpperCase():null;
 }
 function setRoomInUrl(code){
-  try{ history.replaceState(null,'','#partida='+code); }catch(e){ location.hash='partida='+code; }
+  try{ history.replaceState(null,'','#multiverso='+code); }catch(e){ location.hash='multiverso='+code; }
 }
 function hubIdFor(code){ return HUB_ID_BASE+'-'+code.toLowerCase(); }
-function roomLink(code){ return 'https://jfcarpiopuntocom.github.io/ajedrez-16bit/#partida='+code; }
+function roomLink(code){ return 'https://jfcarpiopuntocom.github.io/ajedrez-16bit/#multiverso='+code; }
 const PRESENCE_TTL=20000; // 20s (4x guest ping)
 const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'',
             hubPeer:null, hubConn:null, isHub:false, roster:[],
@@ -1899,7 +1902,7 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
 /* ===== Tavern Music — epic medieval score: harp + battle brass + heroic lead
    + a 10% romantic-piano wash (Chopin / Rachmaninoff in style) + battle pulse ===== */
 var tavernCtx=null, tavernGain=null, tavernPlaying=false, tavernTimer=null;
-var MUSIC_VOL=0.04; // 2/3 of prior 0.06
+var MUSIC_VOL=0.02; // half of prior 0.04
 var tavernMuted=(function(){ try{ return localStorage.getItem('losdosreinos_muted')==='1'; }catch(e){ return false; } })();
 function tavernNoteFreq(n){ return 440*Math.pow(2,(n-69)/12); }
 function playTavernMelody(){
