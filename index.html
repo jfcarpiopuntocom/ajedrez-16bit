@@ -49,6 +49,10 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   min-width:0; max-width:430px; overflow-y:auto; max-height:100%; padding:4px 2px }
 /* When the lobby is in front, hide the splash art/rail so the lobby (with its tavern image) owns the screen. */
 .start.in-lobby .start-body{ display:none }
+/* Safety net: the lobby is sized to fit without scrolling, but if a device's visual viewport
+   shrinks further than expected (Safari's dynamic toolbar, an unusually short phone), allow a
+   vertical scroll here instead of silently clipping content with no way to reach it. */
+.start.in-lobby{ overflow-y:auto; -webkit-overflow-scrolling:touch }
 @media (max-width:720px){
   /* Mobile: original tight layout (title + controls only). The duel art is desktop-only —
      on mobile it crowded the rail and pushed buttons down. Splash-start flash + peace-card still work. */
@@ -104,7 +108,15 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .kingrow[data-side="b"] button{ background:#2a0e12 }
 .kingrow button.active{ border-color:var(--gold2); box-shadow:0 0 10px var(--gold) }
 .kingrow button img{ max-height:54px; max-width:54px; width:auto; height:auto; object-fit:contain; display:block }
-.back{ font-size:14px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; background:transparent; border:none; cursor:pointer; padding:6px }
+/* Fixed (not in-flow) so it's ALWAYS reachable regardless of how tall the lobby content gets —
+   the old in-flow placement got pushed below the fold on short viewports (iPhone with Safari's
+   dynamic toolbar) with no scroll available to reach it. Mirrors the help/crown buttons' top-left
+   safe-area handling so it never sits under a notch/Dynamic Island. */
+.back{ position:fixed; top:max(10px,env(safe-area-inset-top)); left:max(10px,env(safe-area-inset-left));
+  z-index:150; font-size:14px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  background:linear-gradient(160deg,#3a2a14,#1a1006); border:2px solid var(--gold); border-radius:18px;
+  cursor:pointer; padding:8px 14px; box-shadow:0 2px 10px rgba(0,0,0,.5) }
+.back:hover,.back:active{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
 /* Lobby (online) */
 .lobby{ display:none; flex-direction:row; align-items:flex-start; gap:16px; width:100%; max-width:780px }
 .lobby.show{ display:flex }
@@ -192,6 +204,24 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .lobby-tavern-wrap{ flex:0 0 280px; border-radius:12px; overflow:hidden; border:2px solid var(--gold); box-shadow:0 4px 18px rgba(0,0,0,.5); align-self:stretch }
 .lobby-tavern{ width:100%; height:100%; display:block; object-fit:cover; filter:contrast(1.1) saturate(.85) }
 @media (max-width:600px){ .lobby-tavern-wrap{ flex:none; width:100%; max-height:22vh } }
+/* Mobile: compact the whole lobby vertically so it fits one short iPhone viewport without scrolling
+   (the .back button is now fixed/out-of-flow too, which already frees real space). Nothing is removed,
+   everything just takes less height: smaller tavern peek, tighter tutorial card, capped player list. */
+@media (max-width:600px){
+  .lobby{ gap:8px }
+  .lobby-panel{ gap:6px }
+  .lobby-tavern-wrap{ max-height:13vh }
+  .lobby-tut{ padding:7px 10px 6px }
+  .lobby-tut-h{ font-size:13px; margin-bottom:4px }
+  .lobby-tut p{ font-size:12px; line-height:1.3; margin-bottom:3px }
+  .lobby-name{ font-size:14px }
+  .lobby-mute-row{ margin:0 }
+  .lobby-h{ margin:2px 0 1px }
+  .lobby-list{ max-height:120px }
+  .lobby-list li{ padding:9px 12px; font-size:14px }
+  .lobby-room-bar{ padding:5px 10px }
+  .lobby-resume{ margin:0 }
+}
 .lobby-room-bar{ display:flex; align-items:center; gap:8px; width:100%; max-width:380px; padding:6px 12px; border-radius:10px; background:#1c140d; border:1px solid rgba(232,160,32,.25) }
 .lobby-room-label{ font-size:14px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; flex:1 }
 .lobby-room-label strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:16px; letter-spacing:2px; font-family:Georgia,"Times New Roman",serif; margin-left:4px }
@@ -410,14 +440,14 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .modal-card button.no{ background:linear-gradient(#5a2a14,#3a1a0c); color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
 .modal-card button:hover{ filter:brightness(1.1) }
 /* Help button + Welcome modal */
-.help-btn{ position:fixed; top:10px; right:10px; z-index:150; width:44px; height:44px; border-radius:50%;
+.help-btn{ position:fixed; top:max(10px,env(safe-area-inset-top)); right:max(10px,env(safe-area-inset-right)); z-index:150; width:44px; height:44px; border-radius:50%;
   border:3px solid var(--gold); background:linear-gradient(160deg,#3a2a14,#1a1006);
   color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
   font-size:22px; font-weight:900; cursor:pointer; padding:0; line-height:1;
   box-shadow:0 2px 12px rgba(232,160,32,.4), 0 0 0 2px rgba(232,160,32,.15); display:flex; align-items:center; justify-content:center; font-family:Georgia,"Times New Roman",serif }
 /* Crown button: pill with label so users see what it is at a glance. Stays clear of the (?). */
 .lib-fixed-btn{ width:auto !important; padding:0 14px 0 12px !important; border-radius:22px !important;
-  right:62px !important; font-family:inherit !important; font-size:15px !important; gap:6px }
+  right:calc(max(10px,env(safe-area-inset-right)) + 52px) !important; font-family:inherit !important; font-size:15px !important; gap:6px }
 .lib-fixed-lbl{ font-weight:800; letter-spacing:.3px; white-space:nowrap }
 @media (max-width:560px){ .lib-fixed-lbl{ display:none } .lib-fixed-btn{ width:44px !important; padding:0 !important; border-radius:50% !important } }
 .help-btn:hover,.help-btn:active{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important; transform:scale(1.08) }
