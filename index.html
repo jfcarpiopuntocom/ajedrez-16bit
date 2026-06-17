@@ -853,15 +853,30 @@ function loadMatch(code){
   }catch(e){ return null; }
 }
 
-/* ===== Identity (persistent pseudonym across reloads) ===== */
+/* ===== Identity =====
+   Two layers: a permanent player id (myPid) that NEVER changes, and an editable display name (myPseudo).
+   myPid is the real identity: renaming keeps it, so history and self-detection survive name changes.
+   Persisted with triple redundancy — localStorage (no expiry = forever), IndexedDB, and a 2-year cookie —
+   so a player keeps the same identity across reloads, name changes, and even a cleared storage layer. */
 const ID_KEY='losdosreinos_identity_v1';
-let myPseudo;
-try{
-  var stored=localStorage.getItem(ID_KEY);
-  if(stored){ myPseudo=JSON.parse(stored).pseudo||genPseudo(); }
-  else { myPseudo=genPseudo(); localStorage.setItem(ID_KEY,JSON.stringify({pseudo:myPseudo})); }
-}catch(e){ myPseudo=genPseudo(); }
-function saveIdentity(){ try{ localStorage.setItem(ID_KEY,JSON.stringify({pseudo:myPseudo})); }catch(e){} }
+const PID_COOKIE='ldr_pid';
+let myPseudo, myPid;
+function genPid(){ return 'p'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4); }
+function readPidCookie(){ try{ var m=document.cookie.match(/(?:^|;\s*)ldr_pid=([^;]+)/); return m?decodeURIComponent(m[1]):''; }catch(e){ return ''; } }
+(function(){
+  try{
+    var stored=JSON.parse(localStorage.getItem(ID_KEY)||'null');
+    if(stored && stored.pseudo){ myPseudo=stored.pseudo; myPid=stored.pid||readPidCookie()||genPid(); }
+    else { myPid=readPidCookie()||genPid(); myPseudo=genPseudo(); }
+  }catch(e){ myPid=readPidCookie()||genPid(); myPseudo=genPseudo(); }
+})();
+function saveIdentity(){
+  var rec={pseudo:myPseudo,pid:myPid,v:2};
+  try{ localStorage.setItem(ID_KEY,JSON.stringify(rec)); }catch(e){}
+  try{ idbPut('__identity',rec); }catch(e){}               // redundant backup (survives localStorage clears)
+  try{ document.cookie=PID_COOKIE+'='+encodeURIComponent(myPid)+';max-age=63072000;path=/;SameSite=Lax'; }catch(e){} // 2-year cookie
+}
+saveIdentity();
 
 let qi=-1, qTimer=null;
 function rotateQuote(){ const el=document.getElementById('quote'); if(!el) return;
@@ -1369,7 +1384,10 @@ function goOnline(){
   setRoomInUrl(currentRoom);
   $('roomCode').textContent=currentRoom;
   $('myName').value=myPseudo;
-  var peerId='jfreino-'+myPseudo.toLowerCase()+'-'+currentRoom.toLowerCase().slice(0,4);
+  // Peer id derives from the PERMANENT pid (not the editable name), so a refresh reclaims the same
+  // slot instead of spawning a ghost twin. net.idSalt only bumps if the id is momentarily taken.
+  var pidPart=myPid.replace(/[^a-z0-9]/gi,'').toLowerCase().slice(0,12);
+  var peerId='jfreino-'+pidPart+'-'+currentRoom.toLowerCase().slice(0,4)+(net.idSalt?('x'+net.idSalt):'');
   net.peer=new Peer(peerId);
   net.peer.on('open',function(){
     $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
@@ -1384,9 +1402,10 @@ function goOnline(){
   net.peer.on('error',function(err){
     if(!err) return;
     if(err.type==='unavailable-id'){
+      // Old session still holds the id. Keep identity intact: just salt the connection and retry.
       try{ net.peer.destroy(); }catch(e){}
-      myPseudo=genPseudo(); $('myName').value=myPseudo;
-      setTimeout(goOnline,300); return;
+      net.idSalt=(net.idSalt||0)+1;
+      setTimeout(goOnline,400); return;
     }
     var silent={'peer-unavailable':1,'network':1,'disconnected':1,'server-error':1,'socket-closed':1,'socket-error':1};
     if(silent[err.type]){
