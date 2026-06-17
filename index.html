@@ -325,7 +325,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .cell.check::after{ content:""; position:absolute; inset:5%; border:3px solid #ff5252; border-radius:7px; box-shadow:0 0 12px #ff2020 }
 
 /* ---------- History panel (always visible, left of board) ---------- */
-.history{ flex:0 0 auto; width:100%; max-width:430px; max-height:80px; overflow-y:auto;
+.history{ flex:0 0 auto; width:100%; max-width:430px; max-height:80px; overflow-y:auto; margin-top:4px;
   background:linear-gradient(160deg,#241a10,#140d07); border:2px solid var(--gold); border-radius:8px; padding:4px 8px;
   font-size:12px; line-height:1.4; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
 .history h4{ margin:0 0 3px; font-size:11px; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; letter-spacing:.5px }
@@ -392,9 +392,13 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .help-modal .help-thanks{ margin:10px 0 0; font-size:13px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; font-weight:800; letter-spacing:.5px }
 .help-modal .help-thanks-top{ margin:14px 0 6px; font-size:16px; font-style:italic }
 .note{ flex:0 0 auto; text-align:center; font-size:13px; min-height:15px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+/* Quote: own gentle frame so it never visually bleeds into the move history below.
+   Truncates to 3 lines with ellipsis to keep the layout stable when an aphorism is long. */
 .quote{ flex:0 0 auto; width:100%; max-width:430px; text-align:center; font-style:italic; font-size:13px; line-height:1.35;
-  color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; padding:1px 8px; min-height:17px; transition:opacity .35s;
-  font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif; word-wrap:break-word; overflow-wrap:break-word }
+  color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; padding:6px 10px; min-height:17px; transition:opacity .35s;
+  background:linear-gradient(160deg,#1f160d,#150e07); border:1px solid rgba(232,160,32,.3); border-radius:8px; margin-bottom:2px;
+  font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif; word-wrap:break-word; overflow-wrap:break-word;
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden }
 .quote b{ font-style:normal; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; display:block; margin-top:4px }
 
 /* ---------- Desktop / tablet ---------- */
