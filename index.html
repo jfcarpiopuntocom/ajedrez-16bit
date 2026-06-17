@@ -88,8 +88,10 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .kingrow button img{ max-height:54px; max-width:54px; width:auto; height:auto; object-fit:contain; display:block }
 .back{ font-size:14px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; background:transparent; border:none; cursor:pointer; padding:6px }
 /* Lobby (online) */
-.lobby{ display:none; flex-direction:column; align-items:center; gap:10px; width:100%; max-width:380px }
+.lobby{ display:none; flex-direction:row; align-items:flex-start; gap:16px; width:100%; max-width:780px }
 .lobby.show{ display:flex }
+.lobby-panel{ display:flex; flex-direction:column; gap:8px; flex:1; min-width:0 }
+@media (max-width:600px){ .lobby{ flex-direction:column; align-items:center; max-width:380px } .lobby-tavern-wrap{ max-height:28vh } }
 .lobby-name{ margin:0; font-size:16px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; display:flex; align-items:center; gap:6px }
 .lobby-name strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:22px }
 .lobby-para{ display:inline-block; margin-top:6px; font-size:12px; font-weight:700; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; font-style:italic; line-height:1.4 }
@@ -131,8 +133,9 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .lobby-list li .li-name{ flex:1 }
 .lobby-list li .li-arrow{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:18px; flex-shrink:0 }
 .lobby-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:20px 0 }
-.lobby-tavern-wrap{ width:100%; max-width:380px; border-radius:12px; overflow:hidden; border:2px solid var(--gold); box-shadow:0 4px 18px rgba(0,0,0,.5) }
-.lobby-tavern{ width:100%; height:auto; display:block; image-rendering:pixelated; filter:contrast(1.1) saturate(.85) }
+.lobby-tavern-wrap{ flex:0 0 280px; border-radius:12px; overflow:hidden; border:2px solid var(--gold); box-shadow:0 4px 18px rgba(0,0,0,.5); align-self:stretch }
+.lobby-tavern{ width:100%; height:100%; display:block; object-fit:cover; filter:contrast(1.1) saturate(.85) }
+@media (max-width:600px){ .lobby-tavern-wrap{ flex:none; width:100%; max-height:22vh } }
 .lobby-room-bar{ display:flex; align-items:center; gap:8px; width:100%; max-width:380px; padding:6px 12px; border-radius:10px; background:#1c140d; border:1px solid rgba(232,160,32,.25) }
 .lobby-room-label{ font-size:14px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; flex:1 }
 .lobby-room-label strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:16px; letter-spacing:2px; font-family:Georgia,"Times New Roman",serif; margin-left:4px }
@@ -349,7 +352,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <div class="modal-veil" id="helpVeil" role="dialog" aria-modal="true">
   <div class="modal-card help-modal">
     <h2>Bienvenido a Los Dos Reinos</h2>
-    <p class="help-sub">Ajedrez fantástico de 16 bits. Sin cuenta. Sin login. Sin ads.</p>
+    <p class="help-sub">Ajedrez fantástico de 16-bits</p>
 
     <h3>Tres modos de juego</h3>
     <ul>
@@ -444,16 +447,18 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   </div>
   <div class="lobby" id="lobby">
     <div class="lobby-tavern-wrap"><img class="lobby-tavern" src="assets/lobby-tavern.png" alt="La Taberna de los Reyes"></div>
-    <p class="lobby-name"><input class="lobby-name-input" id="myName" maxlength="30" autocomplete="off" spellcheck="false" placeholder="Tu nombre"> <button class="lobby-rename" id="renamePseudo" title="Generar al azar">&#x21bb;</button> <button class="lobby-rename" id="savePseudo" title="Guardar nombre">&#10003;</button></p>
-    <p class="lobby-status" id="lobbyStatus"><span class="lobby-searching">Buscando rivales...</span></p>
-    <h3 class="lobby-h">Jugadores en la Taberna</h3>
-    <ul class="lobby-list" id="lobbyList"></ul>
-    <div class="lobby-room-bar">
-      <span class="lobby-room-label">Sala <strong id="roomCode">------</strong></span>
-      <button class="lobby-rename" id="newRoom" title="Nueva sala">&#x21bb;</button>
-      <button class="lobby-share lobby-share-sm" id="lobbyShare">Copiar link de partida</button>
+    <div class="lobby-panel">
+      <p class="lobby-name"><input class="lobby-name-input" id="myName" maxlength="30" autocomplete="off" spellcheck="false" placeholder="Tu nombre"> <button class="lobby-rename" id="renamePseudo" title="Generar al azar">&#x21bb;</button> <button class="lobby-rename" id="savePseudo" title="Guardar nombre">&#10003;</button></p>
+      <h3 class="lobby-h">Jugadores en la Taberna</h3>
+      <ul class="lobby-list" id="lobbyList"></ul>
+      <p class="lobby-status" id="lobbyStatus"><span class="lobby-searching">Buscando rivales...</span></p>
+      <div class="lobby-room-bar">
+        <span class="lobby-room-label">Partida <strong id="roomCode">------</strong></span>
+        <button class="lobby-rename" id="newRoom" title="Nueva sala">&#x21bb;</button>
+        <button class="lobby-share lobby-share-sm" id="lobbyShare">Copiar link</button>
+      </div>
+      <button class="lobby-share" id="myMatches" style="background:linear-gradient(#2a1a0c,#1a100a)">Mis partidas guardadas</button>
     </div>
-    <button class="lobby-share" id="myMatches" style="background:linear-gradient(#2a1a0c,#1a100a)">Mis partidas guardadas</button>
   </div>
   <button class="back" id="backBtn" style="display:none">&larr; volver</button>
 </div>
