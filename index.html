@@ -144,6 +144,16 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .cel-lv-t{ font-size:13px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .lobby-rename{ background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; transition:color .15s,-webkit-text-fill-color .15s }
 .lobby-rename:hover{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.lobby-tut{ position:relative; width:100%; border:2px solid var(--gold); border-radius:12px; padding:10px 12px 8px; margin:0 0 4px;
+  background:linear-gradient(160deg,#241a10,#160f08) }
+.lobby-tut.hidden{ display:none }
+.lobby-tut-h{ margin:0 0 6px; font-size:14px; font-weight:900; letter-spacing:.5px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-transform:uppercase }
+.lobby-tut p{ margin:0 0 4px; font-size:13px; line-height:1.4; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; text-align:left }
+.lobby-tut p:last-child{ margin-bottom:0 }
+.lobby-tut p b{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.lobby-tut-x{ position:absolute; top:4px; right:6px; background:none; border:none; cursor:pointer; font-size:15px; padding:2px 5px;
+  color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+.lobby-tut-x:hover{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
 .lobby-mute{ background:none; border:none; cursor:pointer; font-size:18px; padding:2px 4px; line-height:1 }
 .lobby-mute-row{ margin:0; display:flex; align-items:center; gap:6px }
 .lobby-mute-lbl{ font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; cursor:pointer }
@@ -549,6 +559,13 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   <div class="lobby" id="lobby">
     <div class="lobby-tavern-wrap"><img class="lobby-tavern" src="assets/lobby-tavern.png" alt="La Taberna de los Reyes"></div>
     <div class="lobby-panel">
+      <div class="lobby-tut" id="lobbyTut">
+        <button class="lobby-tut-x" id="lobbyTutX" title="Ocultar guía">&#10005;</button>
+        <p class="lobby-tut-h">Cómo funciona la Taberna</p>
+        <p><b>1.</b> Toca un nombre de la lista para retarlo. Quien gana se queda.</p>
+        <p><b>2.</b> ¿Aún sin rivales? Comparte tu link: quien lo abra entra aquí.</p>
+        <p><b>3.</b> ¿Tienes un código de partida? Síguelo con la IA, o ábrelo para que un rival lo termine contigo.</p>
+      </div>
       <p class="lobby-name"><input class="lobby-name-input" id="myName" maxlength="30" autocomplete="off" spellcheck="false" placeholder="Tu nombre"> <button class="lobby-rename" id="renamePseudo" title="Generar al azar">&#x21bb;</button> <button class="lobby-rename" id="savePseudo" title="Guardar nombre">&#10003;</button></p>
       <p class="lobby-mute-row"><button class="lobby-mute" id="lobbyMute" title="Música de taberna">&#128266;</button> <span class="lobby-mute-lbl" id="lobbyMuteLbl">mutear ambiente de la taberna</span></p>
       <div class="lobby-live" id="lobbyLive" style="display:none"></div>
@@ -1348,7 +1365,7 @@ function goOnline(){
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
   $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('splashLibBtn').style.display='none'; $('uniCallout').classList.add('hidden');
   $('startH2').textContent='La Taberna';
-  playTavernMelody();
+  playTavernMelody(); refreshLobbyTut();
   if(!currentRoom){ currentRoom=roomFromUrl()||genCode(); }
   setRoomInUrl(currentRoom);
   $('roomCode').textContent=currentRoom;
@@ -1446,7 +1463,42 @@ $('lobbyResumeCode').addEventListener('input',function(){
   $('lobbyResumeMsg').textContent=''; $('lobbyResumeMsg').classList.remove('ok');
 });
 $('lobbyResumeCode').addEventListener('keydown',function(e){ if(e.key==='Enter' && !$('lobbyResumeBtn').disabled) $('lobbyResumeBtn').click(); });
-$('lobbyResumeBtn').onclick=function(){ tryResumeCode($('lobbyResumeCode').value,$('lobbyResumeMsg'),true); };
+$('lobbyResumeBtn').onclick=function(){
+  var p=parseResumeInput($('lobbyResumeCode').value);
+  if(p.code.length!==6) return;
+  var d=loadMatch(p.code);
+  if(d){
+    // You have this gamestate on this device. The Multiverse choice: finish it solo vs the AI,
+    // or open it in the Taberna so a real rival takes the other side from the exact position.
+    showConfirm('Partida '+p.code+' encontrada. ¿Cómo la sigues?','Con la IA','Con un rival').then(function(withAI){
+      if(withAI){ tryResumeCode($('lobbyResumeCode').value,$('lobbyResumeMsg'),true); }
+      else { hostGamestateForRival(p.code); }
+    });
+  } else {
+    // Not on this device: it's a friend's room code. Go meet whoever is there.
+    joinRoomCode(p.code);
+  }
+};
+// Become host of this room with your saved gamestate; whoever opens the link takes over (Multiverse).
+function hostGamestateForRival(code){
+  currentRoom=code; netReset();
+  $('lobbyResumeMsg').textContent='Sala '+code+' lista. Comparte el link: el rival que entre tomará el otro bando desde esa posición.';
+  $('lobbyResumeMsg').classList.add('ok');
+  setTimeout(goOnline,250);
+}
+// Join an existing room code (a friend shared it) to find the host / rivals there.
+function joinRoomCode(code){
+  currentRoom=code; netReset();
+  $('lobbyResumeMsg').textContent='Entrando a la sala '+code+'. Si tu rival está en línea, aparecerá en la lista.';
+  $('lobbyResumeMsg').classList.remove('ok');
+  setTimeout(goOnline,250);
+}
+/* Lobby tutorial: dismissible, remembers the choice so it never nags returning visitors */
+function refreshLobbyTut(){
+  var hidden=false; try{ hidden=localStorage.getItem('losdosreinos_tut_hidden')==='1'; }catch(e){}
+  $('lobbyTut').classList.toggle('hidden',hidden);
+}
+$('lobbyTutX').onclick=function(){ try{ localStorage.setItem('losdosreinos_tut_hidden','1'); }catch(e){} $('lobbyTut').classList.add('hidden'); };
 $('lobbyShare').onclick=function(){
   var url=currentRoom?roomLink(currentRoom):'https://jfcarpiopuntocom.github.io/ajedrez-16bit/';
   var b=$('lobbyShare'); var orig=b.innerHTML;
