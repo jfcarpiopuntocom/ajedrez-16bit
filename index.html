@@ -422,7 +422,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <p><span class="pop">Empieza vs la IA. Termina con un amigo</span> (o al revés). El código de partida abre el estado exacto para cualquiera que llegue a seguirla. La línea original queda viva en paralelo. Endless multiverse fun.</p>
   </div>
   <div class="lobby-resume" id="resumeRow">
-    <input type="text" id="resumeCode" placeholder="Tienes un código? Reanuda partida" maxlength="6" autocomplete="off" spellcheck="false">
+    <input type="text" id="resumeCode" placeholder="Código de partida? Continúa aquí" maxlength="7" autocomplete="off" spellcheck="false">
     <button id="resumeBtn" disabled>▶ Ir</button>
   </div>
   <p class="lobby-resume-msg" id="resumeMsg"></p>
@@ -457,6 +457,11 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
         <button class="lobby-rename" id="newRoom" title="Nueva sala">&#x21bb;</button>
         <button class="lobby-share lobby-share-sm" id="lobbyShare">Copiar link</button>
       </div>
+      <div class="lobby-resume" id="lobbyResumeRow">
+        <input type="text" id="lobbyResumeCode" placeholder="Código de partida? Continúa" maxlength="7" autocomplete="off" spellcheck="false">
+        <button id="lobbyResumeBtn" disabled>&#9654; Ir</button>
+      </div>
+      <p class="lobby-resume-msg" id="lobbyResumeMsg"></p>
       <button class="lobby-share" id="myMatches" style="background:linear-gradient(#2a1a0c,#1a100a)">Mis partidas guardadas</button>
     </div>
   </div>
@@ -620,6 +625,16 @@ const TABLEROS=[
   {key:'alekhine',  name:'Alekhine'},
 ];
 function genCode(){ var s='',c='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; for(var i=0;i<6;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }
+/* Side-bound codes: 6-char base + side letter. A=Azul (w), R=Rojo (b).
+   The base identifies the saved board; the side letter pins which color you continue as,
+   so a shared code never silently switches your bando. */
+function sideCodeFor(base,color){ return base+(color==='w'?'A':'R'); }
+function parseResumeInput(raw){
+  var s=(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  var side=null;
+  if(s.length===7){ var last=s.charAt(6); if(last==='A') side='w'; else if(last==='R') side='b'; s=s.slice(0,6); }
+  return {code:s,side:side};
+}
 function pickTablero(){ return TABLEROS[Math.floor(Math.random()*TABLEROS.length)]; }
 function tableroFromKey(k){ for(var i=0;i<TABLEROS.length;i++) if(TABLEROS[i].key===k) return TABLEROS[i]; return TABLEROS[0]; }
 let currentTablero=null, matchCode=null;
@@ -1130,21 +1145,39 @@ $('btnOnline').onclick=goOnline;
 // Auto-enter online lobby if URL carries a room id
 (function(){ var rc=roomFromUrl(); if(rc){ currentRoom=rc; setTimeout(goOnline,200); } })();
 $('resumeCode').addEventListener('input',function(){
-  this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
-  $('resumeBtn').disabled=this.value.length!==6;
+  this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,7);
+  var p=parseResumeInput(this.value);
+  $('resumeBtn').disabled=p.code.length!==6;
   $('resumeMsg').textContent=''; $('resumeMsg').classList.remove('ok');
 });
 $('resumeCode').addEventListener('keydown',function(e){ if(e.key==='Enter' && !$('resumeBtn').disabled) $('resumeBtn').click(); });
-$('resumeBtn').onclick=function(){
-  var code=$('resumeCode').value.trim().toUpperCase();
-  if(code.length!==6) return;
-  var d=loadMatch(code);
-  if(!d){ $('resumeMsg').textContent='Código no encontrado en este dispositivo'; $('resumeMsg').classList.remove('ok'); return; }
-  $('resumeMsg').textContent='Cargando Tablero '+(tableroFromKey(d.tab).name)+'...'; $('resumeMsg').classList.add('ok');
-  pendingResume={data:d,code:code};
+function tryResumeCode(raw,msgEl,fromLobby){
+  var p=parseResumeInput(raw);
+  if(p.code.length!==6) return false;
+  var d=loadMatch(p.code);
+  if(!d){ if(msgEl){ msgEl.textContent='Código no encontrado en este dispositivo'; msgEl.classList.remove('ok'); } return false; }
+  var side=p.side||d.col; // 7-char code pins the bando; 6-char keeps the saved color
+  d=Object.assign({},d,{col:side});
+  var sideName=side==='w'?'Azul':'Rojo';
+  if(msgEl){ msgEl.textContent='Cargando Tablero '+(tableroFromKey(d.tab).name)+' como '+sideName+'...'; msgEl.classList.add('ok'); }
+  if(fromLobby){ stopTavernMusic(); netReset(); }
+  pendingResume={data:d,code:p.code};
   if(d.lvl){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].key===d.lvl){ level=LEVELS[i]; break; } }
-  setTimeout(function(){ startGame(d.m||'ai'); $('resumeCode').value=''; $('resumeBtn').disabled=true; $('resumeMsg').textContent=''; },350);
+  setTimeout(function(){ startGame(d.m||'ai'); },350);
+  return true;
+}
+$('resumeBtn').onclick=function(){
+  if(tryResumeCode($('resumeCode').value,$('resumeMsg'),false)){
+    setTimeout(function(){ $('resumeCode').value=''; $('resumeBtn').disabled=true; $('resumeMsg').textContent=''; },400);
+  }
 };
+$('lobbyResumeCode').addEventListener('input',function(){
+  this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,7);
+  $('lobbyResumeBtn').disabled=parseResumeInput(this.value).code.length!==6;
+  $('lobbyResumeMsg').textContent=''; $('lobbyResumeMsg').classList.remove('ok');
+});
+$('lobbyResumeCode').addEventListener('keydown',function(e){ if(e.key==='Enter' && !$('lobbyResumeBtn').disabled) $('lobbyResumeBtn').click(); });
+$('lobbyResumeBtn').onclick=function(){ tryResumeCode($('lobbyResumeCode').value,$('lobbyResumeMsg'),true); };
 $('lobbyShare').onclick=function(){
   var url=currentRoom?roomLink(currentRoom):'https://jfcarpiopuntocom.github.io/ajedrez-16bit/';
   var b=$('lobbyShare'); var orig=b.innerHTML;
@@ -1436,7 +1469,9 @@ function status(){
   else{ var eng=fallback?'IA local':'Stockfish'; var ln=level.name+' &middot; powered by '+eng;
     s=(game.turn()===playerColor?'<span class="chip '+(playerColor==='w'?'azul':'rojo')+'">Tu turno</span> <span class="lvl">vs. '+ln+'</span>':'<span class="chip '+(playerColor==='w'?'rojo':'azul')+'">Piensa el rival…</span> <span class="lvl">'+ln+'</span>'); }
   if(currentTablero && matchCode && mode!=='online'){
-    s+=' <span class="lvl tablero-tag">Tablero '+currentTablero.name+' &middot; Código <b>'+matchCode+'</b></span>';
+    s+=' <span class="lvl tablero-tag">Tablero '+currentTablero.name
+      +' &middot; Sigue Azul <b>'+sideCodeFor(matchCode,'w')+'</b>'
+      +' &middot; Sigue Rojo <b>'+sideCodeFor(matchCode,'b')+'</b></span>';
   }
   statusEl.innerHTML=s;
 }
