@@ -1090,18 +1090,21 @@ function mkLi(id,name,shield,isSelf){
 
 function renderLobby(){
   var selfId=net.peer&&net.peer.id;
-  var map={}; // peerJsId -> name
-  // Add self always
+  var map={}; // peerJsId -> {name, self}
+  var seenPids={}; // pid -> true (dedupe by identity so a ghost twin never appears as a rival)
+  if(myPid) seenPids[myPid]=true;
   if(selfId) map[selfId]={name:myPseudo,self:true};
-  // Hub roster
   net.roster.forEach(function(p){
-    if(p.id && p.id!==selfId && !map[p.id]) map[p.id]={name:p.name,self:false};
+    if(!p.id || p.id===selfId) return;
+    if(p.pid && seenPids[p.pid]) return; // same identity as me or already counted
+    if(p.pid) seenPids[p.pid]=true;
+    if(!map[p.id]) map[p.id]={name:p.name,self:false};
   });
-  // Trystero peers
   Object.values(trysteroPeers).forEach(function(p){
-    if(p && p.peerJsId && p.peerJsId!==selfId && !map[p.peerJsId]){
-      map[p.peerJsId]={name:p.name,self:false};
-    }
+    if(!p || !p.peerJsId || p.peerJsId===selfId) return;
+    if(p.pid && seenPids[p.pid]) return;
+    if(p.pid) seenPids[p.pid]=true;
+    if(!map[p.peerJsId]) map[p.peerJsId]={name:p.name,self:false};
   });
   var ul=$('lobbyList'); ul.innerHTML='';
   var others=[]; var selfEntry=null;
@@ -1188,13 +1191,14 @@ function initTrysteroLobby(){
       if(!data||typeof data!=='object') return;
       var nm=String(data.name||'???').slice(0,30);
       var pid=String(data.peerJsId||'').slice(0,80);
+      var playerId=String(data.pid||'').slice(0,40);
       if(!pid) return;
-      trysteroPeers[peerId]={name:nm,peerJsId:pid,last:Date.now()};
+      trysteroPeers[peerId]={name:nm,peerJsId:pid,pid:playerId,last:Date.now()};
       renderLobby();
     });
     trysteroRoom.onPeerJoin(function(peerId){
       if(trysteroSendInfo && net.peer && !net.peer.destroyed){
-        try{ trysteroSendInfo({name:myPseudo,peerJsId:net.peer.id},peerId); }catch(e){}
+        try{ trysteroSendInfo({name:myPseudo,peerJsId:net.peer.id,pid:myPid},peerId); }catch(e){}
       }
     });
     trysteroRoom.onPeerLeave(function(peerId){
@@ -1204,7 +1208,7 @@ function initTrysteroLobby(){
     if(trysteroHeartbeat) clearInterval(trysteroHeartbeat);
     trysteroHeartbeat=setInterval(function(){
       if(trysteroSendInfo && net.peer && !net.peer.destroyed){
-        try{ trysteroSendInfo({name:myPseudo,peerJsId:net.peer.id}); }catch(e){}
+        try{ trysteroSendInfo({name:myPseudo,peerJsId:net.peer.id,pid:myPid}); }catch(e){}
       }
       // Prune ghosts: entries not refreshed within 18s (6x heartbeat)
       var now=Date.now(), pruned=false;
@@ -1226,7 +1230,7 @@ function trysteroLeave(){
 
 function broadcastRoster(){
   if(!net.isHub) return;
-  var publicList=net.roster.map(function(p){ return {id:p.id,name:p.name}; });
+  var publicList=net.roster.map(function(p){ return {id:p.id,name:p.name,pid:p.pid||''}; });
   var payload={t:'lobby-roster',list:publicList,match:net.matchInfo,queue:net.queue};
   net.roster.forEach(function(p){
     if(p.conn && p.conn.open){ try{ p.conn.send(payload); }catch(e){} }
@@ -1288,14 +1292,16 @@ function tryClaimHub(){
   var hp=new Peer(hubIdFor(currentRoom)); net.hubPeer=hp;
   hp.on('open',function(){
     net.isHub=true;
-    net.roster=[{id:net.peer.id,name:myPseudo,last:Date.now(),conn:null}];
+    net.roster=[{id:net.peer.id,name:myPseudo,pid:myPid,last:Date.now(),conn:null}];
     hp.on('connection',function(c){
       var entry=null;
       c.on('data',function(d){
         if(!d||!d.t) return;
         if(d.t==='lobby-join'){
-          net.roster=net.roster.filter(function(p){ return p.id!==d.id; });
-          entry={id:d.id,name:String(d.name||'???').slice(0,30),last:Date.now(),conn:c};
+          var jpid=String(d.pid||'').slice(0,40);
+          // Dedupe by pid too: same identity reclaims its slot (old ghost evicted) instead of stacking a twin.
+          net.roster=net.roster.filter(function(p){ return p.id!==d.id && (!jpid || p.pid!==jpid); });
+          entry={id:d.id,name:String(d.name||'???').slice(0,30),pid:jpid,last:Date.now(),conn:c};
           net.roster.push(entry); broadcastRoster();
         } else if(d.t==='lobby-ping' && entry){ entry.last=Date.now(); }
         else if(d.t==='match-status'){ hubSetMatch(d.info); }
@@ -1340,7 +1346,7 @@ function tryConnectHub(){
   var opened=false;
   hc.on('open',function(){
     opened=true;
-    try{ hc.send({t:'lobby-join',id:net.peer.id,name:myPseudo}); }catch(e){}
+    try{ hc.send({t:'lobby-join',id:net.peer.id,name:myPseudo,pid:myPid}); }catch(e){}
     if(hubHeartbeat){ clearInterval(hubHeartbeat); }
     hubHeartbeat=setInterval(function(){ if(hc.open){ try{ hc.send({t:'lobby-ping',id:net.peer.id}); }catch(e){} } },5000);
   });
