@@ -2051,10 +2051,10 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
   });
 })();
 
-/* ===== Tavern Music — epic medieval score: harp + battle brass + heroic lead
-   + a 10% romantic-piano wash (Chopin / Rachmaninoff in style) + battle pulse ===== */
+/* ===== Tavern Music — epic medieval score: brass + harp + heroic lead + romantic-piano wash
+   (Chopin / Rachmaninoff in style) + battle pulse + strings pad + bells + woodwind + light percussion ===== */
 var tavernCtx=null, tavernGain=null, tavernPlaying=false, tavernTimer=null;
-var MUSIC_VOL=0.02; // half of prior 0.04
+var MUSIC_VOL=0.045; // habitual: accompanies without intruding
 var tavernMuted=(function(){ try{ return localStorage.getItem('losdosreinos_muted')==='1'; }catch(e){ return false; } })();
 function tavernNoteFreq(n){ return 440*Math.pow(2,(n-69)/12); }
 function playTavernMelody(){
@@ -2064,7 +2064,7 @@ function playTavernMelody(){
   tavernGain=tavernCtx.createGain(); tavernGain.gain.value=tavernMuted?0:MUSIC_VOL;
   tavernGain.connect(tavernCtx.destination);
   tavernPlaying=true;
-  var BEAT=0.5;
+  var BEAT=0.575; // ~15% slower tempo than prior 0.5
   // Heroic minor-key progression (D minor / F major), 16 chords x 2 beats = 32 beats
   var prog=[
     [[50,53,57],2],[[46,50,53],2],[[53,57,60],2],[[48,52,55],2],
@@ -2113,6 +2113,15 @@ function playTavernMelody(){
       for(var p=0;p<roll.length;p++){
         tone(roll[p],t+0.05+p*0.055,cdur*0.92,0.12,'sine',0,0.03,0.4);
       }
+      // strings pad: lush sawtooth bed, slow swell, sustains the chord up high
+      tone(chord[1]+12,t,cdur,0.16,'sawtooth',-4,0.28,0.7);
+      tone(chord[2]+12,t,cdur,0.12,'sawtooth',6,0.32,0.7);
+      // bell / glockenspiel: bright ring on the downbeat (every other chord), long shimmer
+      if(i%2===0) tone(chord[0]+24,t,cdur*0.95,0.13,'sine',0,0.002,0.8);
+      // tambourine-ish tick on the half-beat: tiny percussive blip
+      tone(95,t+cdur*0.5,0.05,0.05,'square',0,0.001,0.04);
+      // recorder/woodwind: airy triangle an octave over the chord root, gentle
+      tone(chord[0]+12,t+cdur*0.25,cdur*0.6,0.1,'triangle',3,0.06,0.5);
       t+=cdur;
     }
     // Heroic lead over the top, doubled with a soft sine (piano-ish) at low level
