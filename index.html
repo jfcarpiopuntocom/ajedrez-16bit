@@ -107,7 +107,14 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .universo-callout.hidden{ display:none }
 /* Matches modal */
 .matches-modal{ max-width:480px; max-height:80vh; overflow-y:auto; padding:18px 18px 14px }
-.matches-modal h2{ margin:0 0 4px; font-size:20px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center }
+.lib-crown{ text-align:center; font-size:34px; line-height:1; margin:0 0 2px; filter:drop-shadow(0 2px 4px rgba(0,0,0,.5)) }
+.lib-btn{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; max-width:360px; margin:2px auto 0;
+  font-size:15px; font-weight:800; padding:9px 14px; min-height:42px; border-radius:11px; cursor:pointer;
+  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; border:2px solid var(--gold);
+  background:linear-gradient(#2a1a0c,#1a100a) }
+.lib-btn:hover,.lib-btn:active{ background:linear-gradient(#3a2614,#241608) }
+.lib-btn-sub{ font-size:13px; font-weight:700; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.matches-modal h2{ margin:0 0 4px; font-size:22px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; font-family:Georgia,"Times New Roman",serif; letter-spacing:.5px }
 .matches-modal .sub{ margin:0 0 12px; font-size:12px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:center; font-style:italic; font-weight:600 }
 .matches-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px }
 .matches-list li{ background:#1c140d; border:2px solid var(--gold); border-radius:10px; padding:9px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer; transition:background .15s }
@@ -119,6 +126,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .matches-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:18px 0; font-weight:600 }
 .lobby-rename{ background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; transition:color .15s,-webkit-text-fill-color .15s }
 .lobby-rename:hover{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.lobby-mute{ background:none; border:none; cursor:pointer; font-size:18px; padding:2px 4px; line-height:1 }
 .lobby-status{ margin:0; font-size:14px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; min-height:18px; font-weight:700 }
 .lobby-count{ font-weight:400; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; font-size:13px; margin-left:4px }
 .lobby-list{ list-style:none; margin:0; padding:0; width:100%; max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:5px }
@@ -401,8 +409,9 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 </div>
 <div class="modal-veil" id="matchesVeil" role="dialog" aria-modal="true">
   <div class="modal-card matches-modal">
-    <h2>Mis partidas guardadas</h2>
-    <p class="sub">Doble respaldo: localStorage + IndexedDB en este dispositivo.</p>
+    <div class="lib-crown">&#128081;</div>
+    <h2>Librería Real</h2>
+    <p class="sub">Tus partidas guardadas. Doble respaldo: localStorage + IndexedDB en este dispositivo.</p>
     <ul class="matches-list" id="matchesList"></ul>
     <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap">
       <button class="yes" id="matchesExport">&#128190; Exportar JSON</button>
@@ -440,6 +449,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <button id="resumeBtn" disabled>▶ Ir</button>
   </div>
   <p class="lobby-resume-msg" id="resumeMsg"></p>
+  <button class="lib-btn" id="splashLibBtn">&#128081; Librería Real <span class="lib-btn-sub">tus partidas guardadas</span></button>
   <div class="levels" id="levels"></div>
   <div class="colorpick" id="colorpick">
     <button class="bigbtn" id="pickBlue"><img src="assets/shield-blue.png" class="shield-icon"> Azul</button>
@@ -462,7 +472,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   <div class="lobby" id="lobby">
     <div class="lobby-tavern-wrap"><img class="lobby-tavern" src="assets/lobby-tavern.png" alt="La Taberna de los Reyes"></div>
     <div class="lobby-panel">
-      <p class="lobby-name"><input class="lobby-name-input" id="myName" maxlength="30" autocomplete="off" spellcheck="false" placeholder="Tu nombre"> <button class="lobby-rename" id="renamePseudo" title="Generar al azar">&#x21bb;</button> <button class="lobby-rename" id="savePseudo" title="Guardar nombre">&#10003;</button></p>
+      <p class="lobby-name"><input class="lobby-name-input" id="myName" maxlength="30" autocomplete="off" spellcheck="false" placeholder="Tu nombre"> <button class="lobby-rename" id="renamePseudo" title="Generar al azar">&#x21bb;</button> <button class="lobby-rename" id="savePseudo" title="Guardar nombre">&#10003;</button> <button class="lobby-mute" id="lobbyMute" title="Música de taberna">&#128266;</button></p>
       <div class="lobby-live" id="lobbyLive" style="display:none"></div>
       <h3 class="lobby-h">Jugadores en la Taberna</h3>
       <ul class="lobby-list" id="lobbyList"></ul>
@@ -791,8 +801,8 @@ LEVELS.forEach(l=>{ const b=document.createElement('button'); b.className='lv'; 
   b.innerHTML=`<span>${l.name}</span><span class="tag">${l.tag?l.tag:(l.elo?('~'+l.elo+' Elo'):'máxima')}</span>`;
   b.onclick=()=>{ level=l; showColorPick(); }; levelsEl.appendChild(b); });
 $('btn2p').onclick=()=>startGame('2p');
-$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rival'; $('backBtn').style.display='block'; $('kingpick').classList.remove('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden'); };
-function showColorPick(){ levelsEl.classList.remove('show'); $('colorpick').classList.add('show'); $('kingpick').classList.add('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden'); $('startH2').textContent='¿De qué lado juegas?'; }
+$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rival'; $('backBtn').style.display='block'; $('kingpick').classList.remove('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('splashLibBtn').style.display='none'; $('uniCallout').classList.add('hidden'); };
+function showColorPick(){ levelsEl.classList.remove('show'); $('colorpick').classList.add('show'); $('kingpick').classList.add('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('splashLibBtn').style.display='none'; $('uniCallout').classList.add('hidden'); $('startH2').textContent='¿De qué lado juegas?'; }
 $('pickBlue').addEventListener('mouseenter',()=>$('kingpick').classList.add('focus-blue'));
 $('pickBlue').addEventListener('mouseleave',()=>$('kingpick').classList.remove('focus-blue'));
 $('pickRed').addEventListener('mouseenter',()=>$('kingpick').classList.add('focus-red'));
@@ -811,7 +821,7 @@ $('pickBlue').onclick=()=>{ playerColor='w'; $('colorpick').classList.remove('sh
 $('pickRed').onclick=()=>{ playerColor='b'; $('colorpick').classList.remove('show'); $('kingpick').classList.remove('focus-blue','focus-red'); startGame('ai'); };
 $('backBtn').onclick=()=>{
   if($('colorpick').classList.contains('show')){ $('colorpick').classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); levelsEl.classList.add('show'); $('startH2').textContent='Elige el nivel del Rival'; return; }
-  levelsEl.classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden'); $('uniCallout').classList.remove('hidden'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML=''; stopTavernMusic();
+  levelsEl.classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden'); $('splashLibBtn').style.display=''; $('uniCallout').classList.remove('hidden'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML=''; stopTavernMusic();
   $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none'; };
 $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(!b) return;
   const row=b.closest('.kingrow'); if(row.dataset.side==='w') blueKing=b.dataset.k; else redKing=b.dataset.k;
@@ -1217,7 +1227,7 @@ function goOnline(){
   if(typeof Peer==='undefined'){ $('startH2').textContent='No se pudo cargar el modo online.'; return; }
   $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
-  $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
+  $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('splashLibBtn').style.display='none'; $('uniCallout').classList.add('hidden');
   $('startH2').textContent='La Taberna';
   playTavernMelody();
   if(!currentRoom){ currentRoom=roomFromUrl()||genCode(); }
@@ -1332,6 +1342,8 @@ $('lobbyShare').onclick=function(){
     ta.select(); try{ document.execCommand('copy'); done(); }catch(e){} document.body.removeChild(ta);
   }
 };
+$('lobbyMute').onclick=function(){ setTavernMute(!tavernMuted); };
+setTavernMute(tavernMuted); // reflect persisted state on the button at load
 $('renamePseudo').onclick=function(){
   if(!net.peer||net.conn) return;
   netReset(); myPseudo=genPseudo(); saveIdentity(); $('myName').value=myPseudo;
@@ -1351,7 +1363,7 @@ function commitPseudo(){
 }
 $('myName').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); $('myName').blur(); commitPseudo(); } });
 $('savePseudo').onclick=commitPseudo;
-$('myMatches').onclick=function(){
+function openLibrary(){
   var ul=$('matchesList'); ul.innerHTML='';
   var codes=indexList();
   if(codes.length===0){
@@ -1383,7 +1395,9 @@ $('myMatches').onclick=function(){
     });
   }
   $('matchesVeil').classList.add('show');
-};
+}
+$('myMatches').onclick=openLibrary;
+$('splashLibBtn').onclick=openLibrary;
 $('matchesClose').onclick=function(){ $('matchesVeil').classList.remove('show'); };
 $('matchesExport').onclick=function(){
   var codes=indexList(); var all=[];
@@ -1458,7 +1472,7 @@ function backToStart(){
   $('app').style.display='none'; $('start').classList.remove('hidden');
   $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
   $('colorpick').classList.remove('show'); playerColor='w';
-  $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden'); $('uniCallout').classList.remove('hidden');
+  $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden'); $('splashLibBtn').style.display=''; $('uniCallout').classList.remove('hidden');
   levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none';
   TABLEROS.forEach(function(x){ $('app').classList.remove('t-'+x.key); });
   currentTablero=null; matchCode=null;
@@ -1718,7 +1732,7 @@ function backToLobby(){
   $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
   $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
-  $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
+  $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('splashLibBtn').style.display='none'; $('uniCallout').classList.add('hidden');
   $('startH2').textContent='La Taberna'; $('myName').value=myPseudo; playTavernMelody();
   if(net.peer && !net.peer.destroyed){
     $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
@@ -1836,14 +1850,17 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
   });
 })();
 
-/* ===== Tavern Music — epic medieval score: harp + battle brass + heroic lead ===== */
+/* ===== Tavern Music — epic medieval score: harp + battle brass + heroic lead
+   + a 10% romantic-piano wash (Chopin / Rachmaninoff in style) + battle pulse ===== */
 var tavernCtx=null, tavernGain=null, tavernPlaying=false, tavernTimer=null;
+var MUSIC_VOL=0.04; // 2/3 of prior 0.06
+var tavernMuted=(function(){ try{ return localStorage.getItem('losdosreinos_muted')==='1'; }catch(e){ return false; } })();
 function tavernNoteFreq(n){ return 440*Math.pow(2,(n-69)/12); }
 function playTavernMelody(){
   if(tavernPlaying) return;
   if(!tavernCtx) tavernCtx=new (window.AudioContext||window.webkitAudioContext)();
   if(tavernCtx.state==='suspended') tavernCtx.resume();
-  tavernGain=tavernCtx.createGain(); tavernGain.gain.value=0.06; // 33% of prior 0.18
+  tavernGain=tavernCtx.createGain(); tavernGain.gain.value=tavernMuted?0:MUSIC_VOL;
   tavernGain.connect(tavernCtx.destination);
   tavernPlaying=true;
   var BEAT=0.5;
@@ -1861,27 +1878,28 @@ function playTavernMelody(){
     65,1, 69,1, 72,2, 71,1, 69,1, 67,2,
     74,2, 73,1, 72,1, 69,2, 74,2
   ];
-  function tone(midi,t,dur,vol,wave,detune,attack){
+  function tone(midi,t,dur,vol,wave,detune,attack,rel){
     var osc=tavernCtx.createOscillator(), env=tavernCtx.createGain();
     osc.type=wave; osc.frequency.value=tavernNoteFreq(midi);
     if(detune) osc.detune.value=detune;
-    var a=attack||0.01;
+    var a=attack||0.01, r=rel||0.18;
     env.gain.setValueAtTime(0.0001,t);
     env.gain.exponentialRampToValueAtTime(vol,t+a);
-    env.gain.exponentialRampToValueAtTime(vol*0.18,t+dur*0.8);
+    env.gain.exponentialRampToValueAtTime(vol*r,t+dur*0.8);
     env.gain.linearRampToValueAtTime(0.0001,t+dur*0.99);
     osc.connect(env); env.connect(tavernGain);
     osc.start(t); osc.stop(t+dur);
   }
   function scheduleSection(startT){
     var t=startT;
-    // Brass pads + plucked harp arpeggios per chord
     for(var i=0;i<prog.length;i++){
       var chord=prog[i][0], beats=prog[i][1], cdur=beats*BEAT;
       // battle brass: root+fifth+octave, sustained, sawtooth (warm, layered)
       tone(chord[0]-12,t,cdur,0.5,'sawtooth',0,0.06);
       tone(chord[0],t,cdur,0.32,'sawtooth',-6,0.06);
       tone(chord[2],t,cdur,0.26,'sawtooth',5,0.06);
+      // battle pulse: low timpani-like thud on the downbeat
+      tone(chord[0]-24,t,0.5,0.6,'sine',0,0.004,0.02);
       // harp: ascending+descending arpeggio, 8 plucks across 2 beats
       var notes=chord.concat([chord[0]+12,chord[1]+12]);
       var seq=notes.concat(notes.slice().reverse());
@@ -1889,13 +1907,22 @@ function playTavernMelody(){
       for(var h=0;h<seq.length;h++){
         tone(seq[h]+12,t+h*step,step*1.6,0.45,'triangle',0,0.004);
       }
+      // romantic-piano wash (~10%): a softly rolled chord, longer release, expressive 7th color
+      var roll=[chord[0],chord[1],chord[2],chord[1]+12,chord[0]+(beats>1?14:12)];
+      for(var p=0;p<roll.length;p++){
+        tone(roll[p],t+0.05+p*0.055,cdur*0.92,0.12,'sine',0,0.03,0.4);
+      }
       t+=cdur;
     }
-    // Heroic lead over the top
+    // Heroic lead over the top, doubled with a soft sine (piano-ish) at low level
     var lt=startT;
     for(var k=0;k<lead.length;k+=2){
       var m=lead[k], ldur=lead[k+1]*BEAT;
-      if(m>0){ tone(m,lt,ldur*0.95,0.6,'triangle',0,0.02); tone(m,lt,ldur*0.95,0.22,'square',8,0.02); }
+      if(m>0){
+        tone(m,lt,ldur*0.95,0.6,'triangle',0,0.02);
+        tone(m,lt,ldur*0.95,0.2,'square',8,0.02);
+        tone(m,lt,ldur*0.95,0.1,'sine',0,0.04,0.5); // romantic doubling
+      }
       lt+=ldur;
     }
     return 32*BEAT; // section length in seconds
@@ -1911,6 +1938,12 @@ function stopTavernMusic(){
   tavernPlaying=false;
   if(tavernTimer){ clearTimeout(tavernTimer); tavernTimer=null; }
   if(tavernGain){ try{ tavernGain.gain.linearRampToValueAtTime(0,tavernCtx.currentTime+0.5); }catch(e){} }
+}
+function setTavernMute(muted){
+  tavernMuted=!!muted;
+  try{ localStorage.setItem('losdosreinos_muted',tavernMuted?'1':'0'); }catch(e){}
+  if(tavernGain && tavernCtx){ try{ tavernGain.gain.linearRampToValueAtTime(tavernMuted?0:MUSIC_VOL,tavernCtx.currentTime+0.25); }catch(e){} }
+  var b=document.getElementById('lobbyMute'); if(b){ b.textContent=tavernMuted?'🔇':'🔊'; b.title=tavernMuted?'Música apagada':'Música de taberna'; }
 }
 </script>
 </body>
