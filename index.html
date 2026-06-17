@@ -2349,6 +2349,33 @@ var tavernCtx=null, tavernGain=null, tavernPlaying=false, tavernTimer=null;
 var MUSIC_VOL=0.045; // habitual: accompanies without intruding
 var tavernMuted=(function(){ try{ return localStorage.getItem('losdosreinos_muted')==='1'; }catch(e){ return false; } })();
 function tavernNoteFreq(n){ return 440*Math.pow(2,(n-69)/12); }
+/* Mobile/tablet failsafe: iOS and Android suspend AudioContext on lock-screen, tab switch,
+   or background, and only let it resume from inside a real user gesture. A single click on
+   "Jugar online" usually unlocks it, but if the lobby was entered via a shared link (setTimeout,
+   not a gesture) or the OS suspended it later, music silently never starts. Two nets below fix this
+   without adding any audio file / MIDI dependency (which would break the zero-download, fully
+   procedural design): (1) the very first tap/touch/click anywhere primes the context, and
+   (2) returning to the tab re-resumes it and restarts the loop if it had stalled. */
+function tavernEnsureRunning(){
+  if(!tavernCtx) return;
+  if(tavernCtx.state==='suspended'){ try{ tavernCtx.resume(); }catch(e){} }
+  if(tavernPlaying && tavernCtx.state==='running' && !tavernTimer){
+    // Loop died silently (suspended context stalls the currentTime clock) — restart it.
+    (function loop(){
+      if(!tavernPlaying) return;
+      var dur=tavernScheduleSection(tavernCtx.currentTime+0.05);
+      tavernTimer=setTimeout(loop,(dur-0.15)*1000);
+    })();
+  }
+}
+['touchstart','pointerdown','click'].forEach(function(ev){
+  document.addEventListener(ev,function(){
+    if(!tavernCtx){ try{ tavernCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+    tavernEnsureRunning();
+  },{passive:true});
+});
+document.addEventListener('visibilitychange',function(){ if(!document.hidden) tavernEnsureRunning(); });
+var tavernScheduleSection=null; // assigned inside playTavernMelody so the failsafe above can call it
 function playTavernMelody(){
   if(tavernPlaying) return;
   if(!tavernCtx) tavernCtx=new (window.AudioContext||window.webkitAudioContext)();
@@ -2429,6 +2456,7 @@ function playTavernMelody(){
     }
     return 32*BEAT; // section length in seconds
   }
+  tavernScheduleSection=scheduleSection; // expose so the mobile failsafe above can restart a stalled loop
   function loop(){
     if(!tavernPlaying) return;
     var dur=scheduleSection(tavernCtx.currentTime+0.05);
