@@ -140,6 +140,20 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .lobby-room-label{ font-size:14px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; flex:1 }
 .lobby-room-label strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:16px; letter-spacing:2px; font-family:Georgia,"Times New Roman",serif; margin-left:4px }
 .lobby-share-sm{ font-size:13px !important; padding:5px 10px !important; min-height:32px !important }
+/* King of the Hill: live match + queue */
+.lobby-live{ width:100%; border:2px solid var(--crimson); border-radius:12px; padding:10px 12px; background:linear-gradient(160deg,#2a0e12,#1a0608); display:flex; flex-direction:column; gap:8px }
+.lobby-live-h{ display:flex; align-items:center; gap:8px; font-size:15px; font-weight:900; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.live-badge{ font-size:13px; font-weight:900; letter-spacing:1px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; background:#d62828; border-radius:5px; padding:2px 7px; animation:livePulse 1.2s ease-in-out infinite }
+@keyframes livePulse{ 0%,100%{ background:#d62828 } 50%{ background:#ff4d4d } }
+.lobby-live-vs{ font-size:14px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.lobby-live-vs b{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.lobby-live-queue{ font-size:13px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+.lobby-live-btns{ display:flex; gap:8px; flex-wrap:wrap }
+.lobby-live-btns button{ flex:1; min-width:120px; font-size:13px; font-weight:800; padding:8px 10px; min-height:40px; border-radius:9px; cursor:pointer;
+  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; border:2px solid var(--gold) }
+.btn-queue{ background:linear-gradient(#3a2a14,#26180b) }
+.btn-queue.in{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
+.btn-fork{ background:linear-gradient(#0a3a2a,#063020); border-color:#28ECAA }
 @keyframes lobbyPulse{ 0%{color:var(--gold2);-webkit-text-fill-color:var(--gold2)} 50%{color:#8A6A10;-webkit-text-fill-color:#8A6A10} 100%{color:var(--gold2);-webkit-text-fill-color:var(--gold2)} }
 .lobby-searching{ animation:lobbyPulse 1.5s ease-in-out infinite }
 /* Shield icons (inline) */
@@ -449,6 +463,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <div class="lobby-tavern-wrap"><img class="lobby-tavern" src="assets/lobby-tavern.png" alt="La Taberna de los Reyes"></div>
     <div class="lobby-panel">
       <p class="lobby-name"><input class="lobby-name-input" id="myName" maxlength="30" autocomplete="off" spellcheck="false" placeholder="Tu nombre"> <button class="lobby-rename" id="renamePseudo" title="Generar al azar">&#x21bb;</button> <button class="lobby-rename" id="savePseudo" title="Guardar nombre">&#10003;</button></p>
+      <div class="lobby-live" id="lobbyLive" style="display:none"></div>
       <h3 class="lobby-h">Jugadores en la Taberna</h3>
       <ul class="lobby-list" id="lobbyList"></ul>
       <p class="lobby-status" id="lobbyStatus"><span class="lobby-searching">Buscando rivales...</span></p>
@@ -816,7 +831,8 @@ function hubIdFor(code){ return HUB_ID_BASE+'-'+code.toLowerCase(); }
 function roomLink(code){ return 'https://jfcarpiopuntocom.github.io/ajedrez-16bit/#partida='+code; }
 const PRESENCE_TTL=20000; // 20s (4x guest ping)
 const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'',
-            hubPeer:null, hubConn:null, isHub:false, roster:[] };
+            hubPeer:null, hubConn:null, isHub:false, roster:[],
+            matchInfo:{live:false}, queue:[] };
 function netReset(){
   try{ if(net.conn) net.conn.close(); }catch(e){}
   try{ if(net.hubConn) net.hubConn.close(); }catch(e){}
@@ -824,8 +840,10 @@ function netReset(){
   try{ if(net.peer) net.peer.destroy(); }catch(e){}
   net.active=false; net.peer=null; net.conn=null; net.isHost=false; net.myColor='w'; net.rivalName='';
   net.hubPeer=null; net.hubConn=null; net.isHub=false; net.roster=[];
+  net.matchInfo={live:false}; net.queue=[]; net.iResigned=false; net.endReported=false;
   if(lobbyTimer){ clearInterval(lobbyTimer); lobbyTimer=null; }
   if(hubHeartbeat){ clearInterval(hubHeartbeat); hubHeartbeat=null; }
+  if(fenStreamTimer){ clearInterval(fenStreamTimer); fenStreamTimer=null; }
   trysteroLeave();
 }
 function netSend(o){ if(net.conn && net.conn.open){ try{ net.conn.send(o); }catch(e){} } }
@@ -834,7 +852,7 @@ function wireConn(c){
     if(d.t==='hello'){
       net.rivalName=d.name||'???';
       if(net.isHost){
-        net.active=true;
+        net.active=true; net.endReported=false; net.iResigned=false;
         // If the room code matches a saved local match (vs AI), open parallel universe:
         // - Host keeps the AI universe alive in localStorage
         // - Online universe starts from that exact FEN, host takes color, guest takes what was the AI's color
@@ -851,6 +869,11 @@ function wireConn(c){
           c.send({t:'start',name:myPseudo});
           startGame('online');
         }
+        // King of the hill: announce the live duel to the room + stream position for forks
+        reportMatch({live:true,hostId:net.peer.id,hostName:myPseudo,guestName:net.rivalName,
+          fen:game.fen(),tab:currentTablero?currentTablero.key:'capablanca',
+          bk:blueKing,rk:redKing,moves:game.history(),lineage:matchLineage.slice()});
+        startFenStream();
       }
     }
     else if(d.t==='start'){
@@ -889,7 +912,7 @@ function wireConn(c){
   c.on('close',()=>{ if(net.active){ statusEl.innerHTML='<span class="warn">'+net.rivalName+' se desconectó.</span>'; net.active=false; if(typeof showEndButtons==='function') showEndButtons(); } });
   c.on('error',()=>{});
 }
-let lobbyTimer=null, hubHeartbeat=null;
+let lobbyTimer=null, hubHeartbeat=null, fenStreamTimer=null;
 const trysteroPeers={}; // trysteroId -> {name, peerJsId}
 let trysteroRoom=null, trysteroSendInfo=null, trysteroHeartbeat=null;
 
@@ -942,6 +965,53 @@ function renderLobby(){
     li.textContent='Comparte el link por WhatsApp para encontrar rivales';
     ul.appendChild(li);
   }
+  renderLiveBlock();
+}
+
+function renderLiveBlock(){
+  var box=$('lobbyLive'); if(!box) return;
+  var mi=net.matchInfo;
+  if(!mi || !mi.live || amInMatch()){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display='flex'; box.innerHTML='';
+  var h=document.createElement('div'); h.className='lobby-live-h';
+  h.innerHTML='<span class="live-badge">EN VIVO</span> Duelo en curso';
+  var vs=document.createElement('div'); vs.className='lobby-live-vs';
+  var hn=document.createElement('b'); hn.textContent=mi.hostName||'Campeón';
+  var gn=document.createElement('b'); gn.textContent=mi.guestName||'Retador';
+  vs.appendChild(hn); vs.appendChild(document.createTextNode(' vs ')); vs.appendChild(gn);
+  var pos=myQueuePos();
+  var q=document.createElement('div'); q.className='lobby-live-queue';
+  q.textContent=pos>=0?('Eres el retador #'+(pos+1)+' en la cola. Quien gana se queda.')
+                       :('Cola: '+(net.queue?net.queue.length:0)+' esperando. Gana el ganador, sigues tú.');
+  var btns=document.createElement('div'); btns.className='lobby-live-btns';
+  var qb=document.createElement('button'); qb.className='btn-queue'+(pos>=0?' in':'');
+  qb.textContent=pos>=0?('✓ En la cola (#'+(pos+1)+')'):'⚔ Entrar a la cola';
+  qb.onclick=function(){ if(myQueuePos()<0) joinQueue(); };
+  btns.appendChild(qb);
+  if(mi.fen){
+    var fb=document.createElement('button'); fb.className='btn-fork';
+    fb.textContent='✦ Abrir Multiverse aquí';
+    fb.onclick=function(){ forkMultiverse(mi); };
+    btns.appendChild(fb);
+  }
+  box.appendChild(h); box.appendChild(vs); box.appendChild(q); box.appendChild(btns);
+}
+
+// Multiverse fork: take the live position right now and branch a new parallel timeline vs AI.
+function forkMultiverse(mi){
+  if(!mi||!mi.fen) return;
+  showConfirm('¿Abrir un Multiverse desde esta posición? Empiezas vs la IA y se crea una línea paralela.','Sí, forkear','Cancelar').then(function(ok){
+    if(!ok) return;
+    stopTavernMusic();
+    var forkColor=(mi.fen.indexOf(' w ')>0)?'w':'b'; // side to move forks the position
+    var newCode=genCode();
+    pendingResume={data:{fen:mi.fen,tab:mi.tab||'capablanca',m:'ai',col:forkColor,
+      bk:mi.bk||'k_bkA',rk:mi.rk||'k_rkA',moves:(mi.moves||[]).slice(),
+      lineage:(mi.lineage||[]).concat([{at:(mi.moves||[]).length,opp:'Fork Multiverse',mode:'ai'}])},code:newCode};
+    level=LEVELS[2]; // default to Medio for forked AI side
+    netReset(); currentRoom=newCode;
+    setTimeout(function(){ startGame('ai'); },300);
+  });
 }
 
 function initTrysteroLobby(){
@@ -997,10 +1067,60 @@ function trysteroLeave(){
 function broadcastRoster(){
   if(!net.isHub) return;
   var publicList=net.roster.map(function(p){ return {id:p.id,name:p.name}; });
+  var payload={t:'lobby-roster',list:publicList,match:net.matchInfo,queue:net.queue};
   net.roster.forEach(function(p){
-    if(p.conn && p.conn.open){ try{ p.conn.send({t:'lobby-roster',list:publicList}); }catch(e){} }
+    if(p.conn && p.conn.open){ try{ p.conn.send(payload); }catch(e){} }
   });
   renderLobby();
+}
+/* ===== King of the Hill: live-match status + challenger queue ===== */
+// Hub-side: set the room's match state and propagate. When a match ends, promote queue head.
+function hubSetMatch(info){
+  if(!net.isHub) return;
+  var wasLive=net.matchInfo&&net.matchInfo.live;
+  net.matchInfo=info||{live:false};
+  if(wasLive && !net.matchInfo.live){
+    // Match just ended: the winner keeps the seat. Give them a moment to return to the
+    // Taberna, then summon the next challenger in line to face the champion.
+    var nextId=net.queue.shift();
+    if(nextId){
+      var winnerId=info&&info.winnerId, winnerName=(info&&info.winnerName)||'el campeón';
+      setTimeout(function(){
+        var target=net.roster.filter(function(p){ return p.id===nextId; })[0];
+        if(target && target.conn && target.conn.open && winnerId){
+          try{ target.conn.send({t:'your-turn',targetId:winnerId,targetName:winnerName}); }catch(e){}
+        }
+      },3500);
+    }
+  }
+  broadcastRoster();
+}
+// Any participant reports match state; routes to hub (direct if we ARE the hub).
+function reportMatch(info){
+  if(net.isHub){ hubSetMatch(info); }
+  else if(net.hubConn && net.hubConn.open){ try{ net.hubConn.send({t:'match-status',info:info}); }catch(e){} }
+}
+// Challenger asks to join the waiting line for the live match.
+function joinQueue(){
+  if(!net.peer) return;
+  if(net.isHub){
+    if(net.queue.indexOf(net.peer.id)<0){ net.queue.push(net.peer.id); broadcastRoster(); }
+  } else if(net.hubConn && net.hubConn.open){
+    try{ net.hubConn.send({t:'queue-join',id:net.peer.id}); }catch(e){}
+  }
+}
+function myQueuePos(){ return net.queue?net.queue.indexOf(net.peer&&net.peer.id):-1; }
+function amInMatch(){ return net.active; }
+// Host streams the live FEN so spectators/queuers can fork a Multiverse from the exact position.
+function startFenStream(){
+  if(fenStreamTimer) clearInterval(fenStreamTimer);
+  fenStreamTimer=setInterval(function(){
+    if(net.active && net.isHost && typeof game!=='undefined'){
+      reportMatch({live:true,hostId:net.peer.id,hostName:myPseudo,guestName:net.rivalName,
+        fen:game.fen(),tab:currentTablero?currentTablero.key:'capablanca',
+        bk:blueKing,rk:redKing,moves:game.history(),lineage:matchLineage.slice()});
+    }
+  },4000);
 }
 
 function tryClaimHub(){
@@ -1018,9 +1138,15 @@ function tryClaimHub(){
           entry={id:d.id,name:String(d.name||'???').slice(0,30),last:Date.now(),conn:c};
           net.roster.push(entry); broadcastRoster();
         } else if(d.t==='lobby-ping' && entry){ entry.last=Date.now(); }
+        else if(d.t==='match-status'){ hubSetMatch(d.info); }
+        else if(d.t==='queue-join' && d.id){ if(net.queue.indexOf(d.id)<0){ net.queue.push(d.id); broadcastRoster(); } }
       });
       c.on('close',function(){
-        if(entry){ net.roster=net.roster.filter(function(p){ return p.id!==entry.id; }); broadcastRoster(); }
+        if(entry){
+          net.roster=net.roster.filter(function(p){ return p.id!==entry.id; });
+          net.queue=net.queue.filter(function(id){ return id!==entry.id; });
+          broadcastRoster();
+        }
       });
       c.on('error',function(){});
     });
@@ -1028,7 +1154,14 @@ function tryClaimHub(){
     hubHeartbeat=setInterval(function(){
       var now=Date.now(), before=net.roster.length;
       net.roster=net.roster.filter(function(p){ return p.id===net.peer.id || (now-p.last)<PRESENCE_TTL; });
-      if(net.roster.length!==before) broadcastRoster();
+      var ids=net.roster.map(function(p){ return p.id; });
+      net.queue=net.queue.filter(function(id){ return ids.indexOf(id)>=0; });
+      var changed=net.roster.length!==before;
+      // Clear a stale live match if its host vanished
+      if(net.matchInfo && net.matchInfo.live && net.matchInfo.hostId && ids.indexOf(net.matchInfo.hostId)<0){
+        net.matchInfo={live:false}; changed=true;
+      }
+      if(changed) broadcastRoster();
     },3000);
     renderLobby();
   });
@@ -1055,7 +1188,14 @@ function tryConnectHub(){
     if(!d||!d.t) return;
     if(d.t==='lobby-roster'){
       net.roster=(d.list||[]).map(function(p){ return {id:p.id,name:p.name,last:Date.now(),conn:null}; });
+      if(d.match) net.matchInfo=d.match;
+      if(d.queue) net.queue=d.queue;
       renderLobby();
+    }
+    else if(d.t==='your-turn'){
+      // The hub promoted me from the queue: challenge the reigning champion now
+      $('lobbyStatus').innerHTML='<span class="lobby-searching">¡Es tu turno! Retando a '+(d.targetName||'el campeón')+'…</span>';
+      setTimeout(function(){ lobbyConnect(d.targetId,d.targetName||'el campeón'); },600);
     }
   });
   hc.on('close',function(){
@@ -1548,9 +1688,25 @@ $('rematch').onclick=()=>{ game.reset(); capW.length=0; capB.length=0; lastMove=
 $('mutebtn').onclick=()=>{ muted=!muted; $('mutebtn').textContent=muted?'🔇':'🔊'; actxInit(); };
 
 /* ===== Resign / Draw ===== */
+// Host reports the finished duel to the hub; the winner keeps the seat, next challenger is summoned.
+function reportMatchEnd(){
+  if(!net.isHost || mode!=='online' || net.endReported) return;
+  net.endReported=true;
+  if(fenStreamTimer){ clearInterval(fenStreamTimer); fenStreamTimer=null; }
+  var winnerColor;
+  if(game.in_checkmate()) winnerColor=(game.turn()==='w')?'b':'w'; // side to move was mated
+  else if(net.iResigned) winnerColor=(net.myColor==='w')?'b':'w';  // I (host) resigned, rival wins
+  else winnerColor=net.myColor; // rival resigned / draw / disconnect: host keeps the seat
+  var guestId=net.conn&&net.conn.peer;
+  var winnerId,winnerName;
+  if(winnerColor===net.myColor){ winnerId=net.peer.id; winnerName=myPseudo; }
+  else { winnerId=guestId; winnerName=net.rivalName; }
+  reportMatch({live:false,winnerId:winnerId,winnerName:winnerName});
+}
 function showEndButtons(){
   $('resign').style.display='none'; $('drawbtn').style.display='none'; $('rematch').style.display='';
   $('backLobbyBtn').style.display=(mode==='online')?'':'none';
+  reportMatchEnd();
 }
 function backToLobby(){
   try{ if(net.conn) net.conn.close(); }catch(e){}
@@ -1602,7 +1758,7 @@ async function doResign(){
   var ok=await showConfirm('¿Rendirse?','Sí, rendirme','Seguir jugando');
   if(!ok) return;
   resigned=true;
-  if(mode==='online') netSend({t:'resign'});
+  if(mode==='online'){ net.iResigned=true; netSend({t:'resign'}); }
   var loser=mode==='online'?net.myColor:game.turn();
   statusEl.innerHTML=loser==='w'
     ?'<span class="warn">Azul se rindió. Vence el Rojo. 🐉</span>'
