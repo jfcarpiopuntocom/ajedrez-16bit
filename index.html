@@ -127,6 +127,8 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .lobby-rename{ background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; transition:color .15s,-webkit-text-fill-color .15s }
 .lobby-rename:hover{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
 .lobby-mute{ background:none; border:none; cursor:pointer; font-size:18px; padding:2px 4px; line-height:1 }
+.lobby-mute-row{ margin:0; display:flex; align-items:center; gap:6px }
+.lobby-mute-lbl{ font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; cursor:pointer }
 .lobby-status{ margin:0; font-size:14px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; min-height:18px; font-weight:700 }
 .lobby-count{ font-weight:400; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; font-size:13px; margin-left:4px }
 .lobby-list{ list-style:none; margin:0; padding:0; width:100%; max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:5px }
@@ -192,9 +194,11 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .site-credit a{ color:#E8A020; text-decoration:none; font-weight:700; margin-left:5px }
 .site-credit a:hover{ text-decoration:underline }
 /* Zoom / focus mode: expand board, keep only board + captured pieces */
-#zoombtn{ position:fixed; top:6px; right:6px; z-index:300; width:40px; height:40px; border-radius:10px;
+#zoombtn{ position:fixed; top:6px; left:6px; z-index:300; height:38px; padding:0 12px; border-radius:10px;
   background:linear-gradient(#3a1f12,#26140b); border:2px solid var(--gold);
-  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-size:19px; line-height:1; cursor:pointer }
+  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-size:15px; font-weight:800; line-height:1; cursor:pointer;
+  display:flex; align-items:center; gap:6px }
+#zoombtn .zi{ font-size:18px }
 body.focusmode .title-img, body.focusmode .status, body.focusmode .left-rail,
 body.focusmode .note, body.focusmode .hud, body.focusmode .site-credit{ display:none !important }
 body.focusmode .app{ height:100vh !important; height:100svh !important }
@@ -388,17 +392,26 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <p>El botón <span class="accent">⛶</span> maximiza el tablero para concentración total. Deshacer y Rehacer reescriben jugadas hasta el mate.</p>
     <p>Cada partida guarda un <span class="accent">código de seis caracteres tipo NES</span>. Cada jugada se respalda en localStorage e IndexedDB del dispositivo. Anótalo, sal, vuelve después y entra el código en la pantalla inicial. Cargas la posición exacta con su tablero, nivel, capturas y todo.</p>
 
-    <h3>Multiverse (el feature)</h3>
+    <h3>Multiverse</h3>
     <p><span class="accent">Empieza la partida contra la IA. Termínala con un amigo o amiga que llegue a continuarla.</span> O al revés. El código de partida captura todo el estado, así cualquiera con el código puede entrar, tomar el lugar de quien jugaba y seguir desde la posición exacta. La línea original sigue viva en paralelo. Endless multiverse fun.</p>
 
     <h3>La Taberna</h3>
     <p>Tu seudónimo es editable, persistente y solo tuyo. Vive en este navegador. Quien gana se queda en la Taberna y elige al siguiente: estilo king of the hill. Cada sala tiene un link compartible.</p>
 
+    <h3>Bajo el capó</h3>
+    <ul>
+      <li><span class="accent">Sin servidor, sin cuentas:</span> todo corre en tu navegador. Tu juego es tuyo.</li>
+      <li><span class="accent">IA local:</span> el motor Stockfish, clase mundial, calcula dentro de tu propio dispositivo (con una IA de respaldo si no carga).</li>
+      <li><span class="accent">Online directo:</span> conexión jugador a jugador por WebRTC, sin intermediarios. La presencia en la Taberna viaja por la red abierta Nostr.</li>
+      <li><span class="accent">Tus partidas, blindadas:</span> cada jugada se respalda en localStorage e IndexedDB, y puedes exportar todo a JSON cuando quieras.</li>
+      <li><span class="accent">Música viva:</span> la melodía de la Taberna se compone en tiempo real con Web Audio, nota por nota. No hay archivo de audio que cargar.</li>
+    </ul>
+
     <h3>Próximamente</h3>
     <p>Más tableros: <span class="accent">el espacio</span> y <span class="accent">la selva</span>. Cada uno con su propio fondo y atmósfera.</p>
 
     <div class="help-footer">
-      <p>Diseñado por <strong>J. F. Carpio</strong> en Quito</p>
+      <p>hecho por <strong>J. F. Carpio</strong> en Cuenca, Ecuador</p>
       <p>Contacto: <strong>jfcarpio@gmail.com</strong></p>
       <a class="help-cta" id="helpSupport" href="#">&#9812; Apoyar el proyecto</a>
       <p class="help-sponsor">¿Tu marca en un tablero futuro? <a id="helpSponsor" href="#">Patrocínalo</a>.</p>
@@ -472,7 +485,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   <div class="lobby" id="lobby">
     <div class="lobby-tavern-wrap"><img class="lobby-tavern" src="assets/lobby-tavern.png" alt="La Taberna de los Reyes"></div>
     <div class="lobby-panel">
-      <p class="lobby-name"><input class="lobby-name-input" id="myName" maxlength="30" autocomplete="off" spellcheck="false" placeholder="Tu nombre"> <button class="lobby-rename" id="renamePseudo" title="Generar al azar">&#x21bb;</button> <button class="lobby-rename" id="savePseudo" title="Guardar nombre">&#10003;</button> <button class="lobby-mute" id="lobbyMute" title="Música de taberna">&#128266;</button></p>
+      <p class="lobby-name"><input class="lobby-name-input" id="myName" maxlength="30" autocomplete="off" spellcheck="false" placeholder="Tu nombre"> <button class="lobby-rename" id="renamePseudo" title="Generar al azar">&#x21bb;</button> <button class="lobby-rename" id="savePseudo" title="Guardar nombre">&#10003;</button></p>
+      <p class="lobby-mute-row"><button class="lobby-mute" id="lobbyMute" title="Música de taberna">&#128266;</button> <span class="lobby-mute-lbl" id="lobbyMuteLbl">mutear ambiente de la taberna</span></p>
       <div class="lobby-live" id="lobbyLive" style="display:none"></div>
       <h3 class="lobby-h">Jugadores en la Taberna</h3>
       <ul class="lobby-list" id="lobbyList"></ul>
@@ -538,8 +552,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   <div class="note" id="note"></div>
 </div>
 
-<button id="zoombtn" title="Expandir tablero" style="display:none">⛶</button>
-<footer class="site-credit">by <a id="credit" href="https://www.jfcarpio.com" rel="noopener">jfcarpio.com</a></footer>
+<button id="zoombtn" title="Expandir tablero" style="display:none"><span class="zi">⛶</span> Zoom</button>
+<footer class="site-credit">hecho por <a id="credit" href="https://www.jfcarpio.com" rel="noopener">J. F. Carpio</a> en Cuenca, Ecuador</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/chess.js@0.12.1/chess.min.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -1374,6 +1388,7 @@ $('lobbyShare').onclick=function(){
   }
 };
 $('lobbyMute').onclick=function(){ setTavernMute(!tavernMuted); };
+$('lobbyMuteLbl').onclick=function(){ setTavernMute(!tavernMuted); };
 setTavernMute(tavernMuted); // reflect persisted state on the button at load
 $('renamePseudo').onclick=function(){
   if(!net.peer||net.conn) return;
@@ -1449,7 +1464,7 @@ document.addEventListener('keydown',function(e){ if(e.key==='Escape' && $('match
 
 /* Zoom / focus mode */
 $('zoombtn').onclick=()=>{ const on=document.body.classList.toggle('focusmode');
-  $('zoombtn').textContent=on?'✕':'⛶'; $('zoombtn').title=on?'Salir de zoom':'Expandir tablero';
+  $('zoombtn').innerHTML=on?'<span class="zi">✕</span> Salir':'<span class="zi">⛶</span> Zoom'; $('zoombtn').title=on?'Salir de zoom':'Expandir tablero';
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); }); };
 
 let pendingResume=null;
@@ -1499,7 +1514,7 @@ function startGame(m){
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); });
 }
 function backToStart(){
-  started=false; resigned=false; netReset(); document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').textContent='⛶';
+  started=false; resigned=false; netReset(); document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='<span class="zi">⛶</span> Zoom';
   $('app').style.display='none'; $('start').classList.remove('hidden');
   $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
   $('colorpick').classList.remove('show'); playerColor='w';
@@ -1655,8 +1670,8 @@ function status(){
     s=(game.turn()===playerColor?'<span class="chip '+(playerColor==='w'?'azul':'rojo')+'">Tu turno</span> <span class="lvl">vs. '+ln+'</span>':'<span class="chip '+(playerColor==='w'?'rojo':'azul')+'">Piensa el rival…</span> <span class="lvl">'+ln+'</span>'); }
   if(currentTablero && matchCode && mode!=='online'){
     s+=' <span class="lvl tablero-tag">Tablero '+currentTablero.name
-      +' &middot; Sigue Azul <b>'+sideCodeFor(matchCode,'w')+'</b>'
-      +' &middot; Sigue Rojo <b>'+sideCodeFor(matchCode,'b')+'</b></span>';
+      +'<br>Código para continuar el tablero como Rey Azul: <b>'+sideCodeFor(matchCode,'w')+'</b>'
+      +'<br>Código para continuar el tablero como Rey Rojo: <b>'+sideCodeFor(matchCode,'b')+'</b></span>';
   }
   statusEl.innerHTML=s;
 }
@@ -1758,7 +1773,7 @@ function backToLobby(){
   net.conn=null; net.active=false; net.isHost=false; net.myColor='w'; net.rivalName='';
   resigned=false; started=false;
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0;
-  document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').textContent='⛶';
+  document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='<span class="zi">⛶</span> Zoom';
   $('app').style.display='none'; $('start').classList.remove('hidden');
   $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
   $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
@@ -1975,6 +1990,7 @@ function setTavernMute(muted){
   try{ localStorage.setItem('losdosreinos_muted',tavernMuted?'1':'0'); }catch(e){}
   if(tavernGain && tavernCtx){ try{ tavernGain.gain.linearRampToValueAtTime(tavernMuted?0:MUSIC_VOL,tavernCtx.currentTime+0.25); }catch(e){} }
   var b=document.getElementById('lobbyMute'); if(b){ b.textContent=tavernMuted?'🔇':'🔊'; b.title=tavernMuted?'Música apagada':'Música de taberna'; }
+  var lbl=document.getElementById('lobbyMuteLbl'); if(lbl){ lbl.textContent=tavernMuted?'activar ambiente de la taberna':'mutear ambiente de la taberna'; }
 }
 </script>
 </body>
