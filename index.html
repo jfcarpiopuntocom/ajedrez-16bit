@@ -1652,7 +1652,8 @@ function startGame(m){
   $('rematch').style.display='none';
   $('resign').style.display='';
   $('drawbtn').style.display=m==='ai'?'none':'';
-  if(mode==='ai'){ boot(); if((ready||fallback)&&!game.game_over()&&game.turn()!==playerColor) setTimeout(aiMove,400); }
+  if(mode==='ai'){ boot(); if((ready||fallback)&&!game.game_over()&&game.turn()!==playerColor) setTimeout(aiMove,400);
+    setTimeout(aiWatchdog,9000); setTimeout(aiWatchdog,16000); }
   render(); status(); startQuotes(); renderHistory(); saveMatch();
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); });
 }
@@ -1832,7 +1833,18 @@ async function boot(){
     setTimeout(()=>{ if(!ready) toFallback('timeout'); },6500);
   }catch(e){ toFallback(e.message); }
 }
-function toFallback(w){ if(fallback) return; fallback=true; ready=true; note.textContent='IA local ('+w+')'; }
+function toFallback(w){ if(fallback) return; fallback=true; ready=true; note.textContent='IA local ('+w+')';
+  // Critical: if the engine died/timed out on the AI's turn, kick the local-fallback move
+  // so the board never deadlocks (bad browsers, WhatsApp in-app webview, slow/blocked fetch).
+  if(mode==='ai'&&!game.game_over()&&!resigned&&game.turn()!==playerColor&&!busy) setTimeout(aiMove,200); }
+// Ultimate safety net: if it's ever the AI's turn and nothing is computing a move, force one.
+// Only acts on a genuine stall (busy stays true during any real engine/fallback think), so it
+// can never interrupt a legitimate move or double-move. Cheap insurance against unknown hangs.
+function aiWatchdog(){
+  if(mode!=='ai'||!started||resigned||game.game_over()) return;
+  if(game.turn()===playerColor||busy) return;
+  aiMove();
+}
 function onMsg(e){ const l=typeof e.data==='string'?e.data:'';
   if((l.includes('uciok')||l.includes('readyok'))&&!ready){ ready=true; configEngine();
     if(mode==='ai'&&!game.game_over()&&game.turn()!==playerColor) setTimeout(aiMove,200); }
