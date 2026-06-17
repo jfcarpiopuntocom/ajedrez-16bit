@@ -31,7 +31,7 @@ body{ font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif;
 img{ -webkit-user-drag:none; user-select:none }
 h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
-.app{ height:calc(100vh - 28px); height:calc(100svh - 28px); max-width:1180px; margin:0 auto; padding:5px 6px;
+.app{ height:100vh; height:100svh; max-width:1180px; margin:0 auto; padding:5px 6px;
   display:flex; flex-direction:column; gap:4px; overflow:hidden }
 
 /* ---------- START SCREEN ---------- */
@@ -641,7 +641,6 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   <div class="chat-log" id="chatLog"></div>
   <div class="chat-quick" id="chatQuick"></div>
 </div>
-<footer class="site-credit">by <a id="credit" href="https://www.jfcarpio.com" rel="noopener">jfcarpio.com</a></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/chess.js@0.12.1/chess.min.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -2172,10 +2171,10 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
    and the scheme are assembled only on click — the static DOM/source contains
    no e-mail address and no scheme literal, so scrapers get nothing. */
 (function(){
-  var c=document.getElementById('credit'); if(!c) return;
   var enc='t92YuwWah12ZA9WawJXYjZma';
   var addrOf=function(){ return atob(enc.split('').reverse().join('')); };
-  c.addEventListener('click', function(e){
+  var c=document.getElementById('credit');
+  if(c) c.addEventListener('click', function(e){
     e.preventDefault();
     window.location.href=['mai','lto',':'].join('')+addrOf();
   });
