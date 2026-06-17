@@ -45,7 +45,9 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .start-art img{ width:100%; height:auto; display:block; max-height:78vh; object-fit:cover; image-rendering:pixelated; filter:contrast(1.06) saturate(.95) }
 .start-rail{ flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
   min-width:0; max-width:430px; overflow-y:auto; max-height:100vh; max-height:100svh; padding:4px 2px }
-/* When the lobby is in front, hide the splash art/rail so the lobby (with its tavern image) owns the screen. */
+/* When the lobby is in front, hide the splash art/rail so the lobby (with its tavern image) owns the screen.
+   Restore vertical flow so the back button sits below the lobby instead of beside it. */
+.start.in-lobby{ flex-direction:column; align-items:center; justify-content:center }
 .start.in-lobby .start-art, .start.in-lobby .start-rail{ display:none }
 @media (max-width:720px){
   .start{ flex-direction:column; align-items:center; justify-content:flex-start; padding:8px 12px; gap:6px }
