@@ -1503,6 +1503,23 @@ const FAMOUS=[
    fen:'4r1k1/p1pb1ppp/Qbp1r3/8/1P6/2Pq1B2/R2P1PPP/2B2RK1 b - - 4 17',
    blurb:'Primer Congreso Americano, Nueva York, 1857. Frente a Louis Paulsen, Paul Morphy entrega su dama con Dxf3, abriendo el enroque blanco a un ataque imparable de torres y alfiles. Fue la partida que lo coronó como el mejor jugador del mundo y selló su leyenda. Tomas el bando rojo en ese instante. La dama vale menos que el ataque que viene detrás.'}
 ];
+/* Real moves up to the critical instant. Replaying them (instead of just loading the FEN)
+   rebuilds the full history, so "Deshacer" puede deshilachar hacia atrás hasta la jugada 1
+   y el jugador puede ramificarse libremente por otro camino desde cualquier punto. */
+const FAMOUS_MOVES={
+  opera:["e4","e5","Nf3","d6","d4","Bg4","dxe5","Bxf3","Qxf3","dxe5","Bc4","Nf6","Qb3","Qe7","Nc3","c6","Bg5","b5","Nxb5","cxb5","Bxb5+","Nbd7","O-O-O","Rd8","Rxd7","Rxd7","Rd1","Qe6","Bxd7+","Nxd7"],
+  immortal:["e4","e5","f4","exf4","Bc4","Qh4+","Kf1","b5","Bxb5","Nf6","Nf3","Qh6","d3","Nh5","Nh4","Qg5","Nf5","c6","g4","Nf6","Rg1","cxb5","h4","Qg6","h5","Qg5","Qf3","Ng8","Bxf4","Qf6","Nc3","Bc5","Nd5","Qxb2"],
+  evergreen:["e4","e5","Nf3","Nc6","Bc4","Bc5","b4","Bxb4","c3","Ba5","d4","exd4","O-O","d3","Qb3","Qf6","e5","Qg6","Re1","Nge7","Ba3","b5","Qxb5","Rb8","Qa4","Bb6","Nbd2","Bb7","Ne4","Qf5","Bxd3","Qh5","Nf6+","gxf6","exf6","Rg8"],
+  century:["Nf3","Nf6","c4","g6","Nc3","Bg7","d4","O-O","Bf4","d5","Qb3","dxc4","Qxc4","c6","e4","Nbd7","Rd1","Nb6","Qc5","Bg4","Bg5","Na4","Qa3","Nxc3","bxc3","Nxe4","Bxe7","Qb6","Bc4","Nxc3","Bc5","Rfe8+","Kf1"],
+  deepblue:["e4","c6","d4","d5","Nc3","dxe4","Nxe4","Nd7","Ng5","Ngf6","Bd3","e6","N1f3","h6"],
+  legal:["e4","e5","Bc4","d6","Nf3","Bg4","Nc3","g6"],
+  fools:["f3","e5","g4"],
+  scholars:["e4","e5","Bc4","Nc6","Qh5","Nf6"],
+  reti:["e4","c6","d4","d5","Nc3","dxe4","Nxe4","Nf6","Qd3","e5","dxe5","Qa5+","Bd2","Qxe5","O-O-O","Nxe4"],
+  lasker:["d4","e6","Nf3","f5","Nc3","Nf6","Bg5","Be7","Bxf6","Bxf6","e4","fxe4","Nxe4","b6","Ne5","O-O","Bd3","Bb7","Qh5","Qe7"],
+  peruvian:["e4","d5","exd5","Qxd5","Nc3","Qa5","d4","c6","Nf3","Bg4","Bf4","e6","h3","Bxf3","Qxf3","Bb4","Be2","Nd7","a3","O-O-O","axb4","Qxa1+","Kd2","Qxh1"],
+  paulsen:["e4","e5","Nf3","Nc6","Nc3","Nf6","Bb5","Bc5","O-O","O-O","Nxe5","Re8","Nxc6","dxc6","Bc4","b5","Be2","Nxe4","Nxe4","Rxe4","Bf3","Re6","c3","Qd3","b4","Bb6","a4","bxa4","Qxa4","Bd7","Ra2","Rae8","Qa6"]
+};
 function famousFromKey(k){ for(var i=0;i<FAMOUS.length;i++) if(FAMOUS[i].key===k) return FAMOUS[i]; return null; }
 let celebrePick={key:null,col:null};
 function openCelebre(key){
@@ -1531,7 +1548,7 @@ function startCelebre(levelKey){
   for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].key===levelKey){ level=LEVELS[i]; break; }
   var col=celebrePick.col||g.take;
   pendingResume={data:{fen:g.fen,tab:pickTablero().key,m:'ai',col:col,lvl:level.key,creator:myPseudo,
-    caps:{w:[],b:[]},moves:[],lineage:[{at:0,opp:'Célebre: '+g.name,mode:'celebre'}]},code:genCode()};
+    caps:{w:[],b:[]},moves:(FAMOUS_MOVES[g.key]||[]).slice(),lineage:[{at:0,opp:'Célebre: '+g.name,mode:'celebre'}]},code:genCode()};
   $('celebreVeil').classList.remove('show'); $('matchesVeil').classList.remove('show');
   setTimeout(function(){ startGame('ai'); },150);
 }
@@ -1621,11 +1638,23 @@ function startGame(m){
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; flipped=false; redoStack.length=0;
   if(pendingResume && pendingResume.data){
     var d=pendingResume.data;
-    try{ game.load(d.fen); }catch(e){}
+    // Replay the real moves so the full history exists (undo unravels to move 1, free branching).
+    // Falls back to a plain FEN load if the move list is missing or doesn't replay cleanly.
+    var replayed=false;
+    if(Array.isArray(d.moves) && d.moves.length){
+      replayed=true;
+      for(var mi=0; mi<d.moves.length; mi++){
+        if(!(game.move(d.moves[mi]) || game.move(d.moves[mi],{sloppy:true}))){ replayed=false; break; }
+      }
+      if(replayed && d.fen && game.fen()!==d.fen){ /* tolerate clock diffs; position is what matters */ }
+      if(!replayed) game.reset();
+    }
+    if(!replayed){ try{ game.load(d.fen); }catch(e){} }
     currentTablero=tableroFromKey(d.tab); matchCode=pendingResume.code;
     if(d.bk) blueKing=d.bk; if(d.rk) redKing=d.rk;
     if(d.col) playerColor=d.col;
-    if(d.caps){
+    if(replayed){ rebuildCaptures(); }
+    else if(d.caps){
       if(Array.isArray(d.caps.w)) for(var i=0;i<d.caps.w.length;i++) capW.push(d.caps.w[i]);
       if(Array.isArray(d.caps.b)) for(var j=0;j<d.caps.b.length;j++) capB.push(d.caps.b[j]);
     }
