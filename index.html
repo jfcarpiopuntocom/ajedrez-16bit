@@ -50,10 +50,12 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 /* When the lobby is in front, hide the splash art/rail so the lobby (with its tavern image) owns the screen. */
 .start.in-lobby .start-body{ display:none }
 @media (max-width:720px){
-  .start-body{ flex-direction:column; align-items:center; gap:6px }
-  .start-art{ flex:0 0 auto; max-width:100%; max-height:18vh }
-  .start-art img{ max-height:18vh; object-fit:contain }
-  .start-rail{ max-height:none; overflow-y:visible }
+  /* Mobile: original tight layout (title + controls only). The duel art is desktop-only —
+     on mobile it crowded the rail and pushed buttons down. Splash-start flash + peace-card still work. */
+  .start{ justify-content:center; padding:10px 12px 18px }
+  .start-body{ flex-direction:column; align-items:center; gap:6px; flex:0 1 auto }
+  .start-art{ display:none }
+  .start-rail{ max-height:none; overflow-y:visible; max-width:380px; justify-content:flex-start }
 }
 .start h2{ margin:0; font-size:18px; font-weight:800; text-align:center; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .choices{ display:flex; flex-direction:column; gap:12px; width:100%; max-width:360px }
