@@ -372,6 +372,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
   font-size:22px; font-weight:900; cursor:pointer; padding:0; line-height:1;
   box-shadow:0 2px 12px rgba(232,160,32,.4), 0 0 0 2px rgba(232,160,32,.15); display:flex; align-items:center; justify-content:center; font-family:Georgia,"Times New Roman",serif }
+.lib-fixed-btn{ right:62px !important; font-family:inherit !important }
 .help-btn:hover,.help-btn:active{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important; transform:scale(1.08) }
 .help-modal{ max-width:540px; max-height:84vh; overflow-y:auto; text-align:left; padding:22px 22px 18px }
 .help-modal h2{ margin:0 0 4px; font-size:22px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; letter-spacing:.5px; font-family:Georgia,"Times New Roman",serif }
@@ -391,6 +392,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .help-modal .help-sponsor a{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-decoration:underline }
 .help-modal .help-close{ margin-top:14px; align-self:center }
 .help-modal .help-thanks{ margin:10px 0 0; font-size:13px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; font-weight:800; letter-spacing:.5px }
+.help-modal .help-thanks-top{ margin:14px 0 6px; font-size:16px; font-style:italic }
 .note{ flex:0 0 auto; text-align:center; font-size:13px; min-height:15px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
 .quote{ flex:0 0 auto; width:100%; max-width:430px; text-align:center; font-style:italic; font-size:13px; line-height:1.35;
   color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; padding:1px 8px; min-height:17px; transition:opacity .35s;
@@ -426,6 +428,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <body>
 
 <button class="help-btn" id="helpBtn" title="Ayuda" aria-label="Ayuda">?</button>
+<button class="help-btn lib-fixed-btn" id="libFixedBtn" title="Librería Real" aria-label="Librería Real">&#128081;</button>
 <div class="modal-veil" id="helpVeil" role="dialog" aria-modal="true">
   <div class="modal-card help-modal">
     <h2>Bienvenido a Los Dos Reinos</h2>
@@ -462,12 +465,12 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <h3>Próximamente</h3>
     <p>Más tableros: <span class="accent">el espacio</span> y <span class="accent">la selva</span>. Cada uno con su propio fondo y atmósfera.</p>
 
+    <p class="help-thanks help-thanks-top">Gracias por jugar.</p>
     <div class="help-footer">
       <p>hecho por <strong>J. F. Carpio</strong> en Cuenca, Ecuador</p>
       <p>Contacto: <strong>jfcarpio@gmail.com</strong></p>
       <a class="help-cta" id="helpSupport" href="#">&#9812; Apoyar el proyecto</a>
-      <p class="help-sponsor">¿Tu marca en un tablero futuro? <a id="helpSponsor" href="#">Patrocínalo</a>.</p>
-      <p class="help-thanks">Gracias por jugar.</p>
+      <p class="help-sponsor">¿Tu marca en un tablero futuro? <a id="helpSponsor" href="mailto:jfcarpio@gmail.com?subject=Patrocinar%20un%20tablero%20-%20Los%20Dos%20Reinos">Patrocínalo</a>.</p>
       <button class="no help-close" id="helpClose">Cerrar</button>
     </div>
   </div>
@@ -1715,6 +1718,7 @@ function openLibrary(){
 }
 $('myMatches').onclick=openLibrary;
 $('splashLibBtn').onclick=openLibrary;
+$('libFixedBtn').onclick=openLibrary;
 $('matchesClose').onclick=function(){ $('matchesVeil').classList.remove('show'); };
 $('matchesExport').onclick=function(){
   var codes=indexList(); var all=[];
@@ -2247,8 +2251,10 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
     var body=encodeURIComponent('Hola Juan Fernando, quiero apoyar el proyecto Los Dos Reinos. Cuéntame cómo.');
     window.location.href=['mai','lto',':'].join('')+addrOf()+'?subject='+subj+'&body='+body;
   });
+  // Patrocínalo: native mailto in the href handles it (no JS hijack). The legacy obfuscation
+  // path stays only for the Apoyar CTA, which keeps a body template.
   document.getElementById('helpSponsor').addEventListener('click', function(e){
-    e.preventDefault();
+    return; // native mailto handles it
     var subj=encodeURIComponent('Patrocinar un tablero - Los Dos Reinos');
     var body=encodeURIComponent('Hola Juan Fernando, quiero patrocinar un tablero futuro con mi marca. Hablemos.');
     window.location.href=['mai','lto',':'].join('')+addrOf()+'?subject='+subj+'&body='+body;
