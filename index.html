@@ -384,7 +384,10 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <h2>Mis partidas guardadas</h2>
     <p class="sub">Doble respaldo: localStorage + IndexedDB en este dispositivo.</p>
     <ul class="matches-list" id="matchesList"></ul>
-    <button class="no" id="matchesClose" style="margin-top:12px;align-self:center">Cerrar</button>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap">
+      <button class="yes" id="matchesExport">&#128190; Exportar JSON</button>
+      <button class="no" id="matchesClose">Cerrar</button>
+    </div>
   </div>
 </div>
 
@@ -517,7 +520,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=73';
+const V='?v=74';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -647,11 +650,16 @@ function indexAdd(code){
 function indexList(){
   try{ var raw=localStorage.getItem(IDX_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; }
 }
+let matchLineage=[]; // [{at:moveCount, opp:'IA Casual' | 'DragonAzul' | '2P'}]
 function saveMatch(){
-  if(!matchCode||!started||game.game_over()||resigned||mode==='online') return;
+  if(!matchCode||!started||resigned) return;
   var data={fen:game.fen(),tab:currentTablero.key,m:mode,col:playerColor,bk:blueKing,rk:redKing,
             lvl:level?level.key:null,creator:myPseudo,
-            caps:{w:capW.slice(),b:capB.slice()},ts:Date.now()};
+            caps:{w:capW.slice(),b:capB.slice()},
+            moves:game.history(),       // SAN move sequence (full played history)
+            lineage:matchLineage.slice(), // who was the opponent at each move boundary
+            over:game.game_over(),
+            ts:Date.now(),v:1};
   // Tier 1: localStorage (synchronous, instant)
   try{ localStorage.setItem(MATCH_KEY+matchCode,JSON.stringify(data)); indexAdd(matchCode); }catch(e){}
   // Tier 2: IndexedDB (async, redundant backup)
@@ -808,9 +816,10 @@ function wireConn(c){
         if(snap && snap.m==='ai'){
           var hostColor=snap.col||'w';
           var guestColor=hostColor==='w'?'b':'w';
+          var newCode=genCode();
           net.myColor=hostColor;
-          c.send({t:'start',name:myPseudo,takeover:{fen:snap.fen,tab:snap.tab,bk:snap.bk,rk:snap.rk,guestColor:guestColor,creator:snap.creator||myPseudo,fromCode:currentRoom}});
-          pendingResume={data:{fen:snap.fen,tab:snap.tab,m:'online',col:hostColor,bk:snap.bk,rk:snap.rk,caps:snap.caps},code:genCode()};
+          c.send({t:'start',name:myPseudo,takeover:{fen:snap.fen,tab:snap.tab,bk:snap.bk,rk:snap.rk,guestColor:guestColor,creator:snap.creator||myPseudo,fromCode:currentRoom,newCode:newCode,moves:snap.moves||[],lineage:snap.lineage||[]}});
+          pendingResume={data:{fen:snap.fen,tab:snap.tab,m:'online',col:hostColor,bk:snap.bk,rk:snap.rk,caps:snap.caps,moves:snap.moves,lineage:snap.lineage},code:newCode};
           startGame('online');
         } else {
           c.send({t:'start',name:myPseudo});
@@ -823,7 +832,7 @@ function wireConn(c){
       if(d.takeover){
         var t=d.takeover;
         net.myColor=t.guestColor||'b';
-        pendingResume={data:{fen:t.fen,tab:t.tab,m:'online',col:net.myColor,bk:t.bk,rk:t.rk},code:genCode()};
+        pendingResume={data:{fen:t.fen,tab:t.tab,m:'online',col:net.myColor,bk:t.bk,rk:t.rk,moves:t.moves||[],lineage:t.lineage||[]},code:t.newCode||genCode()};
         statusEl && (statusEl.innerHTML='<span class="warn">Universo paralelo abierto desde '+(t.creator||'tu amigo')+'</span>');
       }
       startGame('online');
@@ -1078,18 +1087,31 @@ function goOnline(){
 }
 
 function lobbyConnect(targetId,name){
-  if(!net.peer||net.conn) return;
+  if(!net.peer||net.peer.destroyed){
+    $('lobbyStatus').innerHTML='<span class="lobby-searching">Reconectando al lobby...</span>';
+    return;
+  }
+  if(net.conn){
+    if(net.active) return; // already in a match
+    try{ net.conn.close(); }catch(e){}
+    net.conn=null;
+  }
   $('lobbyStatus').innerHTML='<span class="lobby-searching">Conectando con '+name+'...</span>';
-  net.isHost=false; net.myColor='b';
-  var c=net.peer.connect(targetId,{reliable:true}); net.conn=c; wireConn(c);
+  net.isHost=false; net.myColor='b'; net.rivalName=name||'rival';
+  var c=net.peer.connect(targetId,{reliable:true,metadata:{type:'match'}});
+  if(!c){
+    $('lobbyStatus').innerHTML='<span class="lobby-searching">No se pudo iniciar la conexión, reintenta</span>';
+    return;
+  }
+  net.conn=c; wireConn(c);
   c.on('open',function(){ try{ c.send({t:'hello',name:myPseudo}); }catch(e){} });
   setTimeout(function(){
-    if(!net.active){
-      try{ if(net.conn) net.conn.close(); }catch(e){} net.conn=null;
-      $('lobbyStatus').innerHTML='<span class="lobby-searching">'+name+' no respondio. Vuelve al lobby.</span>';
+    if(!net.active && net.conn===c){
+      try{ c.close(); }catch(e){} net.conn=null;
+      $('lobbyStatus').innerHTML='<span class="lobby-searching">'+name+' no respondió. Toca otro nombre o reintenta.</span>';
       renderLobby();
     }
-  },8000);
+  },10000);
 }
 
 $('btnOnline').onclick=goOnline;
@@ -1178,6 +1200,20 @@ $('myMatches').onclick=function(){
   $('matchesVeil').classList.add('show');
 };
 $('matchesClose').onclick=function(){ $('matchesVeil').classList.remove('show'); };
+$('matchesExport').onclick=function(){
+  var codes=indexList(); var all=[];
+  codes.forEach(function(c){ var d=loadMatch(c); if(d) all.push({code:c,data:d}); });
+  var dump={app:'losdosreinos',version:1,player:myPseudo,exported:new Date().toISOString(),matches:all};
+  var json=JSON.stringify(dump,null,2);
+  var blob=new Blob([json],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a'); a.href=url;
+  a.download='losdosreinos-'+myPseudo.toLowerCase()+'-'+(new Date().toISOString().slice(0,10))+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); },2000);
+  var btn=$('matchesExport'); var orig=btn.innerHTML;
+  btn.textContent='✓ Descargado'; setTimeout(function(){ btn.innerHTML=orig; },1800);
+};
 $('matchesVeil').addEventListener('click',function(e){ if(e.target===$('matchesVeil')) $('matchesVeil').classList.remove('show'); });
 document.addEventListener('keydown',function(e){ if(e.key==='Escape' && $('matchesVeil').classList.contains('show')) $('matchesVeil').classList.remove('show'); });
 
@@ -1204,9 +1240,19 @@ function startGame(m){
       if(Array.isArray(d.caps.w)) for(var i=0;i<d.caps.w.length;i++) capW.push(d.caps.w[i]);
       if(Array.isArray(d.caps.b)) for(var j=0;j<d.caps.b.length;j++) capB.push(d.caps.b[j]);
     }
+    matchLineage=Array.isArray(d.lineage)?d.lineage.slice():[];
+    // If the resume crosses universes (was AI, now online with a human), record the takeover
+    if(m==='online' && d.m==='ai'){
+      var movesNow=(d.moves&&d.moves.length)||0;
+      matchLineage.push({at:movesNow,opp:(net.rivalName||'rival'),mode:'online'});
+    }
     pendingResume=null;
   } else {
     currentTablero=pickTablero(); matchCode=genCode();
+    var initialOpp = (m==='ai')?('IA '+(level?level.name:'?'))
+                  : (m==='2p')?'2P en persona'
+                  : (net.rivalName||'rival');
+    matchLineage=[{at:0,opp:initialOpp,mode:m}];
   }
   applyTablero(currentTablero);
   if(m==='online' && net.myColor==='b') flipped=true;
