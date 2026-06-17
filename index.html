@@ -35,27 +35,26 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   display:flex; flex-direction:column; gap:4px; overflow:hidden }
 
 /* ---------- START SCREEN ---------- */
-/* Splash: two columns on desktop (art left | rail right) so everything fits without scroll.
-   Below 720px the art collapses and the rail becomes the regular vertical stack. */
+/* Splash: title masthead on top (always centered), then below it art+rail in two columns on desktop.
+   Below 720px art collapses above and the rail becomes a single vertical stack. */
 .start{ position:fixed; inset:0; z-index:100; background:radial-gradient(1100px 700px at 50% -6%, #3a2a1a 0%, #160f08 60%, #0a0604 100%);
-  display:flex; flex-direction:row; align-items:stretch; justify-content:center; gap:18px; padding:10px 14px; overflow:hidden }
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:8px; padding:10px 14px; overflow:hidden }
 .start.hidden{ display:none }
+.start img.banner{ flex:0 0 auto; width:100%; max-width:620px; height:auto; max-height:18vh; object-fit:contain }
+.start-body{ flex:1 1 auto; display:flex; flex-direction:row; align-items:stretch; justify-content:center; gap:18px; width:100%; min-height:0 }
 .start-art{ flex:0 0 360px; max-width:42vw; align-self:center; border:2px solid var(--gold); border-radius:14px; overflow:hidden;
   box-shadow:0 6px 22px rgba(0,0,0,.55); background:#0a0604 }
-.start-art img{ width:100%; height:auto; display:block; max-height:78vh; object-fit:cover; image-rendering:pixelated; filter:contrast(1.06) saturate(.95) }
+.start-art img{ width:100%; height:auto; display:block; max-height:72vh; object-fit:cover; image-rendering:pixelated; filter:contrast(1.06) saturate(.95) }
 .start-rail{ flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
-  min-width:0; max-width:430px; overflow-y:auto; max-height:100vh; max-height:100svh; padding:4px 2px }
-/* When the lobby is in front, hide the splash art/rail so the lobby (with its tavern image) owns the screen.
-   Restore vertical flow so the back button sits below the lobby instead of beside it. */
-.start.in-lobby{ flex-direction:column; align-items:center; justify-content:center }
-.start.in-lobby .start-art, .start.in-lobby .start-rail{ display:none }
+  min-width:0; max-width:430px; overflow-y:auto; max-height:100%; padding:4px 2px }
+/* When the lobby is in front, hide the splash art/rail so the lobby (with its tavern image) owns the screen. */
+.start.in-lobby .start-body{ display:none }
 @media (max-width:720px){
-  .start{ flex-direction:column; align-items:center; justify-content:flex-start; padding:8px 12px; gap:6px }
+  .start-body{ flex-direction:column; align-items:center; gap:6px }
   .start-art{ flex:0 0 auto; max-width:100%; max-height:18vh }
   .start-art img{ max-height:18vh; object-fit:contain }
   .start-rail{ max-height:none; overflow-y:visible }
 }
-.start img.banner{ width:100%; max-width:560px; height:auto; max-height:18vh; object-fit:contain }
 .start h2{ margin:0; font-size:18px; font-weight:800; text-align:center; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .choices{ display:flex; flex-direction:column; gap:12px; width:100%; max-width:360px }
 .bigbtn{ font-size:18px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
@@ -229,7 +228,13 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .banner, .title-img{
   -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
           mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
-  filter:drop-shadow(0 6px 16px rgba(0,0,0,.55)) drop-shadow(0 0 20px rgba(232,160,32,.32));
+  /* Tight gold outline traces the title's alpha so it doesn't look pasted on black, plus the existing glow + shadow. */
+  filter:
+    drop-shadow(0 0 0.6px var(--gold))
+    drop-shadow(0 0 0.6px var(--gold))
+    drop-shadow(0 0 1px rgba(232,160,32,.85))
+    drop-shadow(0 6px 16px rgba(0,0,0,.55))
+    drop-shadow(0 0 22px rgba(232,160,32,.32));
   animation:titleFloat 5s ease-in-out infinite; }
 /* Footer: fixed bottom bar, always visible over both screens */
 .site-credit{ position:fixed; left:0; right:0; bottom:0; z-index:200; height:28px;
@@ -342,6 +347,11 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .cell.check::after{ content:""; position:absolute; inset:5%; border:3px solid #ff5252; border-radius:7px; box-shadow:0 0 12px #ff2020 }
 
 /* ---------- History panel (always visible, left of board) ---------- */
+.peace-card{ flex:0 0 auto; width:100%; max-width:430px; margin-top:6px; border:2px solid var(--gold); border-radius:12px; overflow:hidden;
+  background:linear-gradient(160deg,#1f160d,#0a0604); box-shadow:0 4px 16px rgba(0,0,0,.55) }
+.peace-card img{ width:100%; height:auto; display:block; image-rendering:pixelated; filter:contrast(1.05) saturate(.95) }
+.peace-card p{ margin:0; padding:7px 10px; font-size:13px; font-style:italic; text-align:center; line-height:1.35;
+  color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-weight:700 }
 .history{ flex:0 0 auto; width:100%; max-width:430px; max-height:80px; overflow-y:auto; margin-top:4px;
   background:linear-gradient(160deg,#241a10,#140d07); border:2px solid var(--gold); border-radius:8px; padding:4px 8px;
   font-size:12px; line-height:1.4; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
@@ -535,9 +545,10 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 
 <!-- ===== START SCREEN ===== -->
 <div class="start" id="start">
+  <img class="banner" src="assets/title.png" alt="Los Dos Reinos: ¡ajedrez fantástico!">
+  <div class="start-body">
   <div class="start-art" id="startArt"><img src="assets/splash-duel.png" alt="Los reyes en batalla" onerror="this.parentNode.style.display='none'"></div>
   <div class="start-rail" id="startRail">
-  <img class="banner" src="assets/title.png" alt="Los Dos Reinos: ¡ajedrez fantástico!">
   <h2 id="startH2">¿Cómo quieres jugar?</h2>
   <div class="choices">
     <button class="bigbtn" id="btn2p">👥 Con un amigo en persona</button>
@@ -584,6 +595,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     </div>
   </div>
   </div><!-- /.start-rail -->
+  </div><!-- /.start-body -->
   <div class="lobby" id="lobby">
     <div class="lobby-tavern-wrap"><img class="lobby-tavern" src="assets/lobby-tavern.png" alt="La Taberna de los Reyes"></div>
     <div class="lobby-panel">
@@ -645,6 +657,11 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <div class="left-rail">
       <div class="quote" id="quote"></div>
       <aside class="history" id="history"><h4>Jugadas</h4><ol id="histlist"></ol></aside>
+      <!-- End-of-game card: image speaks for itself. Subtitle echoes the alt text. -->
+      <div class="peace-card" id="peaceCard" style="display:none">
+        <img src="assets/splash-peace.png" alt="al final de la partida, los reyes hacen una mejor amistad" onerror="this.parentNode.style.display='none'">
+        <p>al final de la partida, los reyes hacen una mejor amistad</p>
+      </div>
     </div>
   </div>
 
@@ -1076,12 +1093,16 @@ function wireConn(c){
     }
     else if(d.t==='move'){ doMove(d.mv,true); }
     else if(d.t==='rematch'){
+      // Guard: only honor a rematch request once this side already saw the game end.
+      // Without this, a peer can wipe the in-progress board by sending {t:'rematch'} mid-game.
+      if(!(game.game_over() || resigned)) return;
       // Mirror: swap colors locally so we stay opposite each other.
       net.myColor=(net.myColor==='w'?'b':'w'); flipped=(net.myColor==='b');
       game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0; resigned=false;
       $('undo').style.display='none'; $('redo').style.display='none';
       $('resign').style.display=''; $('drawbtn').style.display='';
       $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
+      var pc=$('peaceCard'); if(pc) pc.style.display='none';
       render(); status(); renderHistory(); saveMatch();
     }
     else if(d.t==='chat'){ showChat(net.rivalName||'rival',d.i,false); }
@@ -1859,6 +1880,7 @@ function startGame(m){
   if(m==='ai' && playerColor==='b') flipped=true;
   $('zoombtn').style.display='block';
   showChatUI(mode==='online');
+  var pc=$('peaceCard'); if(pc) pc.style.display='none';
   $('start').classList.add('hidden'); $('app').style.display='flex';
   $('lobby').classList.remove('show'); $('colorpick').classList.remove('show');
   $('rematch').style.display='none';
@@ -2128,6 +2150,7 @@ $('rematch').onclick=()=>{
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0; resigned=false;
   // Restore the in-game HUD (Deshacer/Rehacer hidden again in online live).
   var hideUR=(mode==='online'); $('undo').style.display=hideUR?'none':''; $('redo').style.display=hideUR?'none':'';
+  var pc=$('peaceCard'); if(pc) pc.style.display='none';
   $('resign').style.display=''; $('drawbtn').style.display=(mode==='ai')?'none':'';
   $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
   render(); status(); renderHistory(); saveMatch();
@@ -2156,6 +2179,8 @@ function showEndButtons(){
   $('backLobbyBtn').style.display=(mode==='online')?'':'none';
   // Take-backs unlock once the duel is over (review-mode).
   $('undo').style.display=''; $('redo').style.display='';
+  // Peace card slides into the left rail: the image (and its subtitle) speaks for itself.
+  var pc=$('peaceCard'); if(pc) pc.style.display='';
   reportMatchEnd();
 }
 function backToLobby(){
