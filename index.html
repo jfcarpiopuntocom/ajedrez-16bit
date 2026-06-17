@@ -1645,53 +1645,74 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
   });
 })();
 
-/* ===== Tavern Music — Web Audio API medieval lute melody ===== */
+/* ===== Tavern Music — epic medieval score: harp + battle brass + heroic lead ===== */
 var tavernCtx=null, tavernGain=null, tavernPlaying=false, tavernTimer=null;
 function tavernNoteFreq(n){ return 440*Math.pow(2,(n-69)/12); }
 function playTavernMelody(){
   if(tavernPlaying) return;
   if(!tavernCtx) tavernCtx=new (window.AudioContext||window.webkitAudioContext)();
   if(tavernCtx.state==='suspended') tavernCtx.resume();
-  tavernGain=tavernCtx.createGain(); tavernGain.gain.value=0.18;
-  var master=tavernCtx.createGain(); master.gain.value=1; master.connect(tavernCtx.destination);
-  tavernGain.connect(master);
+  tavernGain=tavernCtx.createGain(); tavernGain.gain.value=0.06; // 33% of prior 0.18
+  tavernGain.connect(tavernCtx.destination);
   tavernPlaying=true;
-  var melody=[
-    64,0.3, 66,0.3, 67,0.6, 64,0.3, 62,0.3, 60,0.6,
-    62,0.3, 64,0.3, 66,0.6, 67,0.3, 66,0.3, 64,0.6,
-    67,0.3, 69,0.3, 71,0.6, 69,0.3, 67,0.3, 66,0.6,
-    64,0.3, 62,0.3, 60,0.6, 62,0.3, 64,0.3, 62,0.9,
-    60,0.3, 62,0.3, 64,0.6, 67,0.3, 66,0.3, 64,0.6,
-    62,0.3, 60,0.3, 59,0.6, 60,0.3, 62,0.3, 64,0.6,
-    67,0.3, 69,0.3, 71,0.6, 72,0.3, 71,0.3, 69,0.6,
-    67,0.3, 64,0.3, 62,0.6, 60,0.3, 62,0.3, 64,0.9
+  var BEAT=0.5;
+  // Heroic minor-key progression (D minor / F major), 16 chords x 2 beats = 32 beats
+  var prog=[
+    [[50,53,57],2],[[46,50,53],2],[[53,57,60],2],[[48,52,55],2],
+    [[55,58,62],2],[[46,50,53],2],[[57,61,64],2],[[50,53,57],2],
+    [[53,57,60],2],[[48,52,55],2],[[50,53,57],2],[[57,61,64],2],
+    [[46,50,53],2],[[53,57,60],2],[[55,58,62],2],[[57,61,64],2]
   ];
-  var bass=[
-    48,1.2, 43,1.2, 45,1.2, 48,1.2,
-    48,1.2, 43,1.2, 45,1.2, 48,1.2
+  // Heroic lead melody, [midi,beats], 32 beats total
+  var lead=[
+    69,2, 65,1, 67,1, 69,2, 72,1, 69,1,
+    74,2, 72,1, 69,1, 70,2, 69,1, 67,1,
+    65,1, 69,1, 72,2, 71,1, 69,1, 67,2,
+    74,2, 73,1, 72,1, 69,2, 74,2
   ];
-  function scheduleVoice(notes,vol,wave,detune){
-    var t=tavernCtx.currentTime+0.05;
-    for(var i=0;i<notes.length;i+=2){
-      var osc=tavernCtx.createOscillator();
-      var env=tavernCtx.createGain();
-      osc.type=wave; osc.frequency.value=tavernNoteFreq(notes[i]);
-      if(detune) osc.detune.value=detune;
-      env.gain.setValueAtTime(vol,t);
-      env.gain.exponentialRampToValueAtTime(vol*0.15,t+notes[i+1]*0.85);
-      env.gain.linearRampToValueAtTime(0,t+notes[i+1]*0.98);
-      osc.connect(env); env.connect(tavernGain);
-      osc.start(t); osc.stop(t+notes[i+1]);
-      t+=notes[i+1];
+  function tone(midi,t,dur,vol,wave,detune,attack){
+    var osc=tavernCtx.createOscillator(), env=tavernCtx.createGain();
+    osc.type=wave; osc.frequency.value=tavernNoteFreq(midi);
+    if(detune) osc.detune.value=detune;
+    var a=attack||0.01;
+    env.gain.setValueAtTime(0.0001,t);
+    env.gain.exponentialRampToValueAtTime(vol,t+a);
+    env.gain.exponentialRampToValueAtTime(vol*0.18,t+dur*0.8);
+    env.gain.linearRampToValueAtTime(0.0001,t+dur*0.99);
+    osc.connect(env); env.connect(tavernGain);
+    osc.start(t); osc.stop(t+dur);
+  }
+  function scheduleSection(startT){
+    var t=startT;
+    // Brass pads + plucked harp arpeggios per chord
+    for(var i=0;i<prog.length;i++){
+      var chord=prog[i][0], beats=prog[i][1], cdur=beats*BEAT;
+      // battle brass: root+fifth+octave, sustained, sawtooth (warm, layered)
+      tone(chord[0]-12,t,cdur,0.5,'sawtooth',0,0.06);
+      tone(chord[0],t,cdur,0.32,'sawtooth',-6,0.06);
+      tone(chord[2],t,cdur,0.26,'sawtooth',5,0.06);
+      // harp: ascending+descending arpeggio, 8 plucks across 2 beats
+      var notes=chord.concat([chord[0]+12,chord[1]+12]);
+      var seq=notes.concat(notes.slice().reverse());
+      var step=cdur/seq.length;
+      for(var h=0;h<seq.length;h++){
+        tone(seq[h]+12,t+h*step,step*1.6,0.45,'triangle',0,0.004);
+      }
+      t+=cdur;
     }
-    return t-tavernCtx.currentTime;
+    // Heroic lead over the top
+    var lt=startT;
+    for(var k=0;k<lead.length;k+=2){
+      var m=lead[k], ldur=lead[k+1]*BEAT;
+      if(m>0){ tone(m,lt,ldur*0.95,0.6,'triangle',0,0.02); tone(m,lt,ldur*0.95,0.22,'square',8,0.02); }
+      lt+=ldur;
+    }
+    return 32*BEAT; // section length in seconds
   }
   function loop(){
     if(!tavernPlaying) return;
-    var dur=scheduleVoice(melody,0.7,'triangle',0);
-    scheduleVoice(bass,0.35,'sine',0);
-    scheduleVoice(melody,0.2,'sawtooth',7);
-    tavernTimer=setTimeout(loop,(dur-0.1)*1000);
+    var dur=scheduleSection(tavernCtx.currentTime+0.05);
+    tavernTimer=setTimeout(loop,(dur-0.15)*1000);
   }
   loop();
 }
