@@ -632,6 +632,34 @@ const APHORISMS=[
   {t:'No temas al rival grande; teme al rival preparado.', a:'Proverbio vikingo'},
   {t:'El tablero recuerda cada error; el jugador sabio también.', a:'Principio clásico'},
   {t:'En la batalla, el terreno decide tanto como el acero.', a:'Clausewitz'},
+  {t:'No es el número, sino el orden de batalla, lo que vence.', a:'Vegecio'},
+  {t:'Quien defiende todo, no defiende nada.', a:'Federico el Grande'},
+  {t:'La audacia, repetida, es estrategia; aislada, es suerte.', a:'Principio militar'},
+  {t:'Ataca por la línea de menor resistencia.', a:'B. H. Liddell Hart'},
+  {t:'El que llega primero al campo descansa; el tardío llega ya cansado.', a:'Sun Tzu'},
+  {t:'Toda guerra se basa en el engaño.', a:'Sun Tzu'},
+  // Anécdotas increíbles de ajedrez
+  {t:'El Turco, autómata ajedrecista de 1770, venció a Napoleón y a Franklin: escondía a un maestro humano dentro.', a:'Historia: El Turco'},
+  {t:'Capablanca estuvo ocho años sin perder una sola partida, de 1916 a 1924.', a:'Récord histórico'},
+  {t:'En la Partida Inmortal de 1851, Anderssen sacrificó dama y dos torres para dar mate.', a:'Anderssen, 1851'},
+  {t:'Fischer aplastó 6 a 0 a Taimánov y 6 a 0 a Larsen en 1971: una hazaña jamás repetida.', a:'Fischer, 1971'},
+  {t:'Morphy derrotó a toda la élite europea y se retiró del ajedrez a los 22 años.', a:'Paul Morphy'},
+  {t:'En 1997 Deep Blue venció a Kasparov: la primera vez que una máquina derrotó a un campeón mundial.', a:'Kasparov vs Deep Blue'},
+  {t:'Judit Polgar venció a Kasparov, Karpov y a casi todos los campeones de su era.', a:'Judit Polgar'},
+  {t:'Tal sacrificaba piezas hasta hipnotizar al rival; lo llamaban el Mago de Riga.', a:'Mikhail Tal'},
+  {t:'El ajedrez nació en la India como chaturanga: las cuatro divisiones del ejército.', a:'Origen: Chaturanga'},
+  {t:'La leyenda del grano de trigo en cada casilla arruinaría a cualquier rey: 18 trillones de granos.', a:'Leyenda de Sissa'},
+  {t:'La partida más larga registrada duró 269 jugadas y más de 20 horas.', a:'Nikolić vs Arsović, 1989'},
+  // Anécdotas increíbles de guerras antiguas
+  {t:'En las Termópilas, un puñado de espartanos contuvo a un ejército persa de cientos de miles.', a:'Termópilas, 480 a.C.'},
+  {t:'Aníbal cruzó los Alpes con elefantes y rodeó a un ejército romano mayor en Cannas.', a:'Cannas, 216 a.C.'},
+  {t:'Escipión derrotó a Aníbal en Zama volviendo sus propios elefantes contra él.', a:'Zama, 202 a.C.'},
+  {t:'Alejandro nunca perdió una batalla; en Gaugamela venció a un ejército diez veces mayor.', a:'Gaugamela, 331 a.C.'},
+  {t:'En Azincourt, los arqueros ingleses diezmaron a la caballería francesa atrapada en el lodo.', a:'Azincourt, 1415'},
+  {t:'César cruzó el Rubicón con una sola legión y cambió el rumbo de Roma.', a:'Julio César, 49 a.C.'},
+  {t:'Gengis Kan conquistó en 25 años más tierra que Roma en cuatro siglos.', a:'Gengis Kan'},
+  {t:'Leónidas eligió el terreno, no el número: por eso unos pocos frenaron a un imperio.', a:'Principio: el terreno'},
+  {t:'En Maratón, los atenienses corrieron contra los persas para anular sus arqueros.', a:'Maratón, 490 a.C.'},
 ];
 /* ===== Pseudonyms for online lobby ===== */
 const _NN=['Dragon','Caballo','Torre','Alfil','Peon','Leon','Aguila','Tigre','Oso','Lobo','Gato','Buho','Fenix','Grifo','Halcon','Cuervo','Toro','Zorro','Ogro','Mago','Vikingo','Pirata','Ninja','Samurai','Gladiador','Centauro','Minotauro','Kraken'];
@@ -736,7 +764,10 @@ function saveIdentity(){ try{ localStorage.setItem(ID_KEY,JSON.stringify({pseudo
 
 let qi=-1, qTimer=null;
 function rotateQuote(){ const el=document.getElementById('quote'); if(!el) return;
-  qi=(qi+1)%APHORISMS.length; const q=APHORISMS[qi];
+  // Random order, avoiding an immediate repeat of the last shown aphorism
+  let ni=Math.floor(Math.random()*APHORISMS.length);
+  if(APHORISMS.length>1 && ni===qi) ni=(ni+1)%APHORISMS.length;
+  qi=ni; const q=APHORISMS[qi];
   el.style.opacity='0'; setTimeout(()=>{ el.innerHTML='&ldquo;'+q.t+'&rdquo; <b>&mdash; '+q.a+'</b>'; el.style.opacity='1'; },160); }
 function startQuotes(){ if(qTimer) clearInterval(qTimer); qi=-1; rotateQuote(); qTimer=setInterval(rotateQuote,9000); }
 const BOARD_W=472, BOARD_H=536, ASPECT=BOARD_W/BOARD_H, FILES='abcdefgh';
