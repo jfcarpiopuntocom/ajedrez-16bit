@@ -227,31 +227,29 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-size:15px; font-weight:800; line-height:1; cursor:pointer;
   display:flex; align-items:center; gap:6px }
 #zoombtn .zi{ font-size:18px }
-/* Quick-chat: floating toggle + panel, online 1v1 only */
-#chatToggle{ position:fixed; bottom:36px; right:8px; z-index:300; width:46px; height:46px; border-radius:50%;
-  background:linear-gradient(160deg,#2c416f,#16223f); border:3px solid var(--gold);
-  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-size:22px; line-height:1; cursor:pointer;
-  box-shadow:0 2px 10px rgba(0,0,0,.5); padding:0; align-items:center; justify-content:center }
-.chat-badge{ position:absolute; top:-3px; right:-3px; min-width:16px; height:16px; border-radius:8px;
-  background:var(--crimson); border:1px solid #FFD060; }
-#chatPanel{ position:fixed; bottom:88px; right:8px; z-index:301; width:248px; max-width:84vw;
+/* Quick-chat: always-on mini feed (last 5) + expandable reply panel. Online 1v1 only. */
+#chatPanel{ position:fixed; bottom:8px; right:8px; z-index:301; width:248px; max-width:84vw;
   background:#1c140d; border:2px solid var(--gold); border-radius:12px; box-shadow:0 6px 22px rgba(0,0,0,.6); overflow:hidden }
-.chat-head{ display:flex; align-items:center; justify-content:space-between; padding:8px 10px; font-size:14px; font-weight:800;
+.chat-head{ display:flex; align-items:center; justify-content:space-between; padding:6px 8px 6px 10px; font-size:13px; font-weight:800;
   color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; background:#241a10 }
-.chat-head button{ background:none; border:none; cursor:pointer; font-size:15px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
-.chat-log{ max-height:130px; overflow-y:auto; padding:8px 10px; display:flex; flex-direction:column; gap:5px }
-.chat-msg{ font-size:14px; line-height:1.35; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.chat-head button{ background:none; border:1px solid var(--gold); border-radius:6px; cursor:pointer; font-size:14px;
+  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; padding:2px 8px; line-height:1; min-width:30px }
+.chat-head button:hover{ background:#34260f }
+.chat-log{ padding:6px 10px; display:flex; flex-direction:column; gap:3px }
+.chat-msg{ font-size:13px; line-height:1.35; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 .chat-msg b{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .chat-msg.mine b{ color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important }
-.chat-empty{ font-size:13px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:6px 0 }
-.chat-quick{ display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:8px; border-top:1px solid rgba(232,160,32,.25) }
+.chat-empty{ font-size:12px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:4px 0; font-style:italic }
+.chat-quick{ display:none; grid-template-columns:1fr 1fr; gap:4px; padding:6px 8px 8px; border-top:1px solid rgba(232,160,32,.25); max-height:240px; overflow-y:auto }
+.chat-quick.open{ display:grid }
 .chat-quick button{ font-size:13px; font-weight:700; padding:7px 6px; min-height:34px; border-radius:8px; border:1px solid var(--gold);
   background:#241a10; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; cursor:pointer; text-align:left; line-height:1.15 }
 .chat-quick button:hover,.chat-quick button:active{ background:#34260f; border-color:#FFD060 }
 .chat-quick button:disabled{ opacity:1; color:#777777 !important; -webkit-text-fill-color:#777777 !important; cursor:wait }
 body.focusmode .title-img, body.focusmode .status, body.focusmode .left-rail,
 body.focusmode .note, body.focusmode .hud, body.focusmode .site-credit,
-body.focusmode #chatToggle, body.focusmode #chatPanel{ display:none !important }
+body.focusmode #chatPanel{ display:none !important }
 body.focusmode .app{ height:100vh !important; height:100svh !important }
 
 /* ---------- Turn / status ---------- */
@@ -637,10 +635,10 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 </div>
 
 <button id="zoombtn" title="Expandir tablero" style="display:none"><span class="zi">⛶</span> Zoom</button>
-<!-- Quick-chat (online 1v1 only): preset phrases, no free text, so jamás hay insultos ni flag wars -->
-<button id="chatToggle" title="Chat rápido" style="display:none">&#128172;<span class="chat-badge" id="chatBadge" style="display:none"></span></button>
+<!-- Quick-chat (online 1v1 only): preset phrases, no free text, so jamás hay insultos ni flag wars.
+     Mini feed always visible (last 5); the reply panel (16 phrases) expands on demand. -->
 <div id="chatPanel" style="display:none">
-  <div class="chat-head">Mensajes corteses <button id="chatClose" title="Cerrar">&#10005;</button></div>
+  <div class="chat-head"><span>&#128172; Mensajes corteses</span> <button id="chatReplyBtn" title="Responder">Responder +</button></div>
   <div class="chat-log" id="chatLog"></div>
   <div class="chat-quick" id="chatQuick"></div>
 </div>
@@ -1770,17 +1768,18 @@ function showChat(name,i,mine){
   var nm=document.createElement('b'); nm.textContent=name+': ';
   m.appendChild(nm); m.appendChild(document.createTextNode(CHAT_ITEMS[i]));
   log.appendChild(m);
-  while(log.childElementCount>30) log.removeChild(log.firstChild);
-  log.scrollTop=log.scrollHeight;
-  if(!mine && $('chatPanel').style.display==='none'){ $('chatBadge').style.display='block'; }
+  // Keep only the last 5 visible — the panel stays compact and never grows.
+  while(log.childElementCount>5) log.removeChild(log.firstChild);
 }
-function resetChat(){ $('chatLog').innerHTML='<div class="chat-empty">Saluda a tu rival con un gesto cortés.</div>'; $('chatBadge').style.display='none'; $('chatPanel').style.display='none'; }
+function resetChat(){ $('chatLog').innerHTML='<div class="chat-empty">Solo gestos corteses. Sin texto libre.</div>'; $('chatQuick').classList.remove('open'); }
 function showChatUI(on){
-  if(on){ buildChatQuick(); resetChat(); $('chatToggle').style.display='flex'; }
-  else { $('chatToggle').style.display='none'; $('chatPanel').style.display='none'; }
+  if(on){ buildChatQuick(); resetChat(); $('chatPanel').style.display='block'; }
+  else { $('chatPanel').style.display='none'; $('chatQuick').classList.remove('open'); }
 }
-$('chatToggle').onclick=function(){ var p=$('chatPanel'); var open=p.style.display!=='none'; p.style.display=open?'none':'block'; if(!open) $('chatBadge').style.display='none'; };
-$('chatClose').onclick=function(){ $('chatPanel').style.display='none'; };
+$('chatReplyBtn').onclick=function(){
+  var q=$('chatQuick'); var open=q.classList.toggle('open');
+  $('chatReplyBtn').textContent=open?'Cerrar':'Responder +';
+};
 
 let pendingResume=null;
 function applyTablero(t){
