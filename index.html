@@ -92,8 +92,6 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .lobby.show{ display:flex }
 .lobby-name{ margin:0; font-size:16px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; display:flex; align-items:center; gap:6px }
 .lobby-name strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:22px }
-.lobby-room{ margin:0; font-size:15px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; display:flex; align-items:center; gap:6px }
-.lobby-room strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:20px; letter-spacing:2px; font-family:Georgia,"Times New Roman",serif }
 .lobby-para{ display:inline-block; margin-top:6px; font-size:12px; font-weight:700; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; font-style:italic; line-height:1.4 }
 .lobby-name-input{ font-size:18px; font-weight:800; padding:4px 8px; min-width:130px; max-width:180px; border:2px solid var(--gold); border-radius:8px;
   background:#1c140d; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; font-family:inherit }
@@ -119,7 +117,6 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .matches-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:18px 0; font-weight:600 }
 .lobby-rename{ background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; transition:color .15s,-webkit-text-fill-color .15s }
 .lobby-rename:hover{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
-.lobby-hint{ margin:0; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:center }
 .lobby-status{ margin:0; font-size:14px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; min-height:18px; font-weight:700 }
 .lobby-count{ font-weight:400; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; font-size:13px; margin-left:4px }
 .lobby-list{ list-style:none; margin:0; padding:0; width:100%; max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:5px }
@@ -134,6 +131,12 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .lobby-list li .li-name{ flex:1 }
 .lobby-list li .li-arrow{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:18px; flex-shrink:0 }
 .lobby-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:20px 0 }
+.lobby-tavern-wrap{ width:100%; max-width:380px; border-radius:12px; overflow:hidden; border:2px solid var(--gold); box-shadow:0 4px 18px rgba(0,0,0,.5) }
+.lobby-tavern{ width:100%; height:auto; display:block; image-rendering:pixelated; filter:contrast(1.1) saturate(.85) }
+.lobby-room-bar{ display:flex; align-items:center; gap:8px; width:100%; max-width:380px; padding:6px 12px; border-radius:10px; background:#1c140d; border:1px solid rgba(232,160,32,.25) }
+.lobby-room-label{ font-size:14px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; flex:1 }
+.lobby-room-label strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:16px; letter-spacing:2px; font-family:Georgia,"Times New Roman",serif; margin-left:4px }
+.lobby-share-sm{ font-size:13px !important; padding:5px 10px !important; min-height:32px !important }
 @keyframes lobbyPulse{ 0%{color:var(--gold2);-webkit-text-fill-color:var(--gold2)} 50%{color:#8A6A10;-webkit-text-fill-color:#8A6A10} 100%{color:var(--gold2);-webkit-text-fill-color:var(--gold2)} }
 .lobby-searching{ animation:lobbyPulse 1.5s ease-in-out infinite }
 /* Shield icons (inline) */
@@ -363,8 +366,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <h3>Multiverse (el feature)</h3>
     <p><span class="accent">Empieza la partida contra la IA. Termínala con un amigo o amiga que llegue a continuarla.</span> O al revés. El código de partida captura todo el estado, así cualquiera con el código puede entrar, tomar el lugar de quien jugaba y seguir desde la posición exacta. La línea original sigue viva en paralelo. Endless multiverse fun.</p>
 
-    <h3>Lobby online</h3>
-    <p>Tu seudónimo es editable, persistente y solo tuyo. Vive en este navegador. Quien gana se queda en el lobby y elige al siguiente: estilo king of the hill. Cada sala tiene un link único compartible.</p>
+    <h3>La Taberna</h3>
+    <p>Tu seudónimo es editable, persistente y solo tuyo. Vive en este navegador. Quien gana se queda en la Taberna y elige al siguiente: estilo king of the hill. Cada sala tiene un link compartible.</p>
 
     <h3>Próximamente</h3>
     <p>Más tableros: <span class="accent">el espacio</span> y <span class="accent">la selva</span>. Cada uno con su propio fondo y atmósfera.</p>
@@ -440,14 +443,17 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     </div>
   </div>
   <div class="lobby" id="lobby">
-    <p class="lobby-name">Tu nombre: <input class="lobby-name-input" id="myName" maxlength="30" autocomplete="off" spellcheck="false"> <button class="lobby-rename" id="renamePseudo" title="Generar al azar">&#x21bb;</button> <button class="lobby-rename" id="savePseudo" title="Guardar nombre">&#10003;</button></p>
-    <button class="lobby-share" id="myMatches" style="background:linear-gradient(#2a1a0c,#1a100a)">&#128218; Mis partidas guardadas</button>
-    <p class="lobby-room">Sala: <strong id="roomCode">------</strong> <button class="lobby-rename" id="newRoom" title="Nueva sala">&#x21bb;</button></p>
-    <p class="lobby-hint">Comparte el link de la sala por WhatsApp. Quien gana se queda y elige rival.</p>
-    <button class="lobby-share" id="lobbyShare">&#128279; Copiar link de esta sala</button>
+    <div class="lobby-tavern-wrap"><img class="lobby-tavern" src="assets/lobby-tavern.png" alt="La Taberna de los Reyes"></div>
+    <p class="lobby-name"><input class="lobby-name-input" id="myName" maxlength="30" autocomplete="off" spellcheck="false" placeholder="Tu nombre"> <button class="lobby-rename" id="renamePseudo" title="Generar al azar">&#x21bb;</button> <button class="lobby-rename" id="savePseudo" title="Guardar nombre">&#10003;</button></p>
     <p class="lobby-status" id="lobbyStatus"><span class="lobby-searching">Buscando rivales...</span></p>
-    <h3 class="lobby-h">Jugadores Conectados</h3>
+    <h3 class="lobby-h">Jugadores en la Taberna</h3>
     <ul class="lobby-list" id="lobbyList"></ul>
+    <div class="lobby-room-bar">
+      <span class="lobby-room-label">Sala <strong id="roomCode">------</strong></span>
+      <button class="lobby-rename" id="newRoom" title="Nueva sala">&#x21bb;</button>
+      <button class="lobby-share lobby-share-sm" id="lobbyShare">Copiar link</button>
+    </div>
+    <button class="lobby-share" id="myMatches" style="background:linear-gradient(#2a1a0c,#1a100a)">Mis partidas guardadas</button>
   </div>
   <button class="back" id="backBtn" style="display:none">&larr; volver</button>
 </div>
@@ -491,7 +497,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <button id="drawbtn" style="display:none">&#129309; Tablas</button>
     <button id="resign" style="display:none">&#127987; Rendirse</button>
     <button id="rematch" style="display:none">Revancha</button>
-    <button id="backLobbyBtn" style="display:none">&larr; Lobby</button>
+    <button id="backLobbyBtn" style="display:none">&larr; Taberna</button>
     <button id="mutebtn" title="Sonido">🔊</button>
   </div>
   <div class="note" id="note"></div>
@@ -780,14 +786,14 @@ $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[dat
 const HUB_ID_BASE='jfreino-lobby-hub';
 let currentRoom=null; // 6-char room id; set by entering online flow
 function roomFromUrl(){
-  var m=(location.hash||'').match(/room=([A-Z0-9]{4,8})/i);
+  var m=(location.hash||'').match(/(?:partida|room)=([A-Z0-9]{4,8})/i);
   return m?m[1].toUpperCase():null;
 }
 function setRoomInUrl(code){
-  try{ history.replaceState(null,'','#room='+code); }catch(e){ location.hash='room='+code; }
+  try{ history.replaceState(null,'','#partida='+code); }catch(e){ location.hash='partida='+code; }
 }
 function hubIdFor(code){ return HUB_ID_BASE+'-'+code.toLowerCase(); }
-function roomLink(code){ return 'https://jfcarpiopuntocom.github.io/ajedrez-16bit/#room='+code; }
+function roomLink(code){ return 'https://jfcarpiopuntocom.github.io/ajedrez-16bit/#partida='+code; }
 const PRESENCE_TTL=20000; // 20s (4x guest ping)
 const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'',
             hubPeer:null, hubConn:null, isHub:false, roster:[] };
@@ -1052,7 +1058,7 @@ function goOnline(){
   $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
   $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
-  $('startH2').textContent='Lobby Online';
+  $('startH2').textContent='La Taberna';
   if(!currentRoom){ currentRoom=roomFromUrl()||genCode(); }
   setRoomInUrl(currentRoom);
   $('roomCode').textContent=currentRoom;
@@ -1515,7 +1521,7 @@ function backToLobby(){
   $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
   $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
-  $('startH2').textContent='Lobby Online'; $('myName').value=myPseudo;
+  $('startH2').textContent='La Taberna'; $('myName').value=myPseudo;
   if(net.peer && !net.peer.destroyed){
     $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
     if(net.isHub){ renderLobby(); }
