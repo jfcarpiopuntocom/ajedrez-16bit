@@ -98,7 +98,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .lobby-name-input{ font-size:18px; font-weight:800; padding:4px 8px; min-width:130px; max-width:180px; border:2px solid var(--gold); border-radius:8px;
   background:#1c140d; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; font-family:inherit }
 .lobby-name-input:focus{ outline:none; border-color:#FFD060; box-shadow:0 0 8px var(--gold) }
-/* Splash Universo Paralelo callout */
+/* Splash Multiverse callout */
 .universo-callout{ width:100%; max-width:430px; margin:6px auto 2px; padding:10px 14px; border:2px solid #28ECAA; border-radius:12px;
   background:linear-gradient(160deg,#0a2a1f,#051a12); text-align:center }
 .universo-callout h3{ margin:0 0 4px; font-size:14px; font-weight:900; letter-spacing:1.5px; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; text-transform:uppercase }
@@ -360,8 +360,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <p>El botón <span class="accent">⛶</span> maximiza el tablero para concentración total. Deshacer y Rehacer reescriben jugadas hasta el mate.</p>
     <p>Cada partida guarda un <span class="accent">código de seis caracteres tipo NES</span>. Cada jugada se respalda en localStorage e IndexedDB del dispositivo. Anótalo, sal, vuelve después y entra el código en la pantalla inicial. Cargas la posición exacta con su tablero, nivel, capturas y todo.</p>
 
-    <h3>&#10024; Universo Paralelo (el feature)</h3>
-    <p>El código de partida no es solo para resumir local. Pásaselo a un amigo: él pega el código en su pantalla inicial o abre el link de la sala, y <span class="accent">toma el lugar de la IA</span> desde la posición exacta. Ahora hay dos líneas temporales: la tuya vs la máquina (la original sigue intacta en localStorage) y la nueva vs tu amigo, online. Cada una sigue su curso.</p>
+    <h3>Multiverse (el feature)</h3>
+    <p><span class="accent">Empieza la partida contra la IA. Termínala con un amigo o amiga que llegue a continuarla.</span> O al revés. El código de partida captura todo el estado, así cualquiera con el código puede entrar, tomar el lugar de quien jugaba y seguir desde la posición exacta. La línea original sigue viva en paralelo. Endless multiverse fun.</p>
 
     <h3>Lobby online</h3>
     <p>Tu seudónimo es editable, persistente y solo tuyo. Vive en este navegador. Quien gana se queda en el lobby y elige al siguiente: estilo king of the hill. Cada sala tiene un link único compartible.</p>
@@ -412,8 +412,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     </div>
   </div>
   <div class="universo-callout" id="uniCallout">
-    <h3>&#10024; Universo Paralelo</h3>
-    <p>Cada partida guarda <span class="pop">FEN, tablero, IA y capturas</span> bajo un código único. Resúmela tú, o pásale el código a un amigo y él <span class="pop">toma el lugar de la IA</span> desde la posición exacta. La línea original sigue viva en paralelo.</p>
+    <h3>Multiverse</h3>
+    <p><span class="pop">Empieza vs la IA. Termina con un amigo</span> (o al revés). El código de partida abre el estado exacto para cualquiera que llegue a seguirla. La línea original queda viva en paralelo. Endless multiverse fun.</p>
   </div>
   <div class="lobby-resume" id="resumeRow">
     <input type="text" id="resumeCode" placeholder="Tienes un código? Reanuda partida" maxlength="6" autocomplete="off" spellcheck="false">
@@ -520,7 +520,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=74';
+const V='?v=75';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -833,7 +833,7 @@ function wireConn(c){
         var t=d.takeover;
         net.myColor=t.guestColor||'b';
         pendingResume={data:{fen:t.fen,tab:t.tab,m:'online',col:net.myColor,bk:t.bk,rk:t.rk,moves:t.moves||[],lineage:t.lineage||[]},code:t.newCode||genCode()};
-        statusEl && (statusEl.innerHTML='<span class="warn">Universo paralelo abierto desde '+(t.creator||'tu amigo')+'</span>');
+        statusEl && (statusEl.innerHTML='<span class="warn">Multiverse abierto desde '+(t.creator||'tu amigo')+'</span>');
       }
       startGame('online');
     }
@@ -901,8 +901,8 @@ function renderLobby(){
   var netTag=trysteroRoom?' &middot; powered by '+(window.__trystero?window.__trystero.kind:'p2p'):'';
   var saved=currentRoom?loadMatch(currentRoom):null;
   var isPara=saved && saved.m==='ai';
-  var paraTag=isPara?'<br><span class="lobby-para">Universo paralelo listo: cuando llegue tu rival, tomará el lugar de la IA en la posición guardada</span>':'';
-  $('lobbyShare').innerHTML=isPara?'&#10024; Compartir universo paralelo':'&#128279; Copiar link de esta sala';
+  var paraTag=isPara?'<br><span class="lobby-para">Multiverse listo: cuando llegue tu amigo, toma el lugar de la IA y la partida sigue desde la posición exacta</span>':'';
+  $('lobbyShare').innerHTML=isPara?'Compartir Multiverse':'&#128279; Copiar link de esta sala';
   $('lobbyStatus').innerHTML=(others.length>0
     ?'<span class="lobby-searching">'+others.length+' rival'+(others.length>1?'es':'')+' conectado'+(others.length>1?'s':'')+hubTag+netTag+'</span>'
     :'<span class="lobby-searching">Esperando que se conecten rivales...'+hubTag+netTag+'</span>')+paraTag;
