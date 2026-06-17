@@ -1254,7 +1254,7 @@ function startGame(m){
     }
     pendingResume=null;
   } else {
-    currentTablero=pickTablero(); matchCode=genCode();
+    currentTablero=pickTablero(); matchCode=currentRoom||genCode();
     var initialOpp = (m==='ai')?('IA '+(level?level.name:'?'))
                   : (m==='2p')?'2P en persona'
                   : (net.rivalName||'rival');
