@@ -287,12 +287,12 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .modal-card button.no{ background:linear-gradient(#5a2a14,#3a1a0c); color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
 .modal-card button:hover{ filter:brightness(1.1) }
 /* Help button + Welcome modal */
-.help-btn{ position:fixed; top:10px; right:10px; z-index:150; width:38px; height:38px; border-radius:50%;
-  border:2px solid var(--gold); background:linear-gradient(160deg,#241a10,#140d07);
-  color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important;
-  font-size:19px; font-weight:900; cursor:pointer; padding:0; line-height:1;
-  box-shadow:0 2px 8px rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; font-family:Georgia,"Times New Roman",serif }
-.help-btn:hover{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
+.help-btn{ position:fixed; top:10px; right:10px; z-index:150; width:44px; height:44px; border-radius:50%;
+  border:3px solid var(--gold); background:linear-gradient(160deg,#3a2a14,#1a1006);
+  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  font-size:22px; font-weight:900; cursor:pointer; padding:0; line-height:1;
+  box-shadow:0 2px 12px rgba(232,160,32,.4), 0 0 0 2px rgba(232,160,32,.15); display:flex; align-items:center; justify-content:center; font-family:Georgia,"Times New Roman",serif }
+.help-btn:hover,.help-btn:active{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important; transform:scale(1.08) }
 .help-modal{ max-width:540px; max-height:84vh; overflow-y:auto; text-align:left; padding:22px 22px 18px }
 .help-modal h2{ margin:0 0 4px; font-size:22px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; letter-spacing:.5px; font-family:Georgia,"Times New Roman",serif }
 .help-modal .help-sub{ margin:0 0 14px; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:center; font-style:italic; font-weight:600 }
@@ -451,7 +451,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <div class="lobby-room-bar">
       <span class="lobby-room-label">Sala <strong id="roomCode">------</strong></span>
       <button class="lobby-rename" id="newRoom" title="Nueva sala">&#x21bb;</button>
-      <button class="lobby-share lobby-share-sm" id="lobbyShare">Copiar link</button>
+      <button class="lobby-share lobby-share-sm" id="lobbyShare">Copiar link de partida</button>
     </div>
     <button class="lobby-share" id="myMatches" style="background:linear-gradient(#2a1a0c,#1a100a)">Mis partidas guardadas</button>
   </div>
@@ -908,7 +908,7 @@ function renderLobby(){
   var saved=currentRoom?loadMatch(currentRoom):null;
   var isPara=saved && saved.m==='ai';
   var paraTag=isPara?'<br><span class="lobby-para">Multiverse listo: cuando llegue tu amigo, toma el lugar de la IA y la partida sigue desde la posición exacta</span>':'';
-  $('lobbyShare').innerHTML=isPara?'Compartir Multiverse':'&#128279; Copiar link de esta sala';
+  $('lobbyShare').innerHTML=isPara?'Compartir Multiverse':'Copiar link de partida';
   $('lobbyStatus').innerHTML=(others.length>0
     ?'<span class="lobby-searching">'+others.length+' rival'+(others.length>1?'es':'')+' conectado'+(others.length>1?'s':'')+hubTag+netTag+'</span>'
     :'<span class="lobby-searching">Esperando que se conecten rivales...'+hubTag+netTag+'</span>')+paraTag;
