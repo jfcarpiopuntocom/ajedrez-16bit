@@ -1463,7 +1463,7 @@ function startGame(m){
   $('rematch').style.display='none';
   $('resign').style.display='';
   $('drawbtn').style.display=m==='ai'?'none':'';
-  if(mode==='ai'){ boot(); if(playerColor==='b'&&(ready||fallback)) setTimeout(aiMove,400); }
+  if(mode==='ai'){ boot(); if((ready||fallback)&&!game.game_over()&&game.turn()!==playerColor) setTimeout(aiMove,400); }
   render(); status(); startQuotes(); renderHistory(); saveMatch();
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); });
 }
