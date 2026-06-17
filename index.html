@@ -776,7 +776,7 @@ $('pickBlue').onclick=()=>{ playerColor='w'; $('colorpick').classList.remove('sh
 $('pickRed').onclick=()=>{ playerColor='b'; $('colorpick').classList.remove('show'); $('kingpick').classList.remove('focus-blue','focus-red'); startGame('ai'); };
 $('backBtn').onclick=()=>{
   if($('colorpick').classList.contains('show')){ $('colorpick').classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); levelsEl.classList.add('show'); $('startH2').textContent='Elige el nivel del Rival'; return; }
-  levelsEl.classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden'); $('uniCallout').classList.remove('hidden'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
+  levelsEl.classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden'); $('uniCallout').classList.remove('hidden'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML=''; stopTavernMusic();
   $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none'; };
 $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(!b) return;
   const row=b.closest('.kingrow'); if(row.dataset.side==='w') blueKing=b.dataset.k; else redKing=b.dataset.k;
@@ -1059,6 +1059,7 @@ function goOnline(){
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
   $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
   $('startH2').textContent='La Taberna';
+  playTavernMelody();
   if(!currentRoom){ currentRoom=roomFromUrl()||genCode(); }
   setRoomInUrl(currentRoom);
   $('roomCode').textContent=currentRoom;
@@ -1234,6 +1235,7 @@ function applyTablero(t){
   $('app').classList.add('t-'+t.key);
 }
 function startGame(m){
+  stopTavernMusic();
   mode=m; started=true; resigned=false;
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; flipped=false; redoStack.length=0;
   if(pendingResume && pendingResume.data){
@@ -1521,7 +1523,7 @@ function backToLobby(){
   $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
   $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
-  $('startH2').textContent='La Taberna'; $('myName').value=myPseudo;
+  $('startH2').textContent='La Taberna'; $('myName').value=myPseudo; playTavernMelody();
   if(net.peer && !net.peer.destroyed){
     $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
     if(net.isHub){ renderLobby(); }
@@ -1637,6 +1639,62 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
     window.location.href=['mai','lto',':'].join('')+addrOf()+'?subject='+subj+'&body='+body;
   });
 })();
+
+/* ===== Tavern Music — Web Audio API medieval lute melody ===== */
+var tavernCtx=null, tavernGain=null, tavernPlaying=false, tavernTimer=null;
+function tavernNoteFreq(n){ return 440*Math.pow(2,(n-69)/12); }
+function playTavernMelody(){
+  if(tavernPlaying) return;
+  if(!tavernCtx) tavernCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(tavernCtx.state==='suspended') tavernCtx.resume();
+  tavernGain=tavernCtx.createGain(); tavernGain.gain.value=0.18;
+  var master=tavernCtx.createGain(); master.gain.value=1; master.connect(tavernCtx.destination);
+  tavernGain.connect(master);
+  tavernPlaying=true;
+  var melody=[
+    64,0.3, 66,0.3, 67,0.6, 64,0.3, 62,0.3, 60,0.6,
+    62,0.3, 64,0.3, 66,0.6, 67,0.3, 66,0.3, 64,0.6,
+    67,0.3, 69,0.3, 71,0.6, 69,0.3, 67,0.3, 66,0.6,
+    64,0.3, 62,0.3, 60,0.6, 62,0.3, 64,0.3, 62,0.9,
+    60,0.3, 62,0.3, 64,0.6, 67,0.3, 66,0.3, 64,0.6,
+    62,0.3, 60,0.3, 59,0.6, 60,0.3, 62,0.3, 64,0.6,
+    67,0.3, 69,0.3, 71,0.6, 72,0.3, 71,0.3, 69,0.6,
+    67,0.3, 64,0.3, 62,0.6, 60,0.3, 62,0.3, 64,0.9
+  ];
+  var bass=[
+    48,1.2, 43,1.2, 45,1.2, 48,1.2,
+    48,1.2, 43,1.2, 45,1.2, 48,1.2
+  ];
+  function scheduleVoice(notes,vol,wave,detune){
+    var t=tavernCtx.currentTime+0.05;
+    for(var i=0;i<notes.length;i+=2){
+      var osc=tavernCtx.createOscillator();
+      var env=tavernCtx.createGain();
+      osc.type=wave; osc.frequency.value=tavernNoteFreq(notes[i]);
+      if(detune) osc.detune.value=detune;
+      env.gain.setValueAtTime(vol,t);
+      env.gain.exponentialRampToValueAtTime(vol*0.15,t+notes[i+1]*0.85);
+      env.gain.linearRampToValueAtTime(0,t+notes[i+1]*0.98);
+      osc.connect(env); env.connect(tavernGain);
+      osc.start(t); osc.stop(t+notes[i+1]);
+      t+=notes[i+1];
+    }
+    return t-tavernCtx.currentTime;
+  }
+  function loop(){
+    if(!tavernPlaying) return;
+    var dur=scheduleVoice(melody,0.7,'triangle',0);
+    scheduleVoice(bass,0.35,'sine',0);
+    scheduleVoice(melody,0.2,'sawtooth',7);
+    tavernTimer=setTimeout(loop,(dur-0.1)*1000);
+  }
+  loop();
+}
+function stopTavernMusic(){
+  tavernPlaying=false;
+  if(tavernTimer){ clearTimeout(tavernTimer); tavernTimer=null; }
+  if(tavernGain){ try{ tavernGain.gain.linearRampToValueAtTime(0,tavernCtx.currentTime+0.5); }catch(e){} }
+}
 </script>
 </body>
 </html>
