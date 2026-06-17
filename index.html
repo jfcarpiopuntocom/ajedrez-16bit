@@ -1046,6 +1046,15 @@ function wireConn(c){
       startGame('online');
     }
     else if(d.t==='move'){ doMove(d.mv,true); }
+    else if(d.t==='rematch'){
+      // Mirror: swap colors locally so we stay opposite each other.
+      net.myColor=(net.myColor==='w'?'b':'w'); flipped=(net.myColor==='b');
+      game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0; resigned=false;
+      $('undo').style.display='none'; $('redo').style.display='none';
+      $('resign').style.display=''; $('drawbtn').style.display='';
+      $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
+      render(); status(); renderHistory(); saveMatch();
+    }
     else if(d.t==='chat'){ showChat(net.rivalName||'rival',d.i,false); }
     else if(d.t==='full'){ $('lobbyStatus').textContent='Ese jugador ya tiene rival.'; }
     else if(d.t==='resign'){
@@ -1824,6 +1833,9 @@ function startGame(m){
   $('rematch').style.display='none';
   $('resign').style.display='';
   $('drawbtn').style.display=m==='ai'?'none':'';
+  // Online duels: no take-backs while live (king of the hill). Re-enabled at game end for review.
+  var hideUR=(m==='online');
+  $('undo').style.display=hideUR?'none':''; $('redo').style.display=hideUR?'none':'';
   if(mode==='ai'){ boot(); if((ready||fallback)&&!game.game_over()&&game.turn()!==playerColor) setTimeout(aiMove,400);
     setTimeout(aiWatchdog,9000); setTimeout(aiWatchdog,16000); }
   render(); status(); startQuotes(); renderHistory(); saveMatch();
@@ -1895,8 +1907,9 @@ function renderCaptured(){
     add(w,capW); add(b,capB);
     const sw=capW.reduce((a,p)=>a+VAL[p.type],0), sb=capB.reduce((a,p)=>a+VAL[p.type],0), d=sw-sb;
     $('scoreW').textContent=d>0?`+${d}`:''; $('scoreB').textContent=d<0?`+${-d}`:'';
-    const ff=mode==='2p'||mode==='online';
-    document.querySelector('.cap.red').classList.toggle('rotcap',ff);
+    // Rotate the red capture bar 180° ONLY in face-to-face 2P so the second player reads it from their side.
+    // In online, each player sees their own normal orientation, so no rotation.
+    document.querySelector('.cap.red').classList.toggle('rotcap',mode==='2p');
   }catch(e){ console.warn('[cap]',e); }
 }
 function audit(){
@@ -1984,10 +1997,10 @@ function status(){
   else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul"><img src="assets/shield-blue.png" class="chip-icon"> Turno Azul</span>':'<span class="chip rojo"><img src="assets/shield-red.png" class="chip-icon"> Turno Rojo</span>');
   else{ var eng=fallback?'IA local':'Stockfish'; var ln=level.name+' &middot; powered by '+eng;
     s=(game.turn()===playerColor?'<span class="chip '+(playerColor==='w'?'azul':'rojo')+'">Tu turno</span> <span class="lvl">vs. '+ln+'</span>':'<span class="chip '+(playerColor==='w'?'rojo':'azul')+'">Piensa el rival…</span> <span class="lvl">'+ln+'</span>'); }
-  if(currentTablero && matchCode && mode!=='online'){
-    s+=' <span class="lvl tablero-tag">Tablero '+currentTablero.name
-      +'<br>Código para continuar el tablero como Rey Azul: <b>'+sideCodeFor(matchCode,'w')+'</b>'
-      +'<br>Código para continuar el tablero como Rey Rojo: <b>'+sideCodeFor(matchCode,'b')+'</b></span>';
+  if(matchCode && mode!=='online'){
+    s+=' <span class="lvl tablero-tag">'
+      +'Código para continuar la jugada como Rey Azul: <b>'+sideCodeFor(matchCode,'w')+'</b>'
+      +'<br>Código para continuar la jugada como Rey Rojo: <b>'+sideCodeFor(matchCode,'b')+'</b></span>';
   }
   statusEl.innerHTML=s;
 }
@@ -2059,19 +2072,36 @@ function rebuildCaptures(){ capW.length=0; capB.length=0;
   const h=game.history({verbose:true}); lastMove=h.length?{from:h[h.length-1].from,to:h[h.length-1].to}:null;
 }
 $('undo').onclick=()=>{ if(busy) return;
+  // King of the hill stays serious: no take-backs while an online human duel is live.
+  if(mode==='online' && !game.game_over() && !resigned) return;
   const u1=game.undo(); if(u1) redoStack.push(u1);
   if(mode==='ai'){ const u2=game.undo(); if(u2) redoStack.push(u2); }
   rebuildCaptures(); render(); status(); renderHistory(); maybeShowRematch(); };
 $('redo').onclick=()=>{ if(busy||!redoStack.length) return;
+  if(mode==='online' && !game.game_over() && !resigned) return;
   const steps=mode==='ai'?2:1;
   for(let i=0;i<steps && redoStack.length;i++){
     const mv=redoStack.pop();
     game.move({from:mv.from,to:mv.to,promotion:mv.promotion});
   }
   rebuildCaptures(); render(); status(); renderHistory(); maybeShowRematch(); };
-$('rematch').onclick=()=>{ game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0; resigned=false;
-  $('rematch').style.display='none'; $('backLobbyBtn').style.display='none'; render(); status(); renderHistory();
-  if(mode==='ai') boot(); };
+$('rematch').onclick=()=>{
+  // Online: tell the rival a rematch is on. Both reset to start; colors swap so each plays the other side.
+  if(mode==='online'){
+    if(net.conn && net.conn.open){ try{ netSend({t:'rematch'}); }catch(e){} }
+    net.myColor=(net.myColor==='w'?'b':'w'); flipped=(net.myColor==='b');
+  } else if(mode==='2p'){
+    // Face-to-face: swap colors so the loser starts white.
+    playerColor=(playerColor==='w'?'b':'w');
+  }
+  game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0; resigned=false;
+  // Restore the in-game HUD (Deshacer/Rehacer hidden again in online live).
+  var hideUR=(mode==='online'); $('undo').style.display=hideUR?'none':''; $('redo').style.display=hideUR?'none':'';
+  $('resign').style.display=''; $('drawbtn').style.display=(mode==='ai')?'none':'';
+  $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
+  render(); status(); renderHistory(); saveMatch();
+  if(mode==='ai') boot();
+};
 $('mutebtn').onclick=()=>{ muted=!muted; $('mutebtn').textContent=muted?'🔇':'🔊'; actxInit(); };
 
 /* ===== Resign / Draw ===== */
@@ -2093,6 +2123,8 @@ function reportMatchEnd(){
 function showEndButtons(){
   $('resign').style.display='none'; $('drawbtn').style.display='none'; $('rematch').style.display='';
   $('backLobbyBtn').style.display=(mode==='online')?'':'none';
+  // Take-backs unlock once the duel is over (review-mode).
+  $('undo').style.display=''; $('redo').style.display='';
   reportMatchEnd();
 }
 function backToLobby(){
