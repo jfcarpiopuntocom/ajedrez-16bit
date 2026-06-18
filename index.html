@@ -1,4 +1,34 @@
 <!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  LOS DOS REINOS — Ajedrez fantástico 16-bit                    ║
+  ║  Author: JFC (Juan Fernando Carpio) · jfcarpio@gmail.com       ║
+  ║  Repo: github.com/jfcarpiopuntocom/ajedrez-16bit               ║
+  ║  Live: jfcarpiopuntocom.github.io/ajedrez-16bit/               ║
+  ╠══════════════════════════════════════════════════════════════════╣
+  ║  ARCHITECTURE                                                   ║
+  ║  Single-file game: HTML + CSS + JS, no build step.              ║
+  ║  Chess engine: chess.js (logic) + Stockfish.js (AI, 7 levels).  ║
+  ║  Online: PeerJS (WebRTC P2P), Trystero (lobby via Nostr/BT).   ║
+  ║  Storage: localStorage + IndexedDB + 2-year cookie (identity).  ║
+  ║                                                                 ║
+  ║  MULTIVERSE SYSTEM                                              ║
+  ║  Each game gets a unique matchCode (6 chars). Players can       ║
+  ║  branch any game position into a new matchCode, creating an     ║
+  ║  infinite tree of alternate timelines. boardCode = permanent     ║
+  ║  personal board identity; matchCode = specific game state.      ║
+  ║  Side codes: matchCode + A (Azul/white) or R (Rojo/black).     ║
+  ║                                                                 ║
+  ║  JFC DESIGN RULES (do NOT violate)                              ║
+  ║  - No opacity/rgba on text. Solid hex only. #FFF body, #CCC    ║
+  ║    secondary minimum. No grey text darker than #999.            ║
+  ║  - Mobile-first CSS (base=320px, enhance up with min-width).    ║
+  ║  - Touch targets 44px minimum.                                  ║
+  ║  - "Azul (blancas)" / "Rojo (negras)" labels everywhere.       ║
+  ║  - Splash art hidden until 16-bit compatible versions exist.    ║
+  ║  - Victory overlay triggers on checkmate, draw, resign.         ║
+  ╚══════════════════════════════════════════════════════════════════╝
+-->
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -34,7 +64,8 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .app{ height:100vh; height:100svh; max-width:1180px; margin:0 auto; padding:5px 6px;
   display:flex; flex-direction:column; gap:4px; overflow:hidden }
 
-/* ---------- START SCREEN ---------- */
+/* ══════ START SCREEN ══════
+   Splash: title + side picker + lobby. Mobile collapses art. */
 /* Splash: title masthead on top (always centered), then below it art+rail in two columns on desktop.
    Below 720px art collapses above and the rail becomes a single vertical stack. */
 .start{ position:fixed; inset:0; z-index:100; background:radial-gradient(1100px 700px at 50% -6%, #3a2a1a 0%, #160f08 60%, #0a0604 100%);
@@ -523,6 +554,9 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   .history ol{ columns:1 }
   .title-img{ max-height:12vh }
 }
+/* ══════ EFFECTS CSS ══════
+   Button sheen, king float, dust/fx canvas, victory overlay.
+   Added from Claude Design v75 (aesthetic cherry-pick). */
 /* ===== Enhanced button polish (sheen + glow) ===== */
 #dustCanvas{ position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none }
 #start > *:not(#dustCanvas){ position:relative; z-index:1 }
@@ -946,6 +980,10 @@ const _NN=['Dragon','Caballo','Torre','Alfil','Peon','Leon','Aguila','Tigre','Os
 const _AJ=['Feroz','Loco','Valiente','Dorado','Nocturno','Veloz','Sabio','Bravo','Fugaz','Epico','Furioso','Invicto','Temible','Astuto','Audaz','Oscuro','Solar','Eterno'];
 function genPseudo(){ return _NN[Math.floor(Math.random()*_NN.length)]+_AJ[Math.floor(Math.random()*_AJ.length)]; }
 
+/* ══════ GAME CODES & PERSISTENCE ══════
+   matchCode: 6-char unique game identifier. boardCode: permanent personal board.
+   Side codes: matchCode+'A' (Azul/white) or matchCode+'R' (Rojo/black).
+   Storage: localStorage (instant) + IndexedDB (backup) + cookie (identity). */
 /* ===== Tableros (named board themes) + match continue codes ===== */
 const TABLEROS=[
   {key:'capablanca',name:'Capablanca'},
@@ -1072,6 +1110,10 @@ let started=false, flipped=false, lastMove=null, busy=false, healing=false, resi
 const game=new Chess(); const capW=[], capB=[];
 let muted=false, redoStack=[];
 
+/* ══════ AUDIO ENGINE ══════
+   All sounds synthesized via Web Audio API (no external files).
+   Medieval theme: wood clicks, bell tones, solemn mate sequence.
+   Tavern music: procedural medieval loop (lobby only). */
 /* ===== Audio (medieval, Web Audio, no files) ===== */
 let actx=null;
 function actxInit(){ try{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
@@ -2281,6 +2323,10 @@ function doMove(mv,fromRemote){
   if(mode==='ai' && !game.game_over() && game.turn()!==playerColor) setTimeout(aiMove,200);
 }
 
+/* ══════ GAME STATUS & VICTORY ══════
+   Updates status bar text + triggers victory overlay on game end.
+   Calls addGameToHistory() for Mi Tablero record-keeping.
+   showVictory(winner) and showDraw() are in the effects script. */
 /* ===== Status ===== */
 function status(){
   let s='';
