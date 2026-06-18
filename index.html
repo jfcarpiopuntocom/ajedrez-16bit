@@ -523,6 +523,58 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   .history ol{ columns:1 }
   .title-img{ max-height:12vh }
 }
+/* ===== Enhanced button polish (sheen + glow) ===== */
+#dustCanvas{ position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none }
+#start > *:not(#dustCanvas){ position:relative; z-index:1 }
+#fxCanvas{ position:fixed; inset:0; z-index:360; pointer-events:none }
+.bigbtn{ position:relative; overflow:hidden; isolation:isolate;
+  box-shadow:0 6px 16px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.18), inset 0 -10px 18px rgba(0,0,0,.32);
+  text-shadow:0 1px 3px rgba(0,0,0,.55); letter-spacing:.3px; transition:transform .12s ease, box-shadow .2s ease, filter .2s ease }
+.bigbtn::after{ content:""; position:absolute; top:0; left:-60%; width:42%; height:100%; z-index:-1;
+  background:linear-gradient(100deg,transparent,rgba(255,236,184,.34),transparent); transform:skewX(-18deg); animation:btnSheen 6s ease-in-out infinite }
+.bigbtn:hover{ transform:translateY(-1px); filter:brightness(1.06);
+  box-shadow:0 10px 22px rgba(0,0,0,.5), 0 0 18px rgba(232,160,32,.35), inset 0 1px 0 rgba(255,255,255,.22) }
+@keyframes btnSheen{ 0%,72%{ left:-60% } 88%{ left:135% } 100%{ left:135% } }
+@keyframes kingFloatA{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-6px) } }
+@keyframes kingFloatB{ 0%,100%{ transform:translateY(-4px) } 50%{ transform:translateY(3px) } }
+.splash-side.blue img:first-child{ animation:kingFloatA 4.6s ease-in-out infinite; filter:drop-shadow(0 4px 8px rgba(0,0,0,.6)) drop-shadow(0 0 16px rgba(70,140,240,.45)) }
+.splash-side.red img:first-child{ animation:kingFloatB 4.6s ease-in-out infinite; filter:drop-shadow(0 4px 8px rgba(0,0,0,.6)) drop-shadow(0 0 16px rgba(230,70,55,.45)) }
+.splash-mini-board{ box-shadow:0 6px 18px rgba(0,0,0,.6), inset 0 0 0 1px #1a1006, 0 0 22px rgba(232,160,32,.22) }
+
+/* ===== Victory overlay ===== */
+.victory-veil{ position:fixed; inset:0; z-index:500; display:none; align-items:center; justify-content:center; padding:18px;
+  background:radial-gradient(120% 90% at 50% 34%, rgba(34,20,8,.86), rgba(6,4,2,.96)); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px) }
+.victory-veil.show{ display:flex; animation:voFade .4s ease forwards }
+@keyframes voFade{ from{ opacity:0 } to{ opacity:1 } }
+.victory-fx{ position:absolute; inset:0; pointer-events:none }
+.victory-card{ position:relative; z-index:2; width:min(440px,92vw); max-height:92vh; overflow:auto; text-align:center; padding:18px 22px 22px;
+  border:2px solid var(--gold); border-radius:20px; background:linear-gradient(170deg,#241708,#0c0704);
+  box-shadow:0 20px 60px rgba(0,0,0,.7), 0 0 40px rgba(232,160,32,.18), inset 0 1px 0 rgba(255,255,255,.08);
+  animation:voPop .5s cubic-bezier(.2,1.2,.35,1) forwards }
+@keyframes voPop{ from{ transform:translateY(18px) scale(.92); opacity:0 } to{ transform:none; opacity:1 } }
+.victory-rays{ position:absolute; left:0; right:0; top:-40%; height:130%; z-index:-1; pointer-events:none; opacity:.65;
+  background:conic-gradient(from 0deg at 50% 36%, rgba(245,194,74,.20) 0deg, transparent 13deg, transparent 27deg, rgba(245,194,74,.14) 40deg, transparent 53deg);
+  filter:blur(1px); animation:voSpin 24s linear infinite }
+@keyframes voSpin{ to{ transform:rotate(360deg) } }
+.victory-king{ width:auto; height:188px; max-width:72%; margin:2px auto 6px; display:block; image-rendering:pixelated; filter:drop-shadow(0 8px 18px rgba(0,0,0,.6)); animation:kingFloatA 4s ease-in-out infinite }
+.victory-king.blue{ filter:drop-shadow(0 8px 18px rgba(0,0,0,.6)) drop-shadow(0 0 28px rgba(70,140,240,.55)) }
+.victory-king.red{ filter:drop-shadow(0 8px 18px rgba(0,0,0,.6)) drop-shadow(0 0 28px rgba(230,70,55,.55)) }
+.victory-kicker{ font-size:14px; font-weight:900; letter-spacing:4px; text-transform:uppercase; margin:0 0 3px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.victory-title{ margin:0 0 7px; font-family:Georgia,"Times New Roman",serif; font-size:33px; line-height:1.05; font-weight:900; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; text-shadow:0 2px 10px rgba(0,0,0,.6) }
+.victory-title .blue{ color:#7ab6ff !important; -webkit-text-fill-color:#7ab6ff !important }
+.victory-title .red{ color:#ff7a6a !important; -webkit-text-fill-color:#ff7a6a !important }
+.victory-sub{ margin:0 0 14px; font-size:14px; line-height:1.45; font-weight:600; color:#d8c9aa !important; -webkit-text-fill-color:#d8c9aa !important }
+.victory-code{ display:inline-block; margin:0 0 14px; padding:7px 16px; border:2px solid var(--gold); border-radius:10px; background:#160f08; font-size:13px; font-weight:700; letter-spacing:.5px; color:#cdbf9c !important; -webkit-text-fill-color:#cdbf9c !important }
+.victory-code span{ font-family:Georgia,serif; font-weight:900; font-size:18px; letter-spacing:3px; margin-left:8px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.victory-actions{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center }
+.vbtn{ flex:1 1 auto; min-width:120px; min-height:46px; font-size:15px; font-weight:800; cursor:pointer; border-radius:12px; border:2px solid var(--gold); padding:11px 16px;
+  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; background:linear-gradient(#2a1a0c,#1a100a); box-shadow:0 4px 12px rgba(0,0,0,.4); transition:transform .12s, filter .2s }
+.vbtn:hover{ filter:brightness(1.1); transform:translateY(-1px) }
+.vbtn:active{ transform:translateY(1px) }
+.vbtn.primary{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
+.vbtn.ghost{ flex:1 1 100%; min-height:38px; font-size:13px; background:transparent; border-color:rgba(232,160,32,.45); color:#cdbf9c !important; -webkit-text-fill-color:#cdbf9c !important }
+@media (max-width:480px){ .victory-king{ height:146px } .victory-title{ font-size:27px } }
+
 @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important } }
 @media (prefers-color-scheme:dark){
   html,body{ background:var(--bg); color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
@@ -619,6 +671,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 
 <!-- ===== START SCREEN ===== -->
 <div class="start" id="start">
+  <canvas id="dustCanvas" aria-hidden="true"></canvas>
   <img class="banner" src="assets/title.png" alt="Los Dos Reinos: ¡ajedrez fantástico!">
   <div class="start-body">
   <div class="start-art" id="startArt"><img src="assets/splash-duel.png" alt="Los reyes en batalla" onerror="this.parentNode.style.display='none'"></div>
@@ -2020,6 +2073,7 @@ function applyTablero(t){
   $('app').classList.add('t-'+t.key);
 }
 function startGame(m){
+  if(typeof hideVictory==='function') hideVictory();
   stopTavernMusic();
   mode=m; started=true; resigned=false;
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; flipped=false; redoStack.length=0;
@@ -2230,22 +2284,47 @@ function doMove(mv,fromRemote){
 /* ===== Status ===== */
 function status(){
   let s='';
-  if(game.in_checkmate()) s=game.turn()==='w'?'<span class="warn">¡Jaque mate! Vence el Rojo. 🐉</span>':'<span class="win">¡Jaque mate! Vence el Azul. 🦁</span>';
-  else if(game.in_stalemate()) s='Tablas por ahogado.';
-  else if(game.in_threefold_repetition()) s='Tablas por repetición.';
-  else if(game.insufficient_material()) s='Tablas: material insuficiente.';
-  else if(game.in_draw()) s='Tablas (50 movimientos).';
+  if(game.in_checkmate()){
+    s=game.turn()==='w'?'<span class="warn">¡Jaque mate! Vence el Rojo (negras). 🐉</span>':'<span class="win">¡Jaque mate! Vence el Azul (blancas). 🦁</span>';
+    if(matchCode && myBoard){
+      var winner=(game.turn()==='b'?'w':'b');
+      var result=(mode==='online'?(winner===net.myColor?'win':'loss'):(playerColor===game.turn()?'loss':'win'));
+      var opp=(mode==='online'?net.rivalName:'IA');
+      addGameToHistory(matchCode,opp,result);
+    }
+    var winner=(game.turn()==='w'?'b':'w');
+    if(typeof showVictory==='function') setTimeout(function(){ showVictory(winner); },600);
+  } else if(game.in_stalemate()){
+    s='Tablas por ahogado.';
+    if(matchCode && myBoard) addGameToHistory(matchCode,mode==='online'?net.rivalName:'IA','draw');
+  } else if(game.in_threefold_repetition()){
+    s='Tablas por repetición.';
+    if(matchCode && myBoard) addGameToHistory(matchCode,mode==='online'?net.rivalName:'IA','draw');
+  } else if(game.insufficient_material()){
+    s='Tablas: material insuficiente.';
+    if(matchCode && myBoard) addGameToHistory(matchCode,mode==='online'?net.rivalName:'IA','draw');
+  } else if(game.in_draw()){
+    s='Tablas (50 movimientos).';
+    if(matchCode && myBoard) addGameToHistory(matchCode,mode==='online'?net.rivalName:'IA','draw');
+  }
+  if(game.in_stalemate()||game.in_threefold_repetition()||game.insufficient_material()||game.in_draw()){
+    if(typeof showDraw==='function') setTimeout(function(){ showDraw(); },600);
+  }
   else if(game.in_check()) s='<span class="warn">¡Jaque!</span>';
   else if(mode==='online') s=(game.turn()===net.myColor?'<span class="chip '+(net.myColor==='w'?'azul':'rojo')+'">Tu turno</span>':'<span class="chip '+(net.myColor==='w'?'rojo':'azul')+'">Turno de '+(net.rivalName||'rival')+'…</span>');
-  else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul"><img src="assets/shield-blue.png" class="chip-icon"> Turno Azul</span>':'<span class="chip rojo"><img src="assets/shield-red.png" class="chip-icon"> Turno Rojo</span>');
+  else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul"><img src="assets/shield-blue.png" class="chip-icon"> Turno Azul (blancas)</span>':'<span class="chip rojo"><img src="assets/shield-red.png" class="chip-icon"> Turno Rojo (negras)</span>');
   else{ var eng=fallback?'IA local':'Stockfish'; var ln=level.name+' &middot; powered by '+eng;
     s=(game.turn()===playerColor?'<span class="chip '+(playerColor==='w'?'azul':'rojo')+'">Tu turno</span> <span class="lvl">vs. '+ln+'</span>':'<span class="chip '+(playerColor==='w'?'rojo':'azul')+'">Piensa el rival…</span> <span class="lvl">'+ln+'</span>'); }
-  if(matchCode && mode!=='online'){
-    s+=' <span class="lvl tablero-tag">'
-      +'Código para continuar la jugada como Rey Azul: <b>'+sideCodeFor(matchCode,'w')+'</b>'
-      +'<br>Código para continuar la jugada como Rey Rojo: <b>'+sideCodeFor(matchCode,'b')+'</b></span>';
-  }
   statusEl.innerHTML=s;
+  var cb=$('codesBar');
+  if(cb){
+    if(matchCode && mode!=='online'){
+      cb.innerHTML='<b>Continuar esta jugada</b><br>'
+        +'Azul (blancas): <span class="code-val">'+sideCodeFor(matchCode,'w')+'</span>'
+        +' &nbsp;·&nbsp; Rojo (negras): <span class="code-val">'+sideCodeFor(matchCode,'b')+'</span>';
+      cb.style.display='';
+    } else { cb.innerHTML=''; cb.style.display='none'; }
+  }
 }
 
 /* ===== Stockfish ===== */
@@ -2637,6 +2716,143 @@ function setTavernMute(muted){
   var b=document.getElementById('lobbyMute'); if(b){ b.textContent=tavernMuted?'🔇':'🔊'; b.title=tavernMuted?'Música apagada':'Música de taberna'; }
   var lbl=document.getElementById('lobbyMuteLbl'); if(lbl){ lbl.textContent=tavernMuted?'activar ambiente de la taberna':'mutear ambiente de la taberna'; }
 }
+</script>
+
+<!-- ===== Overlay de VICTORIA / resultado ===== -->
+<canvas id="fxCanvas" aria-hidden="true"></canvas>
+<div class="victory-veil" id="victoryVeil" role="dialog" aria-modal="true" aria-hidden="true">
+  <canvas class="victory-fx" id="victoryFx" aria-hidden="true"></canvas>
+  <div class="victory-card">
+    <div class="victory-rays" aria-hidden="true"></div>
+    <img class="victory-king" id="victoryKing" src="" alt="Rey victorioso">
+    <p class="victory-kicker" id="victoryKicker">Jaque Mate</p>
+    <h2 class="victory-title" id="victoryTitle">Vence el Reino</h2>
+    <p class="victory-sub" id="victorySub"></p>
+    <div class="victory-code" id="victoryCodeWrap" style="display:none">Código de la partida<span id="victoryCode"></span></div>
+    <div class="victory-actions">
+      <button class="vbtn primary" id="victoryRematch">Nueva partida</button>
+      <button class="vbtn" id="victoryShare">Compartir</button>
+      <button class="vbtn ghost" id="victoryClose">Ver el tablero</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Motor de efectos HTML5: chispas en captura/jaque, overlay de victoria
+   ============================================================ */
+(function(){
+  "use strict";
+  var reduce=false; try{ reduce=matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){}
+  var DPR=Math.min(2,window.devicePixelRatio||1);
+  function vibe(p){ try{ if(typeof muted!=='undefined' && muted) return; }catch(e){} try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+
+  /* ---------- Lienzo de efectos sobre el tablero ---------- */
+  var fx=document.getElementById('fxCanvas'), fxc=fx&&fx.getContext('2d');
+  function sizeFx(){ if(!fx) return; fx.width=Math.floor(innerWidth*DPR); fx.height=Math.floor(innerHeight*DPR); fxc.setTransform(DPR,0,0,DPR,0,0); }
+  sizeFx(); addEventListener('resize',sizeFx);
+  var sparks=[], flash=0, flashCol='rgba(255,90,80,', running=false;
+  function ensureRun(){ if(!running){ running=true; requestAnimationFrame(stepFx); } }
+  function burst(x,y,color,n){ for(var i=0;i<n;i++){ var a=Math.random()*6.283, sp=1.4+Math.random()*4.6;
+    sparks.push({x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.6,life:1,size:1.4+Math.random()*2.6,col:color}); } ensureRun(); }
+  function stepFx(){
+    fxc.clearRect(0,0,innerWidth,innerHeight);
+    if(flash>0){ var g=fxc.createRadialGradient(innerWidth/2,innerHeight/2,innerHeight*0.18,innerWidth/2,innerHeight/2,innerHeight*0.78);
+      g.addColorStop(0,flashCol+'0)'); g.addColorStop(1,flashCol+(0.5*flash)+')'); fxc.fillStyle=g; fxc.fillRect(0,0,innerWidth,innerHeight); flash-=0.045; if(flash<0)flash=0; }
+    for(var i=sparks.length-1;i>=0;i--){ var s=sparks[i]; s.x+=s.vx; s.y+=s.vy; s.vy+=0.16; s.vx*=0.99; s.life-=0.022;
+      if(s.life<=0){ sparks.splice(i,1); continue; }
+      fxc.globalAlpha=Math.max(0,s.life); fxc.fillStyle=s.col; fxc.shadowColor=s.col; fxc.shadowBlur=8;
+      fxc.beginPath(); fxc.arc(s.x,s.y,s.size,0,6.283); fxc.fill(); }
+    fxc.globalAlpha=1; fxc.shadowBlur=0;
+    if(sparks.length||flash>0) requestAnimationFrame(stepFx); else { running=false; fxc.clearRect(0,0,innerWidth,innerHeight); }
+  }
+  function boardCenter(){ var b=document.getElementById('board'); if(b){ var r=b.getBoundingClientRect(); if(r.width) return {x:r.left+r.width/2,y:r.top+r.height/2,r:r.width/2}; } return {x:innerWidth/2,y:innerHeight/2,r:120}; }
+  window.fxCapture=function(){ if(reduce||!fx) return; var c=boardCenter(); burst(c.x,c.y-c.r*0.18,'#f5c24a',26); };
+  window.fxCheck=function(){ if(reduce||!fx) return; flashCol='rgba(255,80,70,'; flash=1; ensureRun(); };
+
+  /* ---------- Dust canvas (golden ambient particles on start screen) ---------- */
+  var dust=document.getElementById('dustCanvas'), dc=dust&&dust.getContext('2d'), motes=[], dustOn=false, dustRAF=0;
+  function sizeDust(){ if(!dust) return; dust.width=Math.max(1,Math.floor(dust.clientWidth*DPR)); dust.height=Math.max(1,Math.floor(dust.clientHeight*DPR)); dc.setTransform(DPR,0,0,DPR,0,0); }
+  function mote(any){ var w=dust.clientWidth,h=dust.clientHeight; return {x:Math.random()*w, y:any?Math.random()*h:h+8, r:0.6+Math.random()*2.2, sp:0.14+Math.random()*0.5, drift:(Math.random()-0.5)*0.4, ph:Math.random()*6.283, tw:0.4+Math.random()*0.6}; }
+  function initMotes(){ motes=[]; var n=Math.round((dust.clientWidth*dust.clientHeight)/16000); n=Math.min(70,Math.max(22,n||30)); for(var i=0;i<n;i++) motes.push(mote(true)); }
+  function stepDust(){ if(!dustOn) return; var w=dust.clientWidth,h=dust.clientHeight; dc.clearRect(0,0,w,h);
+    for(var i=0;i<motes.length;i++){ var m=motes[i]; m.y-=m.sp; m.x+=Math.sin((m.ph+=0.01))*m.drift+m.drift*0.5;
+      if(m.y<-6||m.x<-10||m.x>w+10){ motes[i]=mote(false); continue; }
+      dc.globalAlpha=m.tw*(0.4+0.5*Math.sin(m.ph*2))*0.8; dc.fillStyle='#f5c24a'; dc.shadowColor='#f5c24a'; dc.shadowBlur=6;
+      dc.beginPath(); dc.arc(m.x,m.y,m.r,0,6.283); dc.fill(); }
+    dc.globalAlpha=1; dc.shadowBlur=0; dustRAF=requestAnimationFrame(stepDust); }
+  function setDust(on){ if(!dust||reduce) return;
+    if(on&&!dustOn){ dustOn=true; sizeDust(); initMotes(); dustRAF=requestAnimationFrame(stepDust); }
+    else if(!on&&dustOn){ dustOn=false; cancelAnimationFrame(dustRAF); try{ dc.clearRect(0,0,dust.clientWidth,dust.clientHeight); }catch(e){} } }
+  addEventListener('resize',function(){ if(dustOn){ sizeDust(); initMotes(); } });
+  function startVisible(){ var s=document.getElementById('start'); try{ return s && getComputedStyle(s).display!=='none' && !s.classList.contains('hidden'); }catch(e){ return false; } }
+  setDust(startVisible());
+  var startEl=document.getElementById('start');
+  if(startEl && window.MutationObserver){ new MutationObserver(function(){ setDust(startVisible()); }).observe(startEl,{attributes:true,attributeFilter:['class','style']}); }
+
+  /* ---------- Overlay de victoria ---------- */
+  var veil=document.getElementById('victoryVeil');
+  var voFx=document.getElementById('victoryFx'), voCtx=voFx&&voFx.getContext('2d'), voParts=[], voRAF=0, voShownFen=null;
+  function sizeVo(){ if(!veil) return; voFx.width=Math.max(1,Math.floor(veil.clientWidth*DPR)); voFx.height=Math.max(1,Math.floor(veil.clientHeight*DPR)); voCtx.setTransform(DPR,0,0,DPR,0,0); }
+  function voSpawn(){ voParts=[]; if(reduce) return; var w=veil.clientWidth, h=veil.clientHeight, n=90;
+    for(var i=0;i<n;i++) voParts.push({x:Math.random()*w, y:-Math.random()*h, vy:1+Math.random()*2.4, vx:(Math.random()-0.5)*0.8, r:2+Math.random()*4, rot:Math.random()*6.28, vr:(Math.random()-0.5)*0.2, col:Math.random()<0.5?'#f5c24a':(Math.random()<0.5?'#ffe9a8':'#e8a020'), sq:Math.random()<0.4}); }
+  function voStep(){ if(!veil.classList.contains('show')) return; var w=veil.clientWidth,h=veil.clientHeight; voCtx.clearRect(0,0,w,h);
+    for(var i=0;i<voParts.length;i++){ var p=voParts[i]; p.y+=p.vy; p.x+=p.vx; p.rot+=p.vr; if(p.y>h+10){ p.y=-10; p.x=Math.random()*w; }
+      voCtx.save(); voCtx.translate(p.x,p.y); voCtx.rotate(p.rot); voCtx.globalAlpha=0.9; voCtx.fillStyle=p.col; voCtx.shadowColor=p.col; voCtx.shadowBlur=6;
+      if(p.sq) voCtx.fillRect(-p.r,-p.r*0.6,p.r*2,p.r*1.2); else { voCtx.beginPath(); voCtx.arc(0,0,p.r,0,6.28); voCtx.fill(); }
+      voCtx.restore(); }
+    voCtx.globalAlpha=1; voCtx.shadowBlur=0; voRAF=requestAnimationFrame(voStep); }
+  function kingSrc(color){ try{ if(typeof PIECE==='function') return PIECE(color,'k'); }catch(e){}
+    var k=color==='w'?(typeof blueKing!=='undefined'?blueKing:'k_bkA'):(typeof redKing!=='undefined'?redKing:'k_rkA'); return 'assets/pieces/'+k+'.png'; }
+  function curMode(){ try{ return (typeof mode!=='undefined')?mode:null; }catch(e){ return null; } }
+  function curCode(){ try{ if(typeof matchCode!=='undefined' && matchCode) return matchCode; }catch(e){} return null; }
+  function openVeil(){ veil.classList.add('show'); veil.setAttribute('aria-hidden','false'); sizeVo(); voSpawn(); cancelAnimationFrame(voRAF); voRAF=requestAnimationFrame(voStep); }
+  function setCode(){ var wrap=document.getElementById('victoryCodeWrap'), code=curCode();
+    if(code){ document.getElementById('victoryCode').textContent=code; wrap.style.display=''; } else wrap.style.display='none'; }
+  function rematchLabel(){ document.getElementById('victoryRematch').textContent=(curMode()==='online')?'Revancha':'Nueva partida'; }
+
+  window.showVictory=function(winner){
+    if(!veil) return; var fen=''; try{ fen=game.fen(); }catch(e){}
+    if(voShownFen===fen) return; voShownFen=fen;
+    var mineKnown=false, iWon=false;
+    try{ var m=curMode(); if(m==='online'&&typeof net!=='undefined'&&net&&net.myColor){ mineKnown=true; iWon=(winner===net.myColor); }
+      else if(m==='ai'&&typeof playerColor!=='undefined'){ mineKnown=true; iWon=(winner===playerColor); } }catch(e){}
+    var name=winner==='w'?'Azul':'Rojo', cls=winner==='w'?'blue':'red';
+    var img=document.getElementById('victoryKing'); img.src=kingSrc(winner); img.className='victory-king '+cls;
+    var kick=document.getElementById('victoryKicker'), ttl=document.getElementById('victoryTitle'), sub=document.getElementById('victorySub');
+    if(mineKnown&&iWon){ kick.textContent='Victoria!'; ttl.innerHTML='El Reino <span class="'+cls+'">'+name+'</span> prevalece'; sub.textContent='Jaque mate. El tablero es tuyo.'; }
+    else if(mineKnown&&!iWon){ kick.textContent='Jaque Mate'; ttl.innerHTML='Vence el Reino <span class="'+cls+'">'+name+'</span>'; sub.textContent='Tu rey ha caido. La revancha aguarda.'; }
+    else { kick.textContent='Jaque Mate'; ttl.innerHTML='Vence el Reino <span class="'+cls+'">'+name+'</span>'; sub.textContent='La corona cambia de manos.'; }
+    setCode(); rematchLabel(); openVeil(); vibe([0,55,45,55,45,150]);
+  };
+  window.showDraw=function(){
+    if(!veil) return; var fen=''; try{ fen=game.fen(); }catch(e){}
+    if(voShownFen===fen) return; voShownFen=fen;
+    var img=document.getElementById('victoryKing'); img.src=kingSrc('w'); img.className='victory-king';
+    document.getElementById('victoryKicker').textContent='Tablas';
+    document.getElementById('victoryTitle').innerHTML='Honor entre reinos';
+    document.getElementById('victorySub').textContent='Ningun rey cae hoy. Una partida digna de ambos tronos.';
+    setCode(); rematchLabel(); openVeil(); vibe([0,40,30,40]);
+  };
+  function hideVictory(){ if(!veil) return; veil.classList.remove('show'); veil.setAttribute('aria-hidden','true'); cancelAnimationFrame(voRAF); voShownFen=null; }
+  window.hideVictory=hideVictory;
+  addEventListener('resize',function(){ if(veil&&veil.classList.contains('show')){ sizeVo(); } });
+
+  function clickIfReal(id){ var b=document.getElementById(id); if(b && b.offsetParent!==null){ b.click(); return true; } return false; }
+  var vc=document.getElementById('victoryClose'); if(vc) vc.onclick=hideVictory;
+  var vr=document.getElementById('victoryRematch'); if(vr) vr.onclick=function(){ hideVictory(); if(!clickIfReal('rematch')) clickIfReal('newgame'); };
+  var vs=document.getElementById('victoryShare'); if(vs) vs.onclick=function(){
+    var url=location.href;
+    if(navigator.share){ navigator.share({title:'Los Dos Reinos',text:'Juega Los Dos Reinos!',url:url}).catch(function(){}); }
+    else { try{ navigator.clipboard.writeText(url); var o=vs.textContent; vs.textContent='Link copiado!'; setTimeout(function(){ vs.textContent=o; },1500); }catch(e){} } };
+
+  /* ---------- SFX hooks: haptics + visual sparks ---------- */
+  function wrap(name,after){ try{ if(typeof SFX==='undefined'||!SFX[name]) return; }catch(e){ return; }
+    var orig=SFX[name]; SFX[name]=function(){ try{ orig.apply(SFX,arguments); }catch(e){} try{ after(); }catch(e){} }; }
+  wrap('move',    function(){ vibe(8); });
+  wrap('capture', function(){ vibe(20); if(window.fxCapture) fxCapture(); });
+  wrap('check',   function(){ vibe([0,28,40,28]); if(window.fxCheck) fxCheck(); });
+})();
 </script>
 </body>
 </html>
