@@ -6,9 +6,9 @@
 <meta name="color-scheme" content="light only">
 <meta name="supported-color-schemes" content="light">
 <meta name="theme-color" content="#120c08">
-<title>El Reino de JuanFerland</title>
-<meta property="og:title" content="El Reino de JuanFerland">
-<meta property="og:description" content="¿Quién ganará la batalla por su control? Ajedrez 16-bit: juega con un amigo o contra la IA (5 niveles, hasta Bobby Fischer).">
+<title>Los Dos Reinos</title>
+<meta property="og:title" content="Los Dos Reinos">
+<meta property="og:description" content="¿Quién ganará la batalla por su control? Ajedrez 16-bit: juega con un amigo o contra la IA (7 niveles, hasta Bobby Fischer Bot).">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://jfcarpiopuntocom.github.io/ajedrez-16bit/">
 <meta property="og:image" content="https://jfcarpiopuntocom.github.io/ajedrez-16bit/assets/og.png?v=22">
@@ -35,23 +35,79 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   display:flex; flex-direction:column; gap:4px; overflow:hidden }
 
 /* ---------- START SCREEN ---------- */
+/* Splash: title masthead on top (always centered), then below it art+rail in two columns on desktop.
+   Below 720px art collapses above and the rail becomes a single vertical stack. */
 .start{ position:fixed; inset:0; z-index:100; background:radial-gradient(1100px 700px at 50% -6%, #3a2a1a 0%, #160f08 60%, #0a0604 100%);
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px; overflow:auto }
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:8px; padding:10px 14px; overflow:hidden }
 .start.hidden{ display:none }
-.start img.banner{ width:100%; max-width:560px; height:auto; max-height:22vh; object-fit:contain }
+.start img.banner{ flex:0 0 auto; width:100%; max-width:620px; height:auto; max-height:18vh; object-fit:contain }
+.start-body{ flex:1 1 auto; display:flex; flex-direction:row; align-items:stretch; justify-content:center; gap:18px; width:100%; min-height:0 }
+.start-art{ flex:0 0 360px; max-width:42vw; align-self:center; border:2px solid var(--gold); border-radius:14px; overflow:hidden;
+  box-shadow:0 6px 22px rgba(0,0,0,.55); background:#0a0604 }
+.start-art img{ width:100%; height:auto; display:block; max-height:72vh; object-fit:cover; image-rendering:pixelated; filter:contrast(1.06) saturate(.95) }
+.start-rail{ flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  min-width:0; max-width:430px; overflow-y:auto; max-height:100%; padding:4px 2px }
+/* Theme-pack caption: Los Dos Reinos is the first of several board themes (sci-fi, jungle,
+   conquistadors). Small and quiet — a label, not a second headline. */
+.theme-caption{ margin:6px 0 0; font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
+  color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center }
+/* When the lobby is in front, hide the splash art/rail so the lobby (with its tavern image) owns the screen. */
+.start.in-lobby .start-body{ display:none }
+/* Safety net: the lobby is sized to fit without scrolling, but if a device's visual viewport
+   shrinks further than expected (Safari's dynamic toolbar, an unusually short phone), allow a
+   vertical scroll here instead of silently clipping content with no way to reach it. */
+.start.in-lobby{ overflow-y:auto; -webkit-overflow-scrolling:touch }
+@media (max-width:720px){
+  /* Mobile: original tight layout (title + controls only). The duel art is desktop-only —
+     on mobile it crowded the rail and pushed buttons down. Splash-start flash + peace-card still work.
+     Anchored to the top (not centered): centering made each step (menu / level-pick / color-pick /
+     lobby) float at a different height depending on how much content it had, leaving an inconsistent,
+     sometimes large gap under the fixed back/help/crown buttons. Top-anchored + a fixed clearance
+     padding keeps every step starting at the same, predictable spot right under those buttons. */
+  .start, .start.in-lobby{ justify-content:flex-start; padding:calc(max(10px,env(safe-area-inset-top)) + 54px) 12px 18px }
+  .start-body{ flex-direction:column; align-items:center; gap:6px; flex:0 1 auto }
+  .start-art{ display:none }
+  .start-rail{ max-height:none; overflow-y:visible; max-width:380px; justify-content:flex-start }
+}
 .start h2{ margin:0; font-size:18px; font-weight:800; text-align:center; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .choices{ display:flex; flex-direction:column; gap:12px; width:100%; max-width:360px }
 .bigbtn{ font-size:18px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
   border:3px solid var(--gold); border-radius:14px; padding:16px; cursor:pointer; min-height:60px; background:linear-gradient(#2c416f,#16223f) }
 .bigbtn.ai{ background:linear-gradient(#5a2a14,#3a1a0c) }
+.bigbtn.online{ background:linear-gradient(#145a3a,#0c3a26) }
 .bigbtn:active{ transform:translateY(1px) }
-.levels{ display:none; flex-direction:column; gap:8px; width:100%; max-width:360px }
-.levels.show{ display:flex }
-.levels .lv{ font-size:16px; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
-  border:2px solid var(--gold); border-radius:11px; padding:12px 14px; cursor:pointer; min-height:50px;
-  background:linear-gradient(#3a1f12,#26140b); display:flex; justify-content:space-between; align-items:center }
-.levels .lv .tag{ font-size:13px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
-.kingpick{ display:flex; flex-direction:column; gap:7px; align-items:center }
+.levels{ display:none; gap:6px; width:100%; max-width:380px }
+.levels.show{ display:grid; grid-template-columns:1fr 1fr }
+.levels .lv{ font-size:14px; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  border:2px solid var(--gold); border-radius:11px; padding:8px 6px; cursor:pointer; min-height:44px;
+  background:linear-gradient(#3a1f12,#26140b); display:flex; flex-direction:column; align-items:center; text-align:center; gap:1px }
+.levels .lv .tag{ font-size:12px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.kingpick{ display:none; flex-direction:column; gap:7px; align-items:center; transition:opacity .25s }
+.kingpick.show-step{ display:flex }
+/* Splash mini-board with king + queen flanks */
+.splashBoard{ display:flex; align-items:center; justify-content:center; gap:14px; margin:6px 0 4px }
+.splashBoard.hidden{ display:none }
+.lobby-resume.hidden,.lobby-resume-msg.hidden{ display:none }
+.splash-side{ display:flex; flex-direction:column; gap:4px; align-items:center }
+.splash-side img{ height:58px; width:auto; filter:drop-shadow(0 2px 4px rgba(0,0,0,.6)) }
+.splash-mini-board{ width:96px; height:96px; border:3px solid var(--gold); border-radius:6px;
+  box-shadow:0 4px 14px rgba(0,0,0,.55), inset 0 0 0 1px #1a1006;
+  background-color:#e8d3a8;
+  background-image:linear-gradient(45deg,#3a1f10 25%,transparent 25%,transparent 75%,#3a1f10 75%,#3a1f10),
+                   linear-gradient(45deg,#3a1f10 25%,transparent 25%,transparent 75%,#3a1f10 75%,#3a1f10);
+  background-size:24px 24px; background-position:0 0,12px 12px }
+@media (max-width:380px){ .splashBoard{ gap:8px } .splash-side img{ height:48px } .splash-mini-board{ width:80px; height:80px; background-size:20px 20px; background-position:0 0,10px 10px } }
+/* Lobby header + share */
+.lobby-h{ margin:4px 0 2px; font-size:14px; font-weight:800; letter-spacing:.5px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; text-transform:uppercase }
+.lobby-share{ font-size:14px; font-weight:800; padding:9px 14px; min-height:40px; border-radius:10px; border:2px solid var(--gold);
+  background:linear-gradient(#2a1a0c,#1a100a); color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; cursor:pointer; transition:background .15s }
+.lobby-share:hover{ background:linear-gradient(#3a2a14,#2a1a0c) }
+.lobby-share.copied{ background:linear-gradient(var(--gold2),var(--gold)) !important; color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
+.kingpick .kingrow button{ transition:filter .25s,transform .15s }
+.kingpick.focus-blue .kingrow[data-side="b"] button{ filter:grayscale(1) brightness(.45) }
+.kingpick.focus-red .kingrow[data-side="w"] button{ filter:grayscale(1) brightness(.45) }
+.kingpick.focus-blue .kingrow[data-side="w"] button.active,
+.kingpick.focus-red .kingrow[data-side="b"] button.active{ transform:scale(1.06) }
 .kingrow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center }
 .kingrow .lbl{ font-size:14px; font-weight:800; min-width:78px; text-align:right;
   color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
@@ -60,13 +116,237 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .kingrow[data-side="b"] button{ background:#2a0e12 }
 .kingrow button.active{ border-color:var(--gold2); box-shadow:0 0 10px var(--gold) }
 .kingrow button img{ max-height:54px; max-width:54px; width:auto; height:auto; object-fit:contain; display:block }
-.back{ font-size:14px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; background:transparent; border:none; cursor:pointer; padding:6px }
+/* Fixed (not in-flow) so it's ALWAYS reachable regardless of how tall the lobby content gets —
+   the old in-flow placement got pushed below the fold on short viewports (iPhone with Safari's
+   dynamic toolbar) with no scroll available to reach it. Mirrors the help/crown buttons' top-left
+   safe-area handling so it never sits under a notch/Dynamic Island. */
+.back{ position:fixed; top:max(10px,env(safe-area-inset-top)); left:max(10px,env(safe-area-inset-left));
+  z-index:150; font-size:14px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  background:linear-gradient(160deg,#3a2a14,#1a1006); border:2px solid var(--gold); border-radius:18px;
+  cursor:pointer; padding:8px 14px; box-shadow:0 2px 10px rgba(0,0,0,.5) }
+.back:hover,.back:active{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
+/* Lobby (online) */
+.lobby{ display:none; flex-direction:row; align-items:flex-start; gap:16px; width:100%; max-width:780px }
+.lobby.show{ display:flex }
+.lobby-panel{ display:flex; flex-direction:column; gap:8px; flex:1; min-width:0 }
+@media (max-width:600px){ .lobby{ flex-direction:column; align-items:center; max-width:380px } .lobby-tavern-wrap{ max-height:28vh } }
+.lobby-name{ margin:0; font-size:16px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; display:flex; align-items:center; gap:6px }
+.lobby-name strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:22px }
+.lobby-para{ display:inline-block; margin-top:6px; font-size:12px; font-weight:700; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; font-style:italic; line-height:1.4 }
+.lobby-name-input{ font-size:18px; font-weight:800; padding:4px 8px; min-width:130px; max-width:180px; border:2px solid var(--gold); border-radius:8px;
+  background:#1c140d; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; font-family:inherit }
+.lobby-name-input:focus{ outline:none; border-color:#FFD060; box-shadow:0 0 8px var(--gold) }
+/* Splash Multiverse callout */
+.universo-callout{ width:100%; max-width:430px; margin:6px auto 2px; padding:10px 14px; border:2px solid #28ECAA; border-radius:12px;
+  background:linear-gradient(160deg,#0a2a1f,#051a12); text-align:center }
+.universo-callout h3{ margin:0 0 4px; font-size:14px; font-weight:900; letter-spacing:1.5px; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; text-transform:uppercase }
+.universo-callout p{ margin:0; font-size:12px; line-height:1.4; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.universo-callout p .pop{ color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; font-weight:800 }
+.universo-callout.hidden{ display:none }
+/* Matches modal */
+.matches-modal{ max-width:480px; max-height:80vh; overflow-y:auto; padding:18px 18px 14px }
+.lib-crown{ text-align:center; font-size:34px; line-height:1; margin:0 0 2px; filter:drop-shadow(0 2px 4px rgba(0,0,0,.5)) }
+.lib-btn{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; max-width:360px; margin:2px auto 0;
+  font-size:15px; font-weight:800; padding:9px 14px; min-height:42px; border-radius:11px; cursor:pointer;
+  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; border:2px solid var(--gold);
+  background:linear-gradient(#2a1a0c,#1a100a) }
+.lib-btn:hover,.lib-btn:active{ background:linear-gradient(#3a2614,#241608) }
+.lib-btn-sub{ font-size:13px; font-weight:700; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.matches-modal h2{ margin:0 0 4px; font-size:22px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; font-family:Georgia,"Times New Roman",serif; letter-spacing:.5px }
+.matches-modal .sub{ margin:0 0 12px; font-size:12px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:center; font-style:italic; font-weight:600 }
+.matches-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px }
+.matches-list li{ background:#1c140d; border:2px solid var(--gold); border-radius:10px; padding:9px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer; transition:background .15s }
+.matches-list li:hover{ background:#2a1f12 }
+.matches-list li .mleft{ display:flex; flex-direction:column; gap:1px; text-align:left }
+.matches-list li .mcode{ font-size:16px; font-weight:900; letter-spacing:2px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-family:Georgia,"Times New Roman",serif }
+.matches-list li .mmeta{ font-size:11px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+.matches-list li .mright{ font-size:11px; font-weight:700; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:right; min-width:70px;
+  display:flex; flex-direction:column; align-items:flex-end; gap:4px }
+.mpublish{ font-size:11px; font-weight:800; padding:4px 8px; min-height:26px; border-radius:8px; border:1px solid var(--gold);
+  background:#241a10; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; cursor:pointer; white-space:nowrap }
+.mpublish:hover,.mpublish:active{ background:#34260f }
+.mpublish:disabled{ background:#1a3a2c; border-color:#28ECAA; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; cursor:default }
+.lobby-multi-list li{ cursor:pointer }
+.matches-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:18px 0; font-weight:600 }
+.lib-section{ margin:14px 0 2px; font-size:15px; font-weight:900; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:left; letter-spacing:.5px }
+.lib-section-sub{ margin:0 0 8px; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:left; line-height:1.4; font-weight:600 }
+.cel-item .cel-name{ letter-spacing:0; font-size:15px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-family:inherit }
+.cel-take{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-weight:800 }
+.celebre-modal{ max-width:460px; max-height:84vh; overflow-y:auto; padding:18px 18px 14px; text-align:center }
+.celebre-modal h2{ margin:0 0 2px; font-size:21px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-family:Georgia,"Times New Roman",serif }
+.cel-players{ margin:0 0 10px; font-size:14px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; font-weight:700 }
+.cel-blurb{ margin:0 0 14px; font-size:14px; line-height:1.5; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; text-align:left }
+.cel-q{ margin:10px 0 6px; font-size:14px; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.cel-colors{ display:flex; gap:10px; justify-content:center }
+.cel-colors .bigbtn{ flex:1; font-size:16px; padding:12px; min-height:50px }
+.cel-colors .cel-sel{ border-color:#FFD060; box-shadow:0 0 12px var(--gold) }
+.cel-levels{ display:grid; grid-template-columns:1fr 1fr; gap:6px }
+.cel-lv{ display:flex; flex-direction:column; align-items:center; gap:1px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  border:2px solid var(--gold); border-radius:11px; padding:9px 6px; cursor:pointer; min-height:46px; background:linear-gradient(#3a1f12,#26140b) }
+.cel-lv:hover,.cel-lv:active{ border-color:#FFD060; background:linear-gradient(#4a2a18,#311a0e) }
+.cel-lv-n{ font-size:14px }
+.cel-lv-t{ font-size:13px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.lobby-rename{ background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; transition:color .15s,-webkit-text-fill-color .15s }
+.lobby-rename:hover{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.lobby-tut{ position:relative; width:100%; border:2px solid var(--gold); border-radius:12px; padding:10px 12px 8px; margin:0 0 4px;
+  background:linear-gradient(160deg,#241a10,#160f08) }
+.lobby-tut.hidden{ display:none }
+.lobby-tut-h{ margin:0 0 6px; font-size:14px; font-weight:900; letter-spacing:.5px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-transform:uppercase }
+.lobby-tut p{ margin:0 0 4px; font-size:13px; line-height:1.4; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; text-align:left }
+.lobby-tut p:last-child{ margin-bottom:0 }
+.lobby-tut p b{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.lobby-tut-x{ position:absolute; top:4px; right:6px; background:none; border:none; cursor:pointer; font-size:15px; padding:2px 5px;
+  color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+.lobby-tut-x:hover{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.lobby-mute{ background:none; border:none; cursor:pointer; font-size:18px; padding:2px 4px; line-height:1 }
+.lobby-mute-row{ margin:0; display:flex; align-items:center; gap:6px }
+.lobby-mute-lbl{ font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; cursor:pointer }
+.lobby-status{ margin:0; font-size:14px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; min-height:18px; font-weight:700 }
+.lobby-count{ font-weight:400; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; font-size:13px; margin-left:4px }
+.lobby-list{ list-style:none; margin:0; padding:0; width:100%; max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:5px }
+.lobby-list li{ font-size:16px; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  background:#1c140d; border:2px solid var(--gold); border-radius:10px; padding:12px 16px; cursor:pointer; text-align:left; transition:background .15s,border-color .15s; display:flex; align-items:center; gap:8px }
+.lobby-list li:hover,.lobby-list li:active{ background:#2a1f12; border-color:#FFD060 }
+.lobby-list li.self{ background:linear-gradient(var(--gold2),var(--gold)) !important; color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important; cursor:default; border-color:#FFD060 }
+.lobby-list li.self:hover{ background:linear-gradient(var(--gold2),var(--gold)) !important }
+.lobby-list li.self .li-name{ color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
+.lobby-list li.self .li-arrow{ color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important; font-size:14px }
+.lobby-list li .li-shield{ height:22px; width:auto; flex-shrink:0 }
+.lobby-list li .li-name{ flex:1 }
+.lobby-list li .li-arrow{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:18px; flex-shrink:0 }
+/* Busy rivals: visibly mid-duel, not clickable. Solid muted colors (never opacity) so text stays
+   fully legible while still reading as "not available" at a glance. */
+.lobby-list li.busy{ cursor:default; background:#15110b; border-color:#5a5248 }
+.lobby-list li.busy:hover,.lobby-list li.busy:active{ background:#15110b }
+.lobby-list li.busy .li-name{ color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+.lobby-list li.busy .li-arrow{ font-size:13px }
+.li-busy-tag{ font-size:12px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; flex-shrink:0 }
+.lobby-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:20px 0 }
+.lobby-tavern-wrap{ flex:0 0 280px; border-radius:12px; overflow:hidden; border:2px solid var(--gold); box-shadow:0 4px 18px rgba(0,0,0,.5); align-self:stretch }
+.lobby-tavern{ width:100%; height:100%; display:block; object-fit:cover; filter:contrast(1.1) saturate(.85) }
+@media (max-width:600px){ .lobby-tavern-wrap{ flex:none; width:100%; max-height:22vh } }
+/* Mobile: compact the whole lobby vertically so it fits one short iPhone viewport without scrolling
+   (the .back button is now fixed/out-of-flow too, which already frees real space). Nothing is removed,
+   everything just takes less height: smaller tavern peek, tighter tutorial card, capped player list. */
+@media (max-width:600px){
+  .lobby{ gap:8px }
+  .lobby-panel{ gap:6px }
+  .lobby-tavern-wrap{ max-height:13vh }
+  .lobby-tut{ padding:7px 10px 6px }
+  .lobby-tut-h{ font-size:13px; margin-bottom:4px }
+  .lobby-tut p{ font-size:12px; line-height:1.3; margin-bottom:3px }
+  .lobby-name{ font-size:14px }
+  .lobby-mute-row{ margin:0 }
+  .lobby-h{ margin:2px 0 1px }
+  .lobby-list{ max-height:120px }
+  .lobby-list li{ padding:9px 12px; font-size:14px }
+  .lobby-room-bar{ padding:5px 10px }
+  .lobby-resume{ margin:0 }
+}
+/* flex-wrap so a long label (e.g. "Plaza Pública") drops the buttons to their own row instead of
+   breaking the label text mid-word against them. */
+.lobby-room-bar{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; width:100%; max-width:380px; padding:6px 12px; border-radius:10px; background:#1c140d; border:1px solid rgba(232,160,32,.25) }
+.lobby-room-label{ font-size:14px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; flex:1 1 auto; min-width:0 }
+.lobby-room-label strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:16px; letter-spacing:2px; font-family:Georgia,"Times New Roman",serif; margin-left:4px }
+/* The Plaza's friendly name is longer than a 6-char code: drop the NES-style spacing/size so it
+   reads as a normal label instead of stretching wide and forcing an awkward wrap. */
+.lobby-room-label strong.room-long{ font-size:14px; letter-spacing:0; font-family:inherit }
+.lobby-share-sm{ font-size:13px !important; padding:5px 10px !important; min-height:32px !important }
+/* King of the Hill: live match + queue */
+.lobby-live{ width:100%; border:2px solid var(--crimson); border-radius:12px; padding:10px 12px; background:linear-gradient(160deg,#2a0e12,#1a0608); display:flex; flex-direction:column; gap:8px }
+.lobby-live-h{ display:flex; align-items:center; gap:8px; font-size:15px; font-weight:900; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.live-badge{ font-size:13px; font-weight:900; letter-spacing:1px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; background:#d62828; border-radius:5px; padding:2px 7px; animation:livePulse 1.2s ease-in-out infinite }
+@keyframes livePulse{ 0%,100%{ background:#d62828 } 50%{ background:#ff4d4d } }
+.lobby-live-vs{ font-size:14px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.lobby-live-vs b{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.lobby-live-queue{ font-size:13px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+.lobby-live-btns{ display:flex; gap:8px; flex-wrap:wrap }
+.lobby-live-btns button{ flex:1; min-width:120px; font-size:13px; font-weight:800; padding:8px 10px; min-height:40px; border-radius:9px; cursor:pointer;
+  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; border:2px solid var(--gold) }
+.btn-queue{ background:linear-gradient(#3a2a14,#26180b) }
+.btn-queue.in{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
+.btn-fork{ background:linear-gradient(#0a3a2a,#063020); border-color:#28ECAA }
+@keyframes lobbyPulse{ 0%{color:var(--gold2);-webkit-text-fill-color:var(--gold2)} 50%{color:#8A6A10;-webkit-text-fill-color:#8A6A10} 100%{color:var(--gold2);-webkit-text-fill-color:var(--gold2)} }
+.lobby-searching{ animation:lobbyPulse 1.5s ease-in-out infinite }
+/* Shield icons (inline) */
+.shield-icon{ height:36px; width:auto; vertical-align:middle; margin-right:6px; filter:drop-shadow(0 2px 3px rgba(0,0,0,.5)) }
+.cap-icon{ height:24px; width:auto; vertical-align:middle; margin-right:4px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.4)) }
+.chip-icon{ height:20px; width:auto; vertical-align:middle; margin-right:4px }
+/* Color picker (AI) */
+.colorpick{ display:none; gap:10px; width:100%; max-width:360px; justify-content:center }
+.colorpick.show{ display:flex }
+.colorpick button{ flex:1 }
+/* Capture bar rotation for face-to-face */
+.cap.rotcap{ transform:rotate(180deg) }
 
 /* ---------- Title (top, prominent) ---------- */
 .title-img{ flex:0 0 auto; display:block; margin:0 auto; width:auto; max-width:100%; max-height:9vh; max-height:9svh; pointer-events:none }
-.site-credit{ text-align:center; padding:18px 12px 28px; color:#CCCCCC; font-size:14px; font-size:.9rem; letter-spacing:.3px }
-.site-credit a{ color:#E8A020; text-decoration:none; font-weight:600 }
+/* Title splendor: melt the flat banner edges into the page + warm golden glow + gentle float */
+@keyframes titleFloat{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-3px) } }
+.banner, .title-img{
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
+          mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
+  /* Tight gold outline traces the title's alpha so it doesn't look pasted on black, plus the existing glow + shadow. */
+  filter:
+    drop-shadow(0 0 0.6px var(--gold))
+    drop-shadow(0 0 0.6px var(--gold))
+    drop-shadow(0 0 1px rgba(232,160,32,.85))
+    drop-shadow(0 6px 16px rgba(0,0,0,.55))
+    drop-shadow(0 0 22px rgba(232,160,32,.32));
+  animation:titleFloat 5s ease-in-out infinite; }
+/* Footer: fixed bottom bar, always visible over both screens */
+.site-credit{ position:fixed; left:0; right:0; bottom:0; z-index:200; height:28px;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--bg); border-top:1px solid rgba(232,160,32,.25);
+  color:#CCCCCC; font-size:13px; letter-spacing:.3px }
+.site-credit a{ color:#E8A020; text-decoration:none; font-weight:700; margin-left:5px }
 .site-credit a:hover{ text-decoration:underline }
+/* Zoom / focus mode: expand board, keep only board + captured pieces */
+#zoombtn{ position:fixed; top:6px; left:6px; z-index:300; height:38px; padding:0 12px; border-radius:10px;
+  background:linear-gradient(#3a1f12,#26140b); border:2px solid var(--gold);
+  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-size:15px; font-weight:800; line-height:1; cursor:pointer;
+  display:flex; align-items:center; gap:6px }
+#zoombtn .zi{ font-size:18px }
+/* Start-of-match flash: brief reveal, then fades so the board takes over. pointer-events:none so it never blocks input.
+   If the image is missing (.noimg), the whole overlay is skipped — never blocks gameplay. */
+.start-overlay{ position:fixed; inset:0; z-index:400; display:none; pointer-events:none; align-items:center; justify-content:center;
+  background:radial-gradient(closest-side,rgba(10,6,4,.78),rgba(10,6,4,.94)) }
+.start-overlay.noimg, .start-overlay.noimg.show{ display:none !important }
+.start-overlay img{ width:auto; max-width:88vw; height:auto; max-height:78vh; object-fit:contain;
+  border:2px solid var(--gold); border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,.6), 0 0 28px rgba(232,160,32,.35);
+  image-rendering:pixelated; filter:contrast(1.06) saturate(.95) }
+@keyframes startSplashFlash{
+  0%   { opacity:0; transform:scale(1.04) }
+  18%  { opacity:1; transform:scale(1) }
+  62%  { opacity:1; transform:scale(1) }
+  100% { opacity:0; transform:scale(.985) }
+}
+.start-overlay.show{ display:flex; animation:startSplashFlash 1.7s ease-out forwards }
+@media (prefers-reduced-motion:reduce){ .start-overlay.show{ animation-duration:.6s } }
+/* Quick-chat: always-on mini feed (last 5) + expandable reply panel. Online 1v1 only. */
+#chatPanel{ position:fixed; bottom:8px; right:8px; z-index:301; width:248px; max-width:84vw;
+  background:#1c140d; border:2px solid var(--gold); border-radius:12px; box-shadow:0 6px 22px rgba(0,0,0,.6); overflow:hidden }
+.chat-head{ display:flex; align-items:center; justify-content:space-between; padding:6px 8px 6px 10px; font-size:13px; font-weight:800;
+  color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; background:#241a10 }
+.chat-head button{ background:none; border:1px solid var(--gold); border-radius:6px; cursor:pointer; font-size:14px;
+  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; padding:2px 8px; line-height:1; min-width:30px }
+.chat-head button:hover{ background:#34260f }
+.chat-log{ padding:6px 10px; display:flex; flex-direction:column; gap:3px }
+.chat-msg{ font-size:13px; line-height:1.35; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.chat-msg b{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.chat-msg.mine b{ color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important }
+.chat-empty{ font-size:12px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:4px 0; font-style:italic }
+.chat-quick{ display:none; grid-template-columns:1fr 1fr; gap:4px; padding:6px 8px 8px; border-top:1px solid rgba(232,160,32,.25); max-height:240px; overflow-y:auto }
+.chat-quick.open{ display:grid }
+.chat-quick button{ font-size:13px; font-weight:700; padding:7px 6px; min-height:34px; border-radius:8px; border:1px solid var(--gold);
+  background:#241a10; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; cursor:pointer; text-align:left; line-height:1.15 }
+.chat-quick button:hover,.chat-quick button:active{ background:#34260f; border-color:#FFD060 }
+.chat-quick button:disabled{ color:#999999 !important; -webkit-text-fill-color:#999999 !important; cursor:wait }
+body.focusmode .title-img, body.focusmode .status, body.focusmode .left-rail,
+body.focusmode .note, body.focusmode .hud, body.focusmode .site-credit,
+body.focusmode #chatPanel{ display:none !important }
+body.focusmode .app{ height:100vh !important; height:100svh !important }
 
 /* ---------- Turn / status ---------- */
 .status{ flex:0 0 auto; text-align:center; font-size:15px; font-weight:800; min-height:24px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
@@ -75,6 +355,28 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .status .chip.rojo{ background:var(--crimson) }
 .status .warn{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .status .win{ color:var(--emerald) !important; -webkit-text-fill-color:var(--emerald) !important }
+.status .lvl{ font-size:13px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; margin-left:6px }
+.status .lvl.tablero-tag{ display:block; margin-left:0; margin-top:2px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:13px }
+.status .lvl.tablero-tag b{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; letter-spacing:1px }
+/* Tablero themes - background applied to .app */
+.app.t-capablanca{ background:radial-gradient(900px 600px at 50% 0%,#1a3a3a 0%,#0a1a1a 60%,#050a0a 100%) }
+.app.t-fischer{    background:radial-gradient(900px 600px at 50% 0%,#1f2a3a 0%,#0a121e 60%,#050810 100%) }
+.app.t-tal{        background:radial-gradient(900px 600px at 50% 0%,#3a1a1a 0%,#1a0808 60%,#0c0303 100%) }
+.app.t-polgar{     background:radial-gradient(900px 600px at 50% 0%,#2a1a3a 0%,#150a1e 60%,#0a0512 100%) }
+.app.t-carlsen{    background:radial-gradient(900px 600px at 50% 0%,#0a1f3a 0%,#050f1c 60%,#02080e 100%) }
+.app.t-morphy{     background:radial-gradient(900px 600px at 50% 0%,#3a2e1a 0%,#1e180a 60%,#0e0c05 100%) }
+.app.t-kasparov{   background:radial-gradient(900px 600px at 50% 0%,#3a0a0a 0%,#1c0505 60%,#0e0202 100%) }
+.app.t-alekhine{   background:radial-gradient(900px 600px at 50% 0%,#0a2a3a 0%,#05151e 60%,#020a0e 100%) }
+/* Lobby resume by code */
+.lobby-resume{ display:flex; gap:6px; width:100%; max-width:360px; align-items:center }
+.lobby-resume input{ flex:1; font-size:15px; font-weight:800; padding:8px 10px; min-height:40px; border:2px solid var(--gold); border-radius:10px;
+  background:#1c140d; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; text-align:center; text-transform:uppercase; letter-spacing:2px }
+.lobby-resume input::placeholder{ color:#999999 !important; -webkit-text-fill-color:#999999 !important; letter-spacing:0 }
+.lobby-resume button{ font-size:14px; font-weight:800; padding:8px 12px; min-height:40px; border-radius:10px; border:2px solid var(--gold);
+  background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important; cursor:pointer }
+.lobby-resume button:disabled{ background:#2a1a0c; color:#999999 !important; -webkit-text-fill-color:#999999 !important; cursor:not-allowed }
+.lobby-resume-msg{ margin:0; font-size:12px; min-height:14px; color:#FF8888 !important; -webkit-text-fill-color:#FF8888 !important; text-align:center }
+.lobby-resume-msg.ok{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 
 /* ---------- Stage ---------- */
 .stage{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; align-items:center; gap:5px; width:100% }
@@ -112,11 +414,19 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .cell img[data-t="q"]{ height:96% }
 .cell img[data-t="k"]{ height:99% }
 .cell img.flip{ transform:translateX(-50%) scaleX(-1) }
+/* opponent pieces (top side) rotated 180 deg for face-to-face mobile/tablet play */
+.cell img.rot{ transform:translateX(-50%) rotate(180deg) }
+.cell img.flip.rot{ transform:translateX(-50%) scaleX(-1) rotate(180deg) }
 .cell.last{ background:rgba(232,160,32,.20) }
 .cell.check::after{ content:""; position:absolute; inset:5%; border:3px solid #ff5252; border-radius:7px; box-shadow:0 0 12px #ff2020 }
 
 /* ---------- History panel (always visible, left of board) ---------- */
-.history{ flex:0 0 auto; width:100%; max-width:430px; max-height:80px; overflow-y:auto;
+.peace-card{ flex:0 0 auto; width:100%; max-width:430px; margin-top:6px; border:2px solid var(--gold); border-radius:12px; overflow:hidden;
+  background:linear-gradient(160deg,#1f160d,#0a0604); box-shadow:0 4px 16px rgba(0,0,0,.55) }
+.peace-card img{ width:100%; height:auto; display:block; image-rendering:pixelated; filter:contrast(1.05) saturate(.95) }
+.peace-card p{ margin:0; padding:7px 10px; font-size:13px; font-style:italic; text-align:center; line-height:1.35;
+  color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-weight:700 }
+.history{ flex:0 0 auto; width:100%; max-width:430px; max-height:80px; overflow-y:auto; margin-top:4px;
   background:linear-gradient(160deg,#241a10,#140d07); border:2px solid var(--gold); border-radius:8px; padding:4px 8px;
   font-size:12px; line-height:1.4; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
 .history h4{ margin:0 0 3px; font-size:11px; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; letter-spacing:.5px }
@@ -137,14 +447,63 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .cap .slots img{ height:20px; width:auto }
 
 /* ---------- Buttons (bottom) ---------- */
-.hud{ flex:0 0 auto; display:flex; gap:10px; justify-content:center; align-items:center }
-.hud button{ font-size:15px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
-  background:linear-gradient(#5a2a14,#3a1a0c); border:2px solid var(--gold); border-radius:10px; padding:9px 18px; min-height:44px; cursor:pointer }
+.hud{ flex:0 0 auto; display:flex; flex-wrap:wrap; gap:6px; justify-content:center; align-items:center; padding:0 4px 4px }
+.hud button{ font-size:13px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  background:linear-gradient(#5a2a14,#3a1a0c); border:2px solid var(--gold); border-radius:10px; padding:8px 10px; min-height:44px; cursor:pointer; flex:0 0 auto }
 .hud button.gold{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
+@media (min-width:600px){ .hud{ gap:10px } .hud button{ font-size:15px; padding:9px 18px } }
+/* In-game confirm modal (replaces window.confirm) */
+.modal-veil{ position:fixed; inset:0; z-index:200; background:rgba(8,4,2,.78); display:none; align-items:center; justify-content:center; padding:18px }
+.modal-veil.show{ display:flex }
+.modal-card{ background:linear-gradient(160deg,#241a10,#140d07); border:3px solid var(--gold); border-radius:14px;
+  box-shadow:0 8px 30px rgba(0,0,0,.7); padding:22px 22px 18px; max-width:380px; width:100%; text-align:center;
+  display:flex; flex-direction:column; gap:14px; animation:modalIn .2s ease-out }
+@keyframes modalIn{ from{ transform:scale(.9) } to{ transform:scale(1) } }
+.modal-card p{ margin:0; font-size:17px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; line-height:1.35 }
+.modal-card .modal-buttons{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap }
+.modal-card button{ font-size:15px; font-weight:800; padding:10px 20px; min-height:44px; min-width:110px; border-radius:10px; cursor:pointer; border:2px solid var(--gold) }
+.modal-card button.yes{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
+.modal-card button.no{ background:linear-gradient(#5a2a14,#3a1a0c); color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.modal-card button:hover{ filter:brightness(1.1) }
+/* Help button + Welcome modal */
+.help-btn{ position:fixed; top:max(10px,env(safe-area-inset-top)); right:max(10px,env(safe-area-inset-right)); z-index:150; width:44px; height:44px; border-radius:50%;
+  border:3px solid var(--gold); background:linear-gradient(160deg,#3a2a14,#1a1006);
+  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  font-size:22px; font-weight:900; cursor:pointer; padding:0; line-height:1;
+  box-shadow:0 2px 12px rgba(232,160,32,.4), 0 0 0 2px rgba(232,160,32,.15); display:flex; align-items:center; justify-content:center; font-family:Georgia,"Times New Roman",serif }
+/* Crown button: pill with label so users see what it is at a glance. Stays clear of the (?). */
+.lib-fixed-btn{ width:auto !important; padding:0 14px 0 12px !important; border-radius:22px !important;
+  right:calc(max(10px,env(safe-area-inset-right)) + 52px) !important; font-family:inherit !important; font-size:15px !important; gap:6px }
+.lib-fixed-lbl{ font-weight:800; letter-spacing:.3px; white-space:nowrap }
+@media (max-width:560px){ .lib-fixed-lbl{ display:none } .lib-fixed-btn{ width:44px !important; padding:0 !important; border-radius:50% !important } }
+.help-btn:hover,.help-btn:active{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important; transform:scale(1.08) }
+.help-modal{ max-width:540px; max-height:84vh; overflow-y:auto; text-align:left; padding:22px 22px 18px }
+.help-modal h2{ margin:0 0 4px; font-size:22px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; letter-spacing:.5px; font-family:Georgia,"Times New Roman",serif }
+.help-modal .help-sub{ margin:0 0 14px; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:center; font-style:italic; font-weight:600 }
+.help-modal h3{ margin:14px 0 4px; font-size:14px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-transform:uppercase; letter-spacing:1px }
+.help-modal p{ margin:0 0 8px; font-size:14px; line-height:1.5; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-weight:600; text-align:left }
+.help-modal p .accent{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-weight:800 }
+.help-modal ul{ margin:0 0 6px; padding-left:18px }
+.help-modal li{ font-size:14px; line-height:1.5; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-weight:600; margin-bottom:3px }
+.help-modal .help-footer{ margin-top:16px; padding-top:14px; border-top:2px solid #3a2a18; text-align:center }
+.help-modal .help-footer p{ margin:3px 0; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; font-weight:700; text-align:center }
+.help-modal .help-footer strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:14px }
+.help-modal .help-cta{ display:inline-block; margin:12px 0 4px; font-size:15px; font-weight:800; padding:10px 22px; min-height:44px; border-radius:10px; border:2px solid var(--gold);
+  background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important; text-decoration:none; cursor:pointer; line-height:24px }
+.help-modal .help-cta:hover{ filter:brightness(1.1) }
+.help-modal .help-sponsor{ margin:8px 0 0; font-size:12px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; font-weight:700; text-align:center; font-style:italic }
+.help-modal .help-sponsor a{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-decoration:underline }
+.help-modal .help-close{ margin-top:14px; align-self:center }
+.help-modal .help-thanks{ margin:10px 0 0; font-size:13px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; font-weight:800; letter-spacing:.5px }
+.help-modal .help-thanks-top{ margin:14px 0 6px; font-size:16px; font-style:italic }
 .note{ flex:0 0 auto; text-align:center; font-size:13px; min-height:15px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+/* Quote: own gentle frame so it never visually bleeds into the move history below.
+   Truncates to 3 lines with ellipsis to keep the layout stable when an aphorism is long. */
 .quote{ flex:0 0 auto; width:100%; max-width:430px; text-align:center; font-style:italic; font-size:13px; line-height:1.35;
-  color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; padding:1px 8px; min-height:17px; transition:opacity .35s;
-  font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif; word-wrap:break-word; overflow-wrap:break-word }
+  color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; padding:6px 10px; min-height:17px; transition:opacity .35s;
+  background:linear-gradient(160deg,#1f160d,#150e07); border:1px solid rgba(232,160,32,.3); border-radius:8px; margin-bottom:2px;
+  font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif; word-wrap:break-word; overflow-wrap:break-word;
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden }
 .quote b{ font-style:normal; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; display:block; margin-top:4px }
 
 /* ---------- Desktop / tablet ---------- */
@@ -175,39 +534,195 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 </head>
 <body>
 
+<button class="help-btn" id="helpBtn" title="Ayuda" aria-label="Ayuda">?</button>
+<button class="help-btn lib-fixed-btn" id="libFixedBtn" title="Tus partidas y las partidas famosas de la historia" aria-label="Librería Real">&#128081; <span class="lib-fixed-lbl">Librería Real</span></button>
+<div class="modal-veil" id="helpVeil" role="dialog" aria-modal="true">
+  <div class="modal-card help-modal">
+    <h2>Bienvenido a Los Dos Reinos</h2>
+    <p class="help-sub">Ajedrez fantástico de 16-bits</p>
+
+    <h3>Tres modos de juego</h3>
+    <ul>
+      <li><span class="accent">Con un amigo en persona:</span> mismo dispositivo, la barra de capturas roja viene rotada 180° para que tu rival la lea desde su lado.</li>
+      <li><span class="accent">Contra la IA:</span> siete niveles, desde Casual (~333 Elo) hasta Bobby Fischer Bot (inhumano).</li>
+      <li><span class="accent">En línea:</span> lobby global, comparte el link por WhatsApp y rivales aparecen en la lista. Un click empieza la partida.</li>
+    </ul>
+
+    <h3>Trucos del tablero</h3>
+    <p>Arrastra una pieza al destino. Las casillas legales se iluminan al levantarla.</p>
+    <p>El botón <span class="accent">⛶</span> maximiza el tablero para concentración total. Deshacer y Rehacer reescriben jugadas hasta el mate.</p>
+    <p>Cada partida guarda un <span class="accent">código de seis caracteres tipo NES</span>. Cada jugada se respalda en localStorage e IndexedDB del dispositivo. Anótalo, sal, vuelve después y entra el código en la pantalla inicial. Cargas la posición exacta con su tablero, nivel, capturas y todo.</p>
+
+    <h3>Función Multiverse</h3>
+    <p><span class="accent">Empieza la partida contra la IA. Termínala con un amigo o amiga que llegue a continuarla.</span> O al revés. El código captura todo el estado, así cualquiera con el código puede entrar, tomar el lugar de quien jugaba y seguir desde la posición exacta. La línea original sigue viva en paralelo. Endless multiverse fun.</p>
+    <p>Coleccionas posiciones célebres, retas desde cualquier nodo, y reconstruyes la genealogía completa de una partida que pasó por tres IAs y dos humanos. Cada gamestate tiene su propio ID: la partida ya no pertenece a dos jugadores, pertenece a la posición misma, y cualquiera puede tomarla.</p>
+
+    <h3>La Taberna</h3>
+    <p>Tu seudónimo es editable, persistente y solo tuyo. Vive en este navegador. Quien gana se queda en la Taberna y elige al siguiente: estilo king of the hill. Cada sala tiene un link compartible.</p>
+
+    <h3>Bajo el capó</h3>
+    <ul>
+      <li><span class="accent">Sin servidor, sin cuentas:</span> todo corre en tu navegador. Tu juego es tuyo.</li>
+      <li><span class="accent">IA local:</span> el motor Stockfish, clase mundial, calcula dentro de tu propio dispositivo (con una IA de respaldo si no carga).</li>
+      <li><span class="accent">Online directo:</span> conexión jugador a jugador por WebRTC, sin intermediarios. La presencia en la Taberna viaja por la red abierta Nostr.</li>
+      <li><span class="accent">Tus partidas, blindadas:</span> cada jugada se respalda en localStorage e IndexedDB, y puedes exportar todo a JSON cuando quieras.</li>
+      <li><span class="accent">Música viva:</span> la melodía de la Taberna se compone en tiempo real con Web Audio, nota por nota. No hay archivo de audio que cargar.</li>
+    </ul>
+
+    <h3>Próximamente</h3>
+    <p><span class="accent">Los Dos Reinos</span> es el primero de varios tableros temáticos. Vienen en camino: <span class="accent">sci-fi</span>, <span class="accent">la selva</span> y <span class="accent">españoles vs. indios</span>. Cada uno con su propio fondo, atmósfera y reyes.</p>
+
+    <p class="help-thanks help-thanks-top">Gracias por jugar.</p>
+    <div class="help-footer">
+      <p>hecho por <strong>J. F. Carpio</strong> en Cuenca, Ecuador</p>
+      <p>Contacto: <strong>jfcarpio@gmail.com</strong></p>
+      <a class="help-cta" id="helpSupport" href="#">&#9812; Apoyar el proyecto</a>
+      <p class="help-sponsor">¿Tu marca en un tablero futuro? <a id="helpSponsor" href="mailto:jfcarpio@gmail.com?subject=Patrocinar%20un%20tablero%20-%20Los%20Dos%20Reinos">Patrocínalo</a>.</p>
+      <button class="no help-close" id="helpClose">Cerrar</button>
+    </div>
+  </div>
+</div>
+<div class="modal-veil" id="matchesVeil" role="dialog" aria-modal="true">
+  <div class="modal-card matches-modal">
+    <div class="lib-crown">&#128081;</div>
+    <h2>Librería Real</h2>
+    <p class="sub">Posiciones célebres para tomar desde el filo, y tus propias partidas guardadas.</p>
+    <h3 class="lib-section">&#9876; Partidas Célebres</h3>
+    <p class="lib-section-sub">Entra en el instante exacto de la genialidad. Eliges bando y dificultad de la IA. Toma el lado del golpe y ejecútalo tú, o el otro y observa qué hace la IA.</p>
+    <ul class="matches-list" id="celebreList"></ul>
+    <h3 class="lib-section">&#128081; Tus partidas</h3>
+    <p class="lib-section-sub">Doble respaldo: localStorage e IndexedDB en este dispositivo. Cada gamestate guarda su propio ID.</p>
+    <ul class="matches-list" id="matchesList"></ul>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap">
+      <button class="yes" id="matchesExport">&#128190; Exportar JSON</button>
+      <button class="no" id="matchesClose">Cerrar</button>
+    </div>
+  </div>
+</div>
+<div class="modal-veil" id="celebreVeil" role="dialog" aria-modal="true">
+  <div class="modal-card celebre-modal">
+    <h2 id="celTitle">&mdash;</h2>
+    <p class="cel-players" id="celPlayers">&mdash;</p>
+    <p class="cel-blurb" id="celBlurb">&mdash;</p>
+    <p class="cel-q">¿Qué bando tomas a cargo?</p>
+    <div class="cel-colors">
+      <button id="celAzul" class="bigbtn"><img src="assets/shield-blue.png" class="shield-icon"> Azul</button>
+      <button id="celRojo" class="bigbtn ai"><img src="assets/shield-red.png" class="shield-icon"> Rojo</button>
+    </div>
+    <p class="cel-q">Dificultad de la IA rival. Juega el otro bando: tú la observas en acción.</p>
+    <div class="cel-levels" id="celLevels"></div>
+    <div style="display:flex;gap:8px;margin-top:10px;justify-content:center">
+      <button class="no" id="celClose">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== START SCREEN ===== -->
 <div class="start" id="start">
-  <img class="banner" src="assets/title.png?v=42" alt="Dragones y Leones: ¡Ajedrez extra divertido!">
+  <img class="banner" src="assets/title.png" alt="Los Dos Reinos: ¡ajedrez fantástico!">
+  <div class="start-body">
+  <div class="start-art" id="startArt"><img src="assets/splash-duel.png" alt="Los reyes en batalla" onerror="this.parentNode.style.display='none'"></div>
+  <div class="start-rail" id="startRail">
   <h2 id="startH2">¿Cómo quieres jugar?</h2>
   <div class="choices">
-    <button class="bigbtn" id="btn2p">👥 Con un amigo</button>
-    <button class="bigbtn ai" id="btnAI">🐉 Contra la IA</button>
+    <button class="bigbtn" id="btn2p">👥 Con un amigo en persona</button>
+    <button class="bigbtn ai" id="btnAI">🐉 Contra la IA (7 niveles)</button>
+    <button class="bigbtn online" id="btnOnline">🌐 Jugar online (1 vs 1)</button>
   </div>
+  <div class="splashBoard" id="splashBoard">
+    <div class="splash-side blue">
+      <img src="assets/pieces/k_bkA.png" alt="Rey azul">
+      <img src="assets/pieces/wQ.png" alt="Reina azul">
+    </div>
+    <div class="splash-mini-board" aria-hidden="true"></div>
+    <div class="splash-side red">
+      <img src="assets/pieces/k_rkA.png" alt="Rey rojo">
+      <img src="assets/pieces/bQ.png" alt="Reina rojo">
+    </div>
+  </div>
+  <div class="universo-callout" id="uniCallout">
+    <h3>Función Multiverse</h3>
+    <p><span class="pop">Empieza vs la IA. Termina con un amigo</span> (o al revés). El código abre el estado exacto para cualquiera que llegue a seguirla. La línea original queda viva en paralelo. Endless multiverse fun.</p>
+  </div>
+  <div class="lobby-resume" id="resumeRow">
+    <input type="text" id="resumeCode" placeholder="Código de partida? Continúa aquí" maxlength="7" autocomplete="off" spellcheck="false">
+    <button id="resumeBtn" disabled>▶ Ir</button>
+  </div>
+  <p class="lobby-resume-msg" id="resumeMsg"></p>
   <div class="levels" id="levels"></div>
+  <div class="colorpick" id="colorpick">
+    <button class="bigbtn" id="pickBlue"><img src="assets/shield-blue.png" class="shield-icon"> Azul</button>
+    <button class="bigbtn ai" id="pickRed"><img src="assets/shield-red.png" class="shield-icon"> Rojo</button>
+  </div>
   <div class="kingpick" id="kingpick">
     <div class="kingrow" data-side="w">
-      <span class="lbl">Rey Azul:</span>
+      <span class="lbl">Elegir Rey Azul:</span>
       <button data-k="k_bkA" class="active"><img src="assets/pieces/k_bkA_hi.png?v=22" alt="Rey azul 1"></button>
       <button data-k="k_bkB"><img src="assets/pieces/k_bkB_hi.png?v=22" alt="Rey azul 2"></button>
       <button data-k="k_bkC"><img src="assets/pieces/k_bkC_hi.png?v=22" alt="Rey azul 3"></button>
     </div>
     <div class="kingrow" data-side="b">
-      <span class="lbl">Rey Rojo:</span>
+      <span class="lbl">Elegir Rey Rojo:</span>
       <button data-k="k_rkA" class="active"><img src="assets/pieces/k_rkA_hi.png?v=22" alt="Rey rojo 1"></button>
       <button data-k="k_rkB"><img src="assets/pieces/k_rkB_hi.png?v=22" alt="Rey rojo 2"></button>
       <button data-k="k_rkC"><img src="assets/pieces/k_rkC_hi.png?v=22" alt="Rey rojo 3"></button>
     </div>
   </div>
-  <button class="back" id="backBtn" style="display:none">← volver</button>
+  <p class="theme-caption">Los Dos Reinos</p>
+  </div><!-- /.start-rail -->
+  </div><!-- /.start-body -->
+  <div class="lobby" id="lobby">
+    <div class="lobby-tavern-wrap"><img class="lobby-tavern" src="assets/lobby-tavern.png" alt="La Taberna de los Reyes"></div>
+    <div class="lobby-panel">
+      <div class="lobby-tut" id="lobbyTut">
+        <button class="lobby-tut-x" id="lobbyTutX" title="Ocultar guía">&#10005;</button>
+        <p class="lobby-tut-h">Cómo funciona la Taberna</p>
+        <p><b>1.</b> Toca un nombre de la lista para retarlo. Quien gana se queda.</p>
+        <p><b>2.</b> ¿Aún sin rivales? Comparte tu link: quien lo abra entra aquí.</p>
+        <p><b>3.</b> ¿Tienes un código de partida? Síguelo con la IA, o ábrelo para que un rival lo termine contigo.</p>
+      </div>
+      <p class="lobby-name"><input class="lobby-name-input" id="myName" maxlength="30" autocomplete="off" spellcheck="false" placeholder="Tu nombre"> <button class="lobby-rename" id="renamePseudo" title="Generar al azar">&#x21bb;</button> <button class="lobby-rename" id="savePseudo" title="Guardar nombre">&#10003;</button></p>
+      <p class="lobby-mute-row"><button class="lobby-mute" id="lobbyMute" title="Música de taberna">&#128266;</button> <span class="lobby-mute-lbl" id="lobbyMuteLbl">mutear ambiente de la taberna</span></p>
+      <div class="lobby-live" id="lobbyLive" style="display:none"></div>
+      <h3 class="lobby-h">Jugadores en la Taberna</h3>
+      <ul class="lobby-list" id="lobbyList"></ul>
+      <p class="lobby-status" id="lobbyStatus"><span class="lobby-searching">Buscando rivales...</span></p>
+      <div id="lobbyMultiBox" style="display:none">
+        <h3 class="lobby-h">&#127744; Multiverse abiertos aquí</h3>
+        <ul class="lobby-list lobby-multi-list" id="lobbyMultiList"></ul>
+      </div>
+      <div class="lobby-room-bar">
+        <span class="lobby-room-label">Partida <strong id="roomCode">------</strong></span>
+        <button class="lobby-rename" id="newRoom" title="Nueva sala">&#x21bb;</button>
+        <button class="lobby-share lobby-share-sm" id="lobbyShare">Copiar link</button>
+      </div>
+      <div class="lobby-resume" id="lobbyResumeRow">
+        <input type="text" id="lobbyResumeCode" placeholder="Código de partida? Continúa" maxlength="7" autocomplete="off" spellcheck="false">
+        <button id="lobbyResumeBtn" disabled>&#9654; Ir</button>
+      </div>
+      <p class="lobby-resume-msg" id="lobbyResumeMsg"></p>
+      <button class="lobby-share" id="myMatches" style="background:linear-gradient(#2a1a0c,#1a100a)">Mis partidas guardadas</button>
+    </div>
+  </div>
+  <button class="back" id="backBtn" style="display:none">&larr; volver</button>
+</div>
+<div class="modal-veil" id="confirmModal" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <p id="confirmMsg">¿Estás seguro?</p>
+    <div class="modal-buttons">
+      <button class="no" id="confirmNo">Cancelar</button>
+      <button class="yes" id="confirmYes">Sí</button>
+    </div>
+  </div>
 </div>
 
 <!-- ===== GAME ===== -->
 <div class="app" id="app" style="display:none">
-  <img class="title-img" src="assets/title.png?v=42" alt="Dragones y Leones: ¡Ajedrez extra divertido!">
+  <img class="title-img" src="assets/title.png" alt="Los Dos Reinos: ¡ajedrez fantástico!">
   <div class="status" id="status"></div>
 
   <div class="stage">
-    <section class="cap red"><h3>Capturas Rojo <span class="score" id="scoreB"></span></h3><div class="slots" id="capB"></div></section>
+    <section class="cap red"><h3><img src="assets/shield-red.png" class="cap-icon"> Capturas Rojo <span class="score" id="scoreB"></span></h3><div class="slots" id="capB"></div></section>
     <div class="board-area">
       <div class="board-frame">
         <div></div><div class="coord files" id="filesTop"></div><div></div>
@@ -217,10 +732,15 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
         <div></div><div class="coord files" id="filesBot"></div><div></div>
       </div>
     </div>
-    <section class="cap blue"><h3>Capturas Azul <span class="score" id="scoreW"></span></h3><div class="slots" id="capW"></div></section>
+    <section class="cap blue"><h3><img src="assets/shield-blue.png" class="cap-icon"> Capturas Azul <span class="score" id="scoreW"></span></h3><div class="slots" id="capW"></div></section>
     <div class="left-rail">
       <div class="quote" id="quote"></div>
       <aside class="history" id="history"><h4>Jugadas</h4><ol id="histlist"></ol></aside>
+      <!-- End-of-game card: image speaks for itself. Subtitle echoes the alt text. -->
+      <div class="peace-card" id="peaceCard" style="display:none">
+        <img src="assets/splash-peace.png" alt="al final de la partida, los reyes hacen una mejor amistad" onerror="this.parentNode.style.display='none'">
+        <p>al final de la partida, los reyes hacen una mejor amistad</p>
+      </div>
     </div>
   </div>
 
@@ -228,29 +748,59 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
     <button class="gold" id="newgame">Nueva Partida</button>
     <button id="undo">Deshacer</button>
     <button id="redo">Rehacer</button>
+    <button id="drawbtn" style="display:none">&#129309; Tablas</button>
+    <button id="resign" style="display:none">&#127987; Rendirse</button>
     <button id="rematch" style="display:none">Revancha</button>
+    <button id="backLobbyBtn" style="display:none">&larr; Taberna</button>
     <button id="mutebtn" title="Sonido">🔊</button>
   </div>
   <div class="note" id="note"></div>
 </div>
 
-<footer class="site-credit">by <a id="credit" href="#" rel="noopener">jfcarpio.com</a></footer>
+<button id="zoombtn" title="Expandir tablero" style="display:none"><span class="zi">⛶</span> Zoom</button>
+<!-- Start-of-match flash: dramatic reveal that fades out fast so the board owns the screen. -->
+<div class="start-overlay" id="startOverlay" aria-hidden="true"><img src="assets/splash-start.png" alt="" onerror="this.parentNode.classList.add('noimg')"></div>
+<!-- Quick-chat (online 1v1 only): preset phrases, no free text, so jamás hay insultos ni flag wars.
+     Mini feed always visible (last 5); the reply panel (16 phrases) expands on demand. -->
+<div id="chatPanel" style="display:none">
+  <div class="chat-head"><span>&#128172; Mensajes corteses</span> <button id="chatReplyBtn" title="Responder">Responder +</button></div>
+  <div class="chat-log" id="chatLog"></div>
+  <div class="chat-quick" id="chatQuick"></div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chess.js@0.12.1/chess.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script type="module">
+  // Trystero — open P2P lobby presence over public Nostr relays + BitTorrent trackers
+  try {
+    const nostrMod = await import('https://esm.sh/trystero@0.20.0/nostr');
+    window.__trystero = { joinRoom: nostrMod.joinRoom, kind: 'nostr' };
+  } catch(e) {
+    try {
+      const torrentMod = await import('https://esm.sh/trystero@0.20.0/torrent');
+      window.__trystero = { joinRoom: torrentMod.joinRoom, kind: 'torrent' };
+    } catch(e2) {
+      window.__trystero = null;
+    }
+  }
+  window.dispatchEvent(new Event('trystero-ready'));
+</script>
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=45';
+const V='?v=75';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
 const VAL={p:1,n:3,b:3,r:5,q:9,k:0};
 const LEVELS=[
-  {key:'medio',  name:'Medio',         elo:1200, skill:3,  mt:400},
-  {key:'alto',   name:'Alto calibre',  elo:1600, skill:8,  mt:600},
-  {key:'master', name:'Chess Master',  elo:2100, skill:14, mt:900},
-  {key:'gm',     name:'Grandmaster',   elo:2600, skill:20, mt:1500},
-  {key:'fischer',name:'Bobby Fischer', elo:null, skill:20, mt:4500},
+  {key:'casual', name:'Casual',            elo:null, skill:0,  mt:150, tag:'~333 Elo'},
+  {key:'novato', name:'Novato',            elo:null, skill:1,  mt:200, tag:'~600 Elo'},
+  {key:'medio',  name:'Medio',             elo:1200, skill:3,  mt:400},
+  {key:'alto',   name:'Alto calibre',      elo:1600, skill:8,  mt:600},
+  {key:'master', name:'Chess Master',      elo:2100, skill:14, mt:900},
+  {key:'gm',     name:'Grandmaster',       elo:2600, skill:20, mt:1500},
+  {key:'fischer',name:'Bobby Fischer Bot', elo:null, skill:20, mt:8000, tag:'inhumano'},
 ];
 const APHORISMS=[
   {t:'Cuando veas una buena jugada, busca una mejor.', a:'Emanuel Lasker'},
@@ -272,16 +822,200 @@ const APHORISMS=[
   {t:'La paciencia es una jugada que el rival no ve.', a:'JuanFerland'},
   {t:'Lo más caro es no planear.', a:'JuanFerland'},
   {t:'Quien no arriesga, rara vez conquista el reino.', a:'JuanFerland'},
+  {t:'En la guerra y el ajedrez, no hay lugar para el segundo.', a:'Proverbio medieval'},
+  {t:'El rey que no estudia a su rival gobierna su propia derrota.', a:'Principio feudal'},
+  {t:'Deja que el rival crea que el peón es insignificante.', a:'Estrategia'},
+  {t:'Un castillo sin guardia es una invitación.', a:'Proverbio medieval'},
+  {t:'La victoria pertenece al más perseverante.', a:'Napoleón'},
+  {t:'Divide las fuerzas del rival y caerá solo.', a:'Julio César'},
+  {t:'Un ejército de ciervos liderado por un león es más temible que uno de leones liderado por un ciervo.', a:'Proverbio árabe'},
+  {t:'No cambies de plan ante la primera dificultad.', a:'Principio militar'},
+  {t:'La torre que avanza primero llega primero a la corona.', a:'Proverbio de ajedrez'},
+  {t:'Quien controla las diagonales, controla el campo.', a:'Principio posicional'},
+  {t:'El caballero es letal cuando el tablero está cerrado.', a:'Principio táctico'},
+  {t:'El silencio antes del ataque vale más que mil gritos.', a:'Proverbio samurái'},
+  {t:'Fortifica primero; conquista después.', a:'Principio de sitio'},
+  {t:'No subestimes al peón que llega al final del camino.', a:'Proverbio de ajedrez'},
+  {t:'El general que gana muchas batallas ha hecho muchos cálculos.', a:'Sun Tzu'},
+  {t:'Golpea donde el rival es débil; retírate donde es fuerte.', a:'Sun Tzu'},
+  {t:'La suprema excelencia consiste en romper la resistencia sin luchar.', a:'Sun Tzu'},
+  {t:'Cuando eres capaz, finge incapacidad.', a:'Sun Tzu'},
+  {t:'El buen guerrero busca la victoria en la situación, no en sus soldados.', a:'Sun Tzu'},
+  {t:'Las cadenas de la esclavitud solo atan las manos; es la mente la que libera o encadena.', a:'Proverbio medieval'},
+  {t:'Más vale un sacrificio oportuno que un tesoro intacto.', a:'Sabiduría de torneo'},
+  {t:'El enroque es el escudo del rey y la espada de la torre.', a:'Principio clásico'},
+  {t:'Cada jugada enseña algo; cada derrota, todo.', a:'Savielly Tartakower'},
+  {t:'En el ajedrez, como en la vida, la mejor jugada es la que se hace.', a:'Tartakower'},
+  {t:'Los errores están ahí, esperando a ser cometidos.', a:'Tartakower'},
+  {t:'El alfil es una espada larga; el caballo, una daga en la sombra.', a:'Proverbio de ajedrez'},
+  {t:'No se conquista un reino sin perder algunos peones.', a:'Estrategia feudal'},
+  {t:'Un mal plan es mejor que ningún plan.', a:'Frank Marshall'},
+  {t:'La táctica es saber qué hacer cuando hay algo que hacer; la estrategia es saber qué hacer cuando no hay nada.', a:'Tartakower'},
+  {t:'El tiempo es el arma más letal del tablero.', a:'Principio de ajedrez'},
+  {t:'Quien mueve sin propósito, regala una jugada.', a:'Principio clásico'},
+  {t:'El trono se gana en el centro del campo, no en los bordes.', a:'Principio posicional'},
+  {t:'Protege a tu rey como protegerías tu castillo: con muros y vigías.', a:'Proverbio medieval'},
+  {t:'La dama es el relámpago; el rey, la tierra que defiende.', a:'Proverbio de ajedrez'},
+  {t:'No temas al rival grande; teme al rival preparado.', a:'Proverbio vikingo'},
+  {t:'El tablero recuerda cada error; el jugador sabio también.', a:'Principio clásico'},
+  {t:'En la batalla, el terreno decide tanto como el acero.', a:'Clausewitz'},
+  {t:'No es el número, sino el orden de batalla, lo que vence.', a:'Vegecio'},
+  {t:'Quien defiende todo, no defiende nada.', a:'Federico el Grande'},
+  {t:'La audacia, repetida, es estrategia; aislada, es suerte.', a:'Principio militar'},
+  {t:'Ataca por la línea de menor resistencia.', a:'B. H. Liddell Hart'},
+  {t:'El que llega primero al campo descansa; el tardío llega ya cansado.', a:'Sun Tzu'},
+  {t:'Toda guerra se basa en el engaño.', a:'Sun Tzu'},
+  // Anécdotas increíbles de ajedrez
+  {t:'El Turco, autómata ajedrecista de 1770, venció a Napoleón y a Franklin: escondía a un maestro humano dentro.', a:'Historia: El Turco'},
+  {t:'Capablanca estuvo ocho años sin perder una sola partida, de 1916 a 1924.', a:'Récord histórico'},
+  {t:'En la Partida Inmortal de 1851, Anderssen sacrificó dama y dos torres para dar mate.', a:'Anderssen, 1851'},
+  {t:'Fischer aplastó 6 a 0 a Taimánov y 6 a 0 a Larsen en 1971: una hazaña jamás repetida.', a:'Fischer, 1971'},
+  {t:'Morphy derrotó a toda la élite europea y se retiró del ajedrez a los 22 años.', a:'Paul Morphy'},
+  {t:'En 1997 Deep Blue venció a Kasparov: la primera vez que una máquina derrotó a un campeón mundial.', a:'Kasparov vs Deep Blue'},
+  {t:'Judit Polgar venció a Kasparov, Karpov y a casi todos los campeones de su era.', a:'Judit Polgar'},
+  {t:'Tal sacrificaba piezas hasta hipnotizar al rival; lo llamaban el Mago de Riga.', a:'Mikhail Tal'},
+  {t:'El ajedrez nació en la India como chaturanga: las cuatro divisiones del ejército.', a:'Origen: Chaturanga'},
+  {t:'La leyenda del grano de trigo en cada casilla arruinaría a cualquier rey: 18 trillones de granos.', a:'Leyenda de Sissa'},
+  {t:'La partida más larga registrada duró 269 jugadas y más de 20 horas.', a:'Nikolić vs Arsović, 1989'},
+  // Anécdotas increíbles de guerras antiguas
+  {t:'En las Termópilas, un puñado de espartanos contuvo a un ejército persa de cientos de miles.', a:'Termópilas, 480 a.C.'},
+  {t:'Aníbal cruzó los Alpes con elefantes y rodeó a un ejército romano mayor en Cannas.', a:'Cannas, 216 a.C.'},
+  {t:'Escipión derrotó a Aníbal en Zama volviendo sus propios elefantes contra él.', a:'Zama, 202 a.C.'},
+  {t:'Alejandro nunca perdió una batalla; en Gaugamela venció a un ejército diez veces mayor.', a:'Gaugamela, 331 a.C.'},
+  {t:'En Azincourt, los arqueros ingleses diezmaron a la caballería francesa atrapada en el lodo.', a:'Azincourt, 1415'},
+  {t:'César cruzó el Rubicón con una sola legión y cambió el rumbo de Roma.', a:'Julio César, 49 a.C.'},
+  {t:'Gengis Kan conquistó en 25 años más tierra que Roma en cuatro siglos.', a:'Gengis Kan'},
+  {t:'Leónidas eligió el terreno, no el número: por eso unos pocos frenaron a un imperio.', a:'Principio: el terreno'},
+  {t:'En Maratón, los atenienses corrieron contra los persas para anular sus arqueros.', a:'Maratón, 490 a.C.'},
 ];
+/* ===== Pseudonyms for online lobby ===== */
+const _NN=['Dragon','Caballo','Torre','Alfil','Peon','Leon','Aguila','Tigre','Oso','Lobo','Gato','Buho','Fenix','Grifo','Halcon','Cuervo','Toro','Zorro','Ogro','Mago','Vikingo','Pirata','Ninja','Samurai','Gladiador','Centauro','Minotauro','Kraken'];
+const _AJ=['Feroz','Loco','Valiente','Dorado','Nocturno','Veloz','Sabio','Bravo','Fugaz','Epico','Furioso','Invicto','Temible','Astuto','Audaz','Oscuro','Solar','Eterno'];
+function genPseudo(){ return _NN[Math.floor(Math.random()*_NN.length)]+_AJ[Math.floor(Math.random()*_AJ.length)]; }
+
+/* ===== Tableros (named board themes) + match continue codes ===== */
+const TABLEROS=[
+  {key:'capablanca',name:'Capablanca'},
+  {key:'fischer',   name:'Fischer'},
+  {key:'tal',       name:'Tal'},
+  {key:'polgar',    name:'Polgar'},
+  {key:'carlsen',   name:'Carlsen'},
+  {key:'morphy',    name:'Morphy'},
+  {key:'kasparov',  name:'Kasparov'},
+  {key:'alekhine',  name:'Alekhine'},
+];
+function genCode(){ var s='',c='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; for(var i=0;i<6;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }
+/* Side-bound codes: 6-char base + side letter. A=Azul (w), R=Rojo (b).
+   The base identifies the saved board; the side letter pins which color you continue as,
+   so a shared code never silently switches your bando. */
+function sideCodeFor(base,color){ return base+(color==='w'?'A':'R'); }
+function parseResumeInput(raw){
+  var s=(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  var side=null;
+  if(s.length===7){ var last=s.charAt(6); if(last==='A') side='w'; else if(last==='R') side='b'; s=s.slice(0,6); }
+  return {code:s,side:side};
+}
+function pickTablero(){ return TABLEROS[Math.floor(Math.random()*TABLEROS.length)]; }
+function tableroFromKey(k){ for(var i=0;i<TABLEROS.length;i++) if(TABLEROS[i].key===k) return TABLEROS[i]; return TABLEROS[0]; }
+let currentTablero=null, matchCode=null;
+const MATCH_KEY='losdosreinos_match_';
+const IDX_KEY='losdosreinos_index';
+/* ===== Tier-2 backup: IndexedDB (larger capacity, structured) ===== */
+function idbOpen(){
+  return new Promise(function(res,rej){
+    var r=indexedDB.open('losdosreinos',1);
+    r.onupgradeneeded=function(){ r.result.createObjectStore('matches'); };
+    r.onsuccess=function(){ res(r.result); };
+    r.onerror=function(){ rej(r.error); };
+  });
+}
+function idbPut(key,data){ return idbOpen().then(function(db){
+  return new Promise(function(res){
+    try{ var tx=db.transaction('matches','readwrite'); tx.objectStore('matches').put(data,key);
+      tx.oncomplete=res; tx.onerror=res; }catch(e){ res(); }
+  });
+}).catch(function(){}); }
+function idbGetAll(){ return idbOpen().then(function(db){
+  return new Promise(function(res){
+    try{ var tx=db.transaction('matches','readonly'); var st=tx.objectStore('matches');
+      var rkeys=st.getAllKeys(), rvals=st.getAll(); var k,v;
+      rkeys.onsuccess=function(){ k=rkeys.result; if(v) finish(); };
+      rvals.onsuccess=function(){ v=rvals.result; if(k) finish(); };
+      function finish(){ var out=[]; for(var i=0;i<k.length;i++) out.push({code:k[i],data:v[i]}); res(out); }
+      tx.onerror=function(){ res([]); };
+    }catch(e){ res([]); }
+  });
+}).catch(function(){ return []; }); }
+function indexAdd(code){
+  try{ var raw=localStorage.getItem(IDX_KEY); var arr=raw?JSON.parse(raw):[];
+    arr=arr.filter(function(c){ return c!==code; }); arr.unshift(code);
+    if(arr.length>40) arr.length=40;
+    localStorage.setItem(IDX_KEY,JSON.stringify(arr));
+  }catch(e){}
+}
+function indexList(){
+  try{ var raw=localStorage.getItem(IDX_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; }
+}
+let matchLineage=[]; // [{at:moveCount, opp:'IA Casual' | 'DragonAzul' | '2P'}]
+function saveMatch(){
+  if(!matchCode||!started||resigned) return;
+  var data={fen:game.fen(),tab:currentTablero.key,m:mode,col:playerColor,bk:blueKing,rk:redKing,
+            lvl:level?level.key:null,creator:myPseudo,
+            caps:{w:capW.slice(),b:capB.slice()},
+            moves:game.history(),       // SAN move sequence (full played history)
+            lineage:matchLineage.slice(), // who was the opponent at each move boundary
+            over:game.game_over(),
+            ts:Date.now(),v:1};
+  // Tier 1: localStorage (synchronous, instant)
+  try{ localStorage.setItem(MATCH_KEY+matchCode,JSON.stringify(data)); indexAdd(matchCode); }catch(e){}
+  // Tier 2: IndexedDB (async, redundant backup)
+  idbPut(matchCode,data);
+}
+function loadMatch(code){
+  try{
+    var raw=localStorage.getItem(MATCH_KEY+code.toUpperCase().trim());
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+
+/* ===== Identity =====
+   Two layers: a permanent player id (myPid) that NEVER changes, and an editable display name (myPseudo).
+   myPid is the real identity: renaming keeps it, so history and self-detection survive name changes.
+   Persisted with triple redundancy — localStorage (no expiry = forever), IndexedDB, and a 2-year cookie —
+   so a player keeps the same identity across reloads, name changes, and even a cleared storage layer. */
+const ID_KEY='losdosreinos_identity_v1';
+const PID_COOKIE='ldr_pid';
+let myPseudo, myPid;
+function genPid(){ return 'p'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4); }
+function readPidCookie(){ try{ var m=document.cookie.match(/(?:^|;\s*)ldr_pid=([^;]+)/); return m?decodeURIComponent(m[1]):''; }catch(e){ return ''; } }
+(function(){
+  try{
+    var stored=JSON.parse(localStorage.getItem(ID_KEY)||'null');
+    if(stored && stored.pseudo){ myPseudo=stored.pseudo; myPid=stored.pid||readPidCookie()||genPid(); }
+    else { myPid=readPidCookie()||genPid(); myPseudo=genPseudo(); }
+  }catch(e){ myPid=readPidCookie()||genPid(); myPseudo=genPseudo(); }
+})();
+function saveIdentity(){
+  var rec={pseudo:myPseudo,pid:myPid,v:2};
+  try{ localStorage.setItem(ID_KEY,JSON.stringify(rec)); }catch(e){}
+  try{ idbPut('__identity',rec); }catch(e){}               // redundant backup (survives localStorage clears)
+  try{ document.cookie=PID_COOKIE+'='+encodeURIComponent(myPid)+';max-age=63072000;path=/;SameSite=Lax'; }catch(e){} // 2-year cookie
+}
+saveIdentity();
+
 let qi=-1, qTimer=null;
 function rotateQuote(){ const el=document.getElementById('quote'); if(!el) return;
-  qi=(qi+1)%APHORISMS.length; const q=APHORISMS[qi];
+  // Random order, avoiding an immediate repeat of the last shown aphorism
+  let ni=Math.floor(Math.random()*APHORISMS.length);
+  if(APHORISMS.length>1 && ni===qi) ni=(ni+1)%APHORISMS.length;
+  qi=ni; const q=APHORISMS[qi];
   el.style.opacity='0'; setTimeout(()=>{ el.innerHTML='&ldquo;'+q.t+'&rdquo; <b>&mdash; '+q.a+'</b>'; el.style.opacity='1'; },160); }
 function startQuotes(){ if(qTimer) clearInterval(qTimer); qi=-1; rotateQuote(); qTimer=setInterval(rotateQuote,9000); }
 const BOARD_W=472, BOARD_H=536, ASPECT=BOARD_W/BOARD_H, FILES='abcdefgh';
 
 let mode='2p', level=LEVELS[1];
-let started=false, flipped=false, lastMove=null, busy=false, healing=false;
+let started=false, flipped=false, lastMove=null, busy=false, healing=false, resigned=false, playerColor='w';
 const game=new Chess(); const capW=[], capB=[];
 let muted=false, redoStack=[];
 
@@ -337,27 +1071,1028 @@ const gridEl=$('grid'), boardEl=$('board'), statusEl=$('status'), note=$('note')
 /* ===== Start screen ===== */
 const levelsEl=$('levels');
 LEVELS.forEach(l=>{ const b=document.createElement('button'); b.className='lv'; b.dataset.key=l.key;
-  b.innerHTML=`<span>${l.name}</span><span class="tag">${l.elo?('~'+l.elo+' Elo'):'máxima'}</span>`;
-  b.onclick=()=>{ level=l; startGame('ai'); }; levelsEl.appendChild(b); });
+  b.innerHTML=`<span>${l.name}</span><span class="tag">${l.tag?l.tag:(l.elo?('~'+l.elo+' Elo'):'máxima')}</span>`;
+  b.onclick=()=>{ level=l; showColorPick(); }; levelsEl.appendChild(b); });
 $('btn2p').onclick=()=>startGame('2p');
-$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('startH2').textContent='Elige el nivel del Rojo'; $('backBtn').style.display='block'; };
-$('backBtn').onclick=()=>{ levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none'; };
+$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rival'; $('backBtn').style.display='block'; $('kingpick').classList.remove('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden'); };
+function showColorPick(){ levelsEl.classList.remove('show'); $('colorpick').classList.add('show'); $('kingpick').classList.add('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden'); $('startH2').textContent='¿De qué lado juegas?'; }
+$('pickBlue').addEventListener('mouseenter',()=>$('kingpick').classList.add('focus-blue'));
+$('pickBlue').addEventListener('mouseleave',()=>$('kingpick').classList.remove('focus-blue'));
+$('pickRed').addEventListener('mouseenter',()=>$('kingpick').classList.add('focus-red'));
+$('pickRed').addEventListener('mouseleave',()=>$('kingpick').classList.remove('focus-red'));
+$('pickBlue').addEventListener('touchstart',()=>{ $('kingpick').classList.remove('focus-red'); $('kingpick').classList.add('focus-blue'); },{passive:true});
+$('pickRed').addEventListener('touchstart',()=>{ $('kingpick').classList.remove('focus-blue'); $('kingpick').classList.add('focus-red'); },{passive:true});
+var __clearPickFocus=()=>$('kingpick').classList.remove('focus-blue','focus-red');
+$('pickBlue').addEventListener('touchcancel',__clearPickFocus,{passive:true});
+$('pickRed').addEventListener('touchcancel',__clearPickFocus,{passive:true});
+$('colorpick').addEventListener('touchmove',(e)=>{
+  var t=e.touches[0]; if(!t) return;
+  var el=document.elementFromPoint(t.clientX,t.clientY);
+  if(!el || (!el.closest('#pickBlue') && !el.closest('#pickRed'))) __clearPickFocus();
+},{passive:true});
+$('pickBlue').onclick=()=>{ playerColor='w'; $('colorpick').classList.remove('show'); $('kingpick').classList.remove('focus-blue','focus-red'); startGame('ai'); };
+$('pickRed').onclick=()=>{ playerColor='b'; $('colorpick').classList.remove('show'); $('kingpick').classList.remove('focus-blue','focus-red'); startGame('ai'); };
+$('backBtn').onclick=()=>{
+  if($('colorpick').classList.contains('show')){ $('colorpick').classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); levelsEl.classList.add('show'); $('startH2').textContent='Elige el nivel del Rival'; return; }
+  levelsEl.classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden'); $('uniCallout').classList.remove('hidden'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML=''; stopTavernMusic();
+  $('start').classList.remove('in-lobby');
+  currentRoom=null; // leaving the lobby fully: next "Jugar online" re-derives room from the URL or defaults back to the Plaza Pública
+  $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none'; };
 $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(!b) return;
   const row=b.closest('.kingrow'); if(row.dataset.side==='w') blueKing=b.dataset.k; else redKing=b.dataset.k;
   [...row.querySelectorAll('button[data-k]')].forEach(x=>x.classList.toggle('active',x===b)); });
 
+/* ===== Online 1 vs 1 (PeerJS / WebRTC P2P) — lobby with hub-based presence ===== */
+const HUB_ID_BASE='jfreino-lobby-hub';
+// Plaza Pública: the default shared room when nobody passed a #multiverso= link. Without this,
+// every visitor landed in their own random genCode() room and could never see each other unless
+// they exchanged a link by hand — "todos deben verse" was structurally impossible. Each player's
+// PeerJS id still derives from their own permanent pid (see goOnline), so many simultaneous players
+// here never collide on identity; the only shared resource is the room's single hub peer (see
+// ROSTER_CAP below for the fan-out safeguard).
+const PUBLIC_PLAZA='PLAZA1';
+const ROSTER_CAP=40; // soft cap on the hub's broadcast/connection fan-out in one room
+let currentRoom=null; // 6-char room id (or PUBLIC_PLAZA); set by entering online flow
+/* URL scheme: #multiverso= is the primary form. #partida= and #room= stay readable
+   low-key so older links (incl. ones already shared on WhatsApp) never break. */
+function roomFromUrl(){
+  var m=(location.hash||'').match(/(?:multiverso|partida|room)=([A-Z0-9]{4,8})/i);
+  return m?m[1].toUpperCase():null;
+}
+function setRoomInUrl(code){
+  try{ history.replaceState(null,'','#multiverso='+code); }catch(e){ location.hash='multiverso='+code; }
+}
+function hubIdFor(code){ return HUB_ID_BASE+'-'+code.toLowerCase(); }
+function roomLink(code){ return 'https://jfcarpiopuntocom.github.io/ajedrez-16bit/#multiverso='+code; }
+const PRESENCE_TTL=20000; // 20s (4x guest ping)
+const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'',
+            hubPeer:null, hubConn:null, isHub:false, roster:[],
+            matchInfo:{live:false}, queue:[], openMulti:{} };
+const MULTI_CAP=12; // soft cap on how many published Multiverse gamestates a room keeps at once
+function netReset(){
+  try{ if(net.conn) net.conn.close(); }catch(e){}
+  try{ if(net.hubConn) net.hubConn.close(); }catch(e){}
+  try{ if(net.hubPeer) net.hubPeer.destroy(); }catch(e){}
+  try{ if(net.peer) net.peer.destroy(); }catch(e){}
+  net.active=false; net.peer=null; net.conn=null; net.isHost=false; net.myColor='w'; net.rivalName='';
+  net.hubPeer=null; net.hubConn=null; net.isHub=false; net.roster=[];
+  net.matchInfo={live:false}; net.queue=[]; net.iResigned=false; net.endReported=false; net.openMulti={};
+  if(lobbyTimer){ clearInterval(lobbyTimer); lobbyTimer=null; }
+  if(hubHeartbeat){ clearInterval(hubHeartbeat); hubHeartbeat=null; }
+  if(fenStreamTimer){ clearInterval(fenStreamTimer); fenStreamTimer=null; }
+  trysteroLeave();
+}
+function netSend(o){ if(net.conn && net.conn.open){ try{ net.conn.send(o); }catch(e){} } }
+function wireConn(c){
+  c.on('data',d=>{ if(!d||!d.t) return;
+    if(d.t==='hello'){
+      net.rivalName=d.name||'???';
+      if(net.isHost){
+        net.active=true; net.endReported=false; net.iResigned=false;
+        // If the room code matches a saved local match (vs AI), open parallel universe:
+        // - Host keeps the AI universe alive in localStorage
+        // - Online universe starts from that exact FEN, host takes color, guest takes what was the AI's color
+        var snap=currentRoom?loadMatch(currentRoom):null;
+        if(snap && snap.m==='ai'){
+          var hostColor=snap.col||'w';
+          var guestColor=hostColor==='w'?'b':'w';
+          var newCode=genCode();
+          net.myColor=hostColor;
+          c.send({t:'start',name:myPseudo,takeover:{fen:snap.fen,tab:snap.tab,bk:snap.bk,rk:snap.rk,guestColor:guestColor,creator:snap.creator||myPseudo,fromCode:currentRoom,newCode:newCode,moves:snap.moves||[],lineage:snap.lineage||[]}});
+          pendingResume={data:{fen:snap.fen,tab:snap.tab,m:'online',col:hostColor,bk:snap.bk,rk:snap.rk,caps:snap.caps,moves:snap.moves,lineage:snap.lineage},code:newCode};
+          startGame('online');
+        } else {
+          c.send({t:'start',name:myPseudo});
+          startGame('online');
+        }
+        // King of the hill: announce the live duel to the room + stream position for forks
+        reportMatch({live:true,hostId:net.peer.id,hostName:myPseudo,
+          guestId:net.conn?net.conn.peer:null,guestName:net.rivalName,
+          fen:game.fen(),tab:currentTablero?currentTablero.key:'capablanca',
+          bk:blueKing,rk:redKing,moves:game.history(),lineage:matchLineage.slice()});
+        startFenStream();
+      }
+    }
+    else if(d.t==='start'){
+      net.rivalName=d.name||'???'; net.active=true;
+      if(d.takeover){
+        var t=d.takeover;
+        net.myColor=t.guestColor||'b';
+        pendingResume={data:{fen:t.fen,tab:t.tab,m:'online',col:net.myColor,bk:t.bk,rk:t.rk,moves:t.moves||[],lineage:t.lineage||[]},code:t.newCode||genCode()};
+        statusEl && (statusEl.innerHTML='<span class="warn">Multiverse abierto desde '+(t.creator||'tu amigo')+'</span>');
+      }
+      startGame('online');
+    }
+    else if(d.t==='move'){ doMove(d.mv,true); }
+    else if(d.t==='rematch'){
+      // Guard: only honor a rematch request once this side already saw the game end.
+      // Without this, a peer can wipe the in-progress board by sending {t:'rematch'} mid-game.
+      if(!(game.game_over() || resigned)) return;
+      // Mirror: swap colors locally so we stay opposite each other.
+      net.myColor=(net.myColor==='w'?'b':'w'); flipped=(net.myColor==='b');
+      game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0; resigned=false;
+      $('undo').style.display='none'; $('redo').style.display='none';
+      $('resign').style.display=''; $('drawbtn').style.display='';
+      $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
+      var pc=$('peaceCard'); if(pc) pc.style.display='none';
+      render(); status(); renderHistory(); saveMatch();
+    }
+    else if(d.t==='chat'){ showChat(net.rivalName||'rival',d.i,false); }
+    else if(d.t==='full'){ $('lobbyStatus').textContent='Ese jugador ya tiene rival.'; }
+    else if(d.t==='resign'){
+      resigned=true;
+      const w=net.myColor==='w'?'Azul':'Rojo';
+      statusEl.innerHTML='<span class="win">'+net.rivalName+' se rindió. Vence el '+w+'. '+(net.myColor==='w'?'🦁':'🐉')+'</span>';
+      SFX.mate(); showEndButtons();
+    }
+    else if(d.t==='draw-offer'){
+      showConfirm(net.rivalName+' ofrece tablas. ¿Aceptar?','Aceptar tablas','Rechazar').then(function(ok){
+        if(ok){
+          netSend({t:'draw-accept'}); resigned=true;
+          statusEl.innerHTML='<span class="warn">Tablas por acuerdo mutuo.</span>'; showEndButtons();
+        } else { netSend({t:'draw-decline'}); }
+      });
+    }
+    else if(d.t==='draw-accept'){
+      resigned=true; statusEl.innerHTML='<span class="warn">Tablas por acuerdo mutuo.</span>'; showEndButtons();
+    }
+    else if(d.t==='draw-decline'){
+      statusEl.innerHTML+=' <span class="warn">(rechazadas)</span>';
+    }
+  });
+  c.on('close',()=>{ if(net.active){ statusEl.innerHTML='<span class="warn">'+net.rivalName+' se desconectó.</span>'; net.active=false; if(typeof showEndButtons==='function') showEndButtons(); } });
+  c.on('error',()=>{});
+}
+let lobbyTimer=null, hubHeartbeat=null, fenStreamTimer=null;
+const trysteroPeers={}; // trysteroId -> {name, peerJsId}
+let trysteroRoom=null, trysteroSendInfo=null, trysteroHeartbeat=null;
+
+function mkLi(id,name,shield,isSelf,busy){
+  var li=document.createElement('li');
+  if(isSelf) li.className='self';
+  else if(busy) li.className='busy';
+  var img=document.createElement('img'); img.className='li-shield'; img.src=shield;
+  var sp=document.createElement('span'); sp.className='li-name'; sp.textContent=isSelf?(name+' (tu)'):name;
+  var ar=document.createElement('span'); ar.className='li-arrow';
+  // Busy rivals are visibly playing right now: show a live dot instead of the challenge sword,
+  // and skip the onclick entirely instead of letting a real connect attempt fail after ~10s
+  // (lobbyConnect's old behavior when targeting someone already in net.conn elsewhere).
+  ar.innerHTML=isSelf?'&#9733;':(busy?'&#128308;':'&#9876;');
+  li.appendChild(img); li.appendChild(sp); li.appendChild(ar);
+  li.dataset.pid=id;
+  if(!isSelf && !busy) li.onclick=function(){ lobbyConnect(id,name); };
+  if(busy){ var tag=document.createElement('span'); tag.className='li-busy-tag'; tag.textContent='jugando'; li.appendChild(tag); }
+  return li;
+}
+
+function renderLobby(){
+  var selfId=net.peer&&net.peer.id;
+  var map={}; // peerJsId -> {name, self}
+  var seenPids={}; // pid -> true (dedupe by identity so a ghost twin never appears as a rival)
+  if(myPid) seenPids[myPid]=true;
+  if(selfId) map[selfId]={name:myPseudo,self:true};
+  net.roster.forEach(function(p){
+    if(!p.id || p.id===selfId) return;
+    if(p.pid && seenPids[p.pid]) return; // same identity as me or already counted
+    if(p.pid) seenPids[p.pid]=true;
+    if(!map[p.id]) map[p.id]={name:p.name,self:false};
+  });
+  Object.values(trysteroPeers).forEach(function(p){
+    if(!p || !p.peerJsId || p.peerJsId===selfId) return;
+    if(p.pid && seenPids[p.pid]) return;
+    if(p.pid) seenPids[p.pid]=true;
+    if(!map[p.peerJsId]) map[p.peerJsId]={name:p.name,self:false};
+  });
+  var ul=$('lobbyList'); ul.innerHTML='';
+  var others=[]; var selfEntry=null;
+  for(var id in map){ if(map[id].self) selfEntry={id:id,name:map[id].name}; else others.push({id:id,name:map[id].name}); }
+  var hubTag=net.isHub?' &middot; tú eres el anfitrión de la partida':'';
+  var netTag=trysteroRoom?' &middot; powered by '+(window.__trystero?window.__trystero.kind:'p2p'):'';
+  var saved=currentRoom?loadMatch(currentRoom):null;
+  var isPara=saved && saved.m==='ai';
+  var paraTag=isPara?'<br><span class="lobby-para">Multiverse listo: cuando llegue tu amigo, toma el lugar de la IA y la partida sigue desde la posición exacta</span>':'';
+  $('lobbyShare').innerHTML=isPara?'Compartir Multiverse':'Copiar link de partida';
+  $('lobbyStatus').innerHTML=(others.length>0
+    ?'<span class="lobby-searching">'+others.length+' rival'+(others.length>1?'es':'')+' conectado'+(others.length>1?'s':'')+hubTag+netTag+'</span>'
+    :'<span class="lobby-searching">Esperando que se conecten rivales...'+hubTag+netTag+'</span>')+paraTag;
+  // Names already in the live duel are disabled instead of clickable: clicking them used to silently
+  // start a 10s connect attempt that only then revealed "ese jugador ya tiene rival".
+  var mi=net.matchInfo;
+  var busyIds={};
+  if(mi && mi.live){ if(mi.hostId) busyIds[mi.hostId]=true; if(mi.guestId) busyIds[mi.guestId]=true; }
+  if(selfEntry) ul.appendChild(mkLi(selfEntry.id,selfEntry.name,'assets/shield-blue.png',true));
+  others.forEach(function(p,i){
+    var shield=i%2===0?'assets/shield-red.png':'assets/shield-blue.png';
+    ul.appendChild(mkLi(p.id,p.name,shield,false,!!busyIds[p.id]));
+  });
+  if(others.length===0){
+    var li=document.createElement('li'); li.className='lobby-empty';
+    li.textContent='Comparte el link por WhatsApp para encontrar rivales';
+    ul.appendChild(li);
+  }
+  renderLiveBlock();
+  renderMultiBlock();
+}
+
+// Open Multiverse gamestates published to this room: anyone here can pick one and fork it, no
+// code needed by hand. This is what lets "elegir la partida en vez de pedir un código" work.
+function renderMultiBlock(){
+  var box=$('lobbyMultiBox'), ul=$('lobbyMultiList'); if(!box||!ul) return;
+  var list=Object.values(net.openMulti||{}).filter(function(e){ return !myPid||e.creatorPid!==myPid; });
+  if(!list.length){ box.style.display='none'; ul.innerHTML=''; return; }
+  list.sort(function(a,b){ return (b.ts||0)-(a.ts||0); }); // most recently published first
+  box.style.display='block'; ul.innerHTML='';
+  list.forEach(function(e){
+    var li=document.createElement('li');
+    var left=document.createElement('div'); left.className='mleft';
+    var nm=document.createElement('span'); nm.className='mcode'; nm.textContent=tableroFromKey(e.tab).name;
+    var meta=document.createElement('span'); meta.className='mmeta'; meta.textContent='de '+(e.creator||'alguien')+(e.lvl?(' · vs IA '+e.lvl):'');
+    left.appendChild(nm); left.appendChild(meta);
+    var right=document.createElement('div'); right.className='mright'; right.textContent='Tomar 🌀';
+    li.appendChild(left); li.appendChild(right);
+    li.onclick=function(){ forkMultiverse(e); };
+    ul.appendChild(li);
+  });
+}
+
+function renderLiveBlock(){
+  var box=$('lobbyLive'); if(!box) return;
+  var mi=net.matchInfo;
+  if(!mi || !mi.live || amInMatch()){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display='flex'; box.innerHTML='';
+  var h=document.createElement('div'); h.className='lobby-live-h';
+  h.innerHTML='<span class="live-badge">EN VIVO</span> Duelo en curso';
+  var vs=document.createElement('div'); vs.className='lobby-live-vs';
+  var hn=document.createElement('b'); hn.textContent=mi.hostName||'Campeón';
+  var gn=document.createElement('b'); gn.textContent=mi.guestName||'Retador';
+  vs.appendChild(hn); vs.appendChild(document.createTextNode(' vs ')); vs.appendChild(gn);
+  var pos=myQueuePos();
+  var q=document.createElement('div'); q.className='lobby-live-queue';
+  q.textContent=pos>=0?('Eres el retador #'+(pos+1)+' en la cola. Quien gana se queda.')
+                       :('Cola: '+(net.queue?net.queue.length:0)+' esperando. Gana el ganador, sigues tú.');
+  var btns=document.createElement('div'); btns.className='lobby-live-btns';
+  var qb=document.createElement('button'); qb.className='btn-queue'+(pos>=0?' in':'');
+  qb.textContent=pos>=0?('✓ En la cola (#'+(pos+1)+')'):'⚔ Entrar a la cola';
+  qb.onclick=function(){ if(myQueuePos()<0) joinQueue(); };
+  btns.appendChild(qb);
+  if(mi.fen){
+    var fb=document.createElement('button'); fb.className='btn-fork';
+    fb.textContent='✦ Abrir Multiverse aquí';
+    fb.onclick=function(){ forkMultiverse(mi); };
+    btns.appendChild(fb);
+  }
+  box.appendChild(h); box.appendChild(vs); box.appendChild(q); box.appendChild(btns);
+}
+
+// Multiverse fork: take the live position right now and branch a new parallel timeline vs AI.
+function forkMultiverse(mi){
+  if(!mi||!mi.fen) return;
+  showConfirm('¿Abrir un Multiverse desde esta posición? Empiezas vs la IA y se crea una línea paralela.','Sí, forkear','Cancelar').then(function(ok){
+    if(!ok) return;
+    stopTavernMusic();
+    var forkColor=(mi.fen.indexOf(' w ')>0)?'w':'b'; // side to move forks the position
+    var newCode=genCode();
+    pendingResume={data:{fen:mi.fen,tab:mi.tab||'capablanca',m:'ai',col:forkColor,
+      bk:mi.bk||'k_bkA',rk:mi.rk||'k_rkA',moves:(mi.moves||[]).slice(),
+      lineage:(mi.lineage||[]).concat([{at:(mi.moves||[]).length,opp:'Fork Multiverse',mode:'ai'}])},code:newCode};
+    level=LEVELS[2]; // default to Medio for forked AI side
+    netReset(); currentRoom=newCode;
+    setTimeout(function(){ startGame('ai'); },300);
+  });
+}
+
+/* ===== Publish a saved AI gamestate to the room so ANYONE present can take it over =====
+   This is what makes the Plaza Pública's "todos se ven" actually useful for Multiverse: instead of
+   needing someone's exact 6/7-char code by hand, an open gamestate just shows up in everyone's lobby,
+   clickable. Taking it over reuses forkMultiverse() unchanged — same mechanism as the live-duel fork. */
+function publishMultiverse(code,d){
+  if(!net.peer||net.peer.destroyed) return;
+  var entry={code:code,creator:myPseudo,creatorPid:myPid,tab:d.tab,fen:d.fen,bk:d.bk,rk:d.rk,
+    moves:(d.moves||[]).slice(),lineage:(d.lineage||[]).slice(),lvl:d.lvl,ts:Date.now()};
+  if(net.isHub){ hubAddOpenMulti(entry); }
+  else if(net.hubConn && net.hubConn.open){ try{ net.hubConn.send({t:'multi-open',entry:entry}); }catch(e){} }
+}
+function hubAddOpenMulti(entry){
+  if(!net.isHub||!entry||!entry.code) return;
+  net.openMulti[entry.code]=entry;
+  // Cap: evict the oldest entries beyond MULTI_CAP so a busy Plaza never grows this unbounded.
+  var keys=Object.keys(net.openMulti);
+  if(keys.length>MULTI_CAP){
+    keys.sort(function(a,b){ return (net.openMulti[a].ts||0)-(net.openMulti[b].ts||0); });
+    for(var i=0;i<keys.length-MULTI_CAP;i++) delete net.openMulti[keys[i]];
+  }
+  broadcastRoster();
+}
+function initTrysteroLobby(){
+  if(!window.__trystero || !window.__trystero.joinRoom){
+    window.addEventListener('trystero-ready',initTrysteroLobby,{once:true}); return;
+  }
+  if(trysteroRoom || !net.peer || net.peer.destroyed) return;
+  try{
+    var roomName=currentRoom?('lobby-'+currentRoom):'lobby-global';
+    trysteroRoom=window.__trystero.joinRoom({appId:'losdosreinos-v1'},roomName);
+    var act=trysteroRoom.makeAction('info');
+    trysteroSendInfo=act[0]; var onInfo=act[1];
+    onInfo(function(data,peerId){
+      if(!data||typeof data!=='object') return;
+      var nm=String(data.name||'???').slice(0,30);
+      var pid=String(data.peerJsId||'').slice(0,80);
+      var playerId=String(data.pid||'').slice(0,40);
+      if(!pid) return;
+      trysteroPeers[peerId]={name:nm,peerJsId:pid,pid:playerId,last:Date.now()};
+      renderLobby();
+    });
+    trysteroRoom.onPeerJoin(function(peerId){
+      if(trysteroSendInfo && net.peer && !net.peer.destroyed){
+        try{ trysteroSendInfo({name:myPseudo,peerJsId:net.peer.id,pid:myPid},peerId); }catch(e){}
+      }
+    });
+    trysteroRoom.onPeerLeave(function(peerId){
+      delete trysteroPeers[peerId]; renderLobby();
+    });
+    // Periodic broadcast (covers late joiners that missed initial onPeerJoin)
+    if(trysteroHeartbeat) clearInterval(trysteroHeartbeat);
+    trysteroHeartbeat=setInterval(function(){
+      if(trysteroSendInfo && net.peer && !net.peer.destroyed){
+        try{ trysteroSendInfo({name:myPseudo,peerJsId:net.peer.id,pid:myPid}); }catch(e){}
+      }
+      // Prune ghosts: entries not refreshed within 18s (6x heartbeat)
+      var now=Date.now(), pruned=false;
+      for(var k in trysteroPeers){
+        if(now-(trysteroPeers[k].last||0)>18000){ delete trysteroPeers[k]; pruned=true; }
+      }
+      if(pruned) renderLobby();
+    },3000);
+    renderLobby();
+  }catch(e){ trysteroRoom=null; }
+}
+
+function trysteroLeave(){
+  try{ if(trysteroRoom && trysteroRoom.leave) trysteroRoom.leave(); }catch(e){}
+  trysteroRoom=null; trysteroSendInfo=null;
+  if(trysteroHeartbeat){ clearInterval(trysteroHeartbeat); trysteroHeartbeat=null; }
+  for(var k in trysteroPeers) delete trysteroPeers[k];
+}
+
+function broadcastRoster(){
+  if(!net.isHub) return;
+  var publicList=net.roster.map(function(p){ return {id:p.id,name:p.name,pid:p.pid||''}; });
+  var payload={t:'lobby-roster',list:publicList,match:net.matchInfo,queue:net.queue,multi:Object.values(net.openMulti)};
+  net.roster.forEach(function(p){
+    if(p.conn && p.conn.open){ try{ p.conn.send(payload); }catch(e){} }
+  });
+  renderLobby();
+}
+/* ===== King of the Hill: live-match status + challenger queue ===== */
+// Hub-side: set the room's match state and propagate. When a match ends, promote queue head.
+function hubSetMatch(info){
+  if(!net.isHub) return;
+  var wasLive=net.matchInfo&&net.matchInfo.live;
+  net.matchInfo=info||{live:false};
+  if(wasLive && !net.matchInfo.live){
+    // Match just ended: the winner keeps the seat. Give them a moment to return to the
+    // Taberna, then summon the next challenger in line to face the champion.
+    var nextId=net.queue.shift();
+    if(nextId){
+      var winnerId=info&&info.winnerId, winnerName=(info&&info.winnerName)||'el campeón';
+      setTimeout(function(){
+        var target=net.roster.filter(function(p){ return p.id===nextId; })[0];
+        if(target && target.conn && target.conn.open && winnerId){
+          try{ target.conn.send({t:'your-turn',targetId:winnerId,targetName:winnerName}); }catch(e){}
+        }
+      },3500);
+    }
+  }
+  broadcastRoster();
+}
+// Any participant reports match state; routes to hub (direct if we ARE the hub).
+function reportMatch(info){
+  if(net.isHub){ hubSetMatch(info); }
+  else if(net.hubConn && net.hubConn.open){ try{ net.hubConn.send({t:'match-status',info:info}); }catch(e){} }
+}
+// Challenger asks to join the waiting line for the live match.
+function joinQueue(){
+  if(!net.peer) return;
+  if(net.isHub){
+    if(net.queue.indexOf(net.peer.id)<0){ net.queue.push(net.peer.id); broadcastRoster(); }
+  } else if(net.hubConn && net.hubConn.open){
+    try{ net.hubConn.send({t:'queue-join',id:net.peer.id}); }catch(e){}
+  }
+}
+function myQueuePos(){ return net.queue?net.queue.indexOf(net.peer&&net.peer.id):-1; }
+function amInMatch(){ return net.active; }
+// Host streams the live FEN so spectators/queuers can fork a Multiverse from the exact position.
+function startFenStream(){
+  if(fenStreamTimer) clearInterval(fenStreamTimer);
+  fenStreamTimer=setInterval(function(){
+    if(net.active && net.isHost && typeof game!=='undefined'){
+      // guestId lets the roster badge the opponent's exact row (by peerJsId), not just show their name
+      // in the separate "live match" box — see renderLobby/mkLi.
+      reportMatch({live:true,hostId:net.peer.id,hostName:myPseudo,
+        guestId:net.conn?net.conn.peer:null,guestName:net.rivalName,
+        fen:game.fen(),tab:currentTablero?currentTablero.key:'capablanca',
+        bk:blueKing,rk:redKing,moves:game.history(),lineage:matchLineage.slice()});
+    }
+  },4000);
+}
+
+function tryClaimHub(){
+  if(!net.peer||net.peer.destroyed||net.isHub||net.hubPeer||net.conn||!currentRoom) return;
+  var hp=new Peer(hubIdFor(currentRoom)); net.hubPeer=hp;
+  hp.on('open',function(){
+    net.isHub=true;
+    net.roster=[{id:net.peer.id,name:myPseudo,pid:myPid,last:Date.now(),conn:null}];
+    hp.on('connection',function(c){
+      var entry=null;
+      c.on('data',function(d){
+        if(!d||!d.t) return;
+        if(d.t==='lobby-join'){
+          var jpid=String(d.pid||'').slice(0,40);
+          // Dedupe by pid too: same identity reclaims its slot (old ghost evicted) instead of stacking a twin.
+          net.roster=net.roster.filter(function(p){ return p.id!==d.id && (!jpid || p.pid!==jpid); });
+          // Safeguard: cap one hub's fan-out (matters most for the shared Plaza Pública, which can
+          // attract many simultaneous strangers, unlike a private room shared by direct link).
+          if(net.roster.length>=ROSTER_CAP){ try{ c.send({t:'plaza-full'}); }catch(e){} return; }
+          entry={id:d.id,name:String(d.name||'???').slice(0,30),pid:jpid,last:Date.now(),conn:c};
+          net.roster.push(entry); broadcastRoster();
+        } else if(d.t==='lobby-ping' && entry){ entry.last=Date.now(); }
+        else if(d.t==='match-status'){ hubSetMatch(d.info); }
+        else if(d.t==='queue-join' && d.id){ if(net.queue.indexOf(d.id)<0){ net.queue.push(d.id); broadcastRoster(); } }
+        else if(d.t==='multi-open' && d.entry && d.entry.code){ hubAddOpenMulti(d.entry); }
+      });
+      c.on('close',function(){
+        if(entry){
+          net.roster=net.roster.filter(function(p){ return p.id!==entry.id; });
+          net.queue=net.queue.filter(function(id){ return id!==entry.id; });
+          broadcastRoster();
+        }
+      });
+      c.on('error',function(){});
+    });
+    if(hubHeartbeat){ clearInterval(hubHeartbeat); }
+    hubHeartbeat=setInterval(function(){
+      var now=Date.now(), before=net.roster.length;
+      net.roster=net.roster.filter(function(p){ return p.id===net.peer.id || (now-p.last)<PRESENCE_TTL; });
+      var ids=net.roster.map(function(p){ return p.id; });
+      net.queue=net.queue.filter(function(id){ return ids.indexOf(id)>=0; });
+      var changed=net.roster.length!==before;
+      // Clear a stale live match if its host vanished
+      if(net.matchInfo && net.matchInfo.live && net.matchInfo.hostId && ids.indexOf(net.matchInfo.hostId)<0){
+        net.matchInfo={live:false}; changed=true;
+      }
+      if(changed) broadcastRoster();
+    },3000);
+    renderLobby();
+  });
+  hp.on('error',function(err){
+    if(err && err.type==='unavailable-id'){
+      try{ hp.destroy(); }catch(e){}
+      net.hubPeer=null; net.isHub=false;
+      setTimeout(tryConnectHub,600);
+    }
+  });
+}
+
+function tryConnectHub(){
+  if(!net.peer||net.peer.destroyed||!currentRoom||net.peer.id===hubIdFor(currentRoom)||net.hubConn||net.conn) return;
+  var hc=net.peer.connect(hubIdFor(currentRoom),{reliable:true,metadata:{type:'lobby'}}); net.hubConn=hc;
+  var opened=false;
+  hc.on('open',function(){
+    opened=true;
+    try{ hc.send({t:'lobby-join',id:net.peer.id,name:myPseudo,pid:myPid}); }catch(e){}
+    if(hubHeartbeat){ clearInterval(hubHeartbeat); }
+    hubHeartbeat=setInterval(function(){ if(hc.open){ try{ hc.send({t:'lobby-ping',id:net.peer.id}); }catch(e){} } },5000);
+  });
+  hc.on('data',function(d){
+    if(!d||!d.t) return;
+    if(d.t==='lobby-roster'){
+      // pid must travel through (was being dropped here), or the ghost-twin dedupe in renderLobby
+      // only ever worked from the hub's own vantage point and never for any other participant.
+      net.roster=(d.list||[]).map(function(p){ return {id:p.id,name:p.name,pid:p.pid||'',last:Date.now(),conn:null}; });
+      if(d.match) net.matchInfo=d.match;
+      if(d.queue) net.queue=d.queue;
+      if(d.multi){
+        var om={}; d.multi.forEach(function(e){ if(e&&e.code) om[e.code]=e; }); net.openMulti=om;
+      }
+      renderLobby();
+    }
+    else if(d.t==='your-turn'){
+      // The hub promoted me from the queue: challenge the reigning champion now
+      $('lobbyStatus').innerHTML='<span class="lobby-searching">¡Es tu turno! Retando a '+(d.targetName||'el campeón')+'…</span>';
+      setTimeout(function(){ lobbyConnect(d.targetId,d.targetName||'el campeón'); },600);
+    }
+    else if(d.t==='plaza-full'){
+      $('lobbyStatus').innerHTML='<span class="lobby-searching">La Plaza Pública está llena ahora mismo. Toca &#x21bb; "Nueva sala" para abrir una privada.</span>';
+    }
+  });
+  hc.on('close',function(){
+    net.hubConn=null;
+    if(hubHeartbeat){ clearInterval(hubHeartbeat); hubHeartbeat=null; }
+    if(!net.active && net.peer && !net.peer.destroyed){
+      setTimeout(tryClaimHub,800);
+    }
+  });
+  hc.on('error',function(){});
+  setTimeout(function(){
+    if(!opened && net.peer && !net.peer.destroyed){
+      try{ hc.close(); }catch(e){} net.hubConn=null; tryClaimHub();
+    }
+  },5000);
+}
+
+function goOnline(){
+  if(typeof Peer==='undefined'){ $('startH2').textContent='No se pudo cargar el modo online.'; return; }
+  $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
+  $('backBtn').style.display='block'; $('lobby').classList.add('show');
+  $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
+  $('start').classList.add('in-lobby');
+  $('startH2').textContent='La Taberna';
+  playTavernMelody(); refreshLobbyTut();
+  // No link in the URL? Default to the shared Plaza Pública (not a fresh random room) so strangers
+  // who just open the site actually land together and can see/challenge each other.
+  if(!currentRoom){ currentRoom=roomFromUrl()||PUBLIC_PLAZA; }
+  setRoomInUrl(currentRoom);
+  $('roomCode').textContent=(currentRoom===PUBLIC_PLAZA)?'Plaza Pública':currentRoom;
+  $('roomCode').classList.toggle('room-long',currentRoom===PUBLIC_PLAZA);
+  $('myName').value=myPseudo;
+  // Peer id derives from the PERMANENT pid (not the editable name), so a refresh reclaims the same
+  // slot instead of spawning a ghost twin. net.idSalt only bumps if the id is momentarily taken.
+  var pidPart=myPid.replace(/[^a-z0-9]/gi,'').toLowerCase().slice(0,12);
+  var peerId='jfreino-'+pidPart+'-'+currentRoom.toLowerCase().slice(0,4)+(net.idSalt?('x'+net.idSalt):'');
+  net.peer=new Peer(peerId);
+  net.peer.on('open',function(){
+    $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
+    net.peer.on('connection',function(c){
+      if(net.conn){ c.on('open',function(){ try{ c.send({t:'full'}); }catch(e){} }); return; }
+      net.conn=c; net.isHost=true; net.myColor='w'; wireConn(c);
+    });
+    renderLobby(); // shows self immediately
+    tryConnectHub();
+    initTrysteroLobby();
+  });
+  net.peer.on('error',function(err){
+    if(!err) return;
+    if(err.type==='unavailable-id'){
+      // Old session still holds the id. Keep identity intact: just salt the connection and retry.
+      try{ net.peer.destroy(); }catch(e){}
+      net.idSalt=(net.idSalt||0)+1;
+      setTimeout(goOnline,400); return;
+    }
+    var silent={'peer-unavailable':1,'network':1,'disconnected':1,'server-error':1,'socket-closed':1,'socket-error':1};
+    if(silent[err.type]){
+      try{ if(net.peer && net.peer.disconnected && !net.peer.destroyed) net.peer.reconnect(); }catch(e){}
+      return;
+    }
+    $('lobbyStatus').innerHTML='<span class="lobby-searching">Reconectando al lobby...</span>';
+    setTimeout(function(){ netReset(); goOnline(); },2500);
+  });
+}
+
+function lobbyConnect(targetId,name){
+  if(!net.peer||net.peer.destroyed){
+    $('lobbyStatus').innerHTML='<span class="lobby-searching">Reconectando al lobby...</span>';
+    return;
+  }
+  if(net.conn){
+    if(net.active) return; // already in a match
+    try{ net.conn.close(); }catch(e){}
+    net.conn=null;
+  }
+  $('lobbyStatus').innerHTML='<span class="lobby-searching">Conectando con '+name+'...</span>';
+  net.isHost=false; net.myColor='b'; net.rivalName=name||'rival';
+  var c=net.peer.connect(targetId,{reliable:true,metadata:{type:'match'}});
+  if(!c){
+    $('lobbyStatus').innerHTML='<span class="lobby-searching">No se pudo iniciar la conexión, reintenta</span>';
+    return;
+  }
+  net.conn=c; wireConn(c);
+  c.on('open',function(){ try{ c.send({t:'hello',name:myPseudo}); }catch(e){} });
+  setTimeout(function(){
+    if(!net.active && net.conn===c){
+      try{ c.close(); }catch(e){} net.conn=null;
+      $('lobbyStatus').innerHTML='<span class="lobby-searching">'+name+' no respondió. Toca otro nombre o reintenta.</span>';
+      renderLobby();
+    }
+  },10000);
+}
+
+$('btnOnline').onclick=goOnline;
+// Auto-enter online lobby if URL carries a room id
+(function(){ var rc=roomFromUrl(); if(rc){ currentRoom=rc; setTimeout(goOnline,200); } })();
+$('resumeCode').addEventListener('input',function(){
+  this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,7);
+  var p=parseResumeInput(this.value);
+  $('resumeBtn').disabled=p.code.length!==6;
+  $('resumeMsg').textContent=''; $('resumeMsg').classList.remove('ok');
+});
+$('resumeCode').addEventListener('keydown',function(e){ if(e.key==='Enter' && !$('resumeBtn').disabled) $('resumeBtn').click(); });
+function tryResumeCode(raw,msgEl,fromLobby){
+  var p=parseResumeInput(raw);
+  if(p.code.length!==6) return false;
+  var d=loadMatch(p.code);
+  if(!d){ if(msgEl){ msgEl.textContent='Código no encontrado en este dispositivo'; msgEl.classList.remove('ok'); } return false; }
+  var side=p.side||d.col; // 7-char code pins the bando; 6-char keeps the saved color
+  d=Object.assign({},d,{col:side});
+  var sideName=side==='w'?'Azul':'Rojo';
+  if(msgEl){ msgEl.textContent='Cargando Tablero '+(tableroFromKey(d.tab).name)+' como '+sideName+'...'; msgEl.classList.add('ok'); }
+  if(fromLobby){ stopTavernMusic(); netReset(); }
+  pendingResume={data:d,code:p.code};
+  if(d.lvl){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].key===d.lvl){ level=LEVELS[i]; break; } }
+  setTimeout(function(){ startGame(d.m||'ai'); },350);
+  return true;
+}
+$('resumeBtn').onclick=function(){
+  if(tryResumeCode($('resumeCode').value,$('resumeMsg'),false)){
+    setTimeout(function(){ $('resumeCode').value=''; $('resumeBtn').disabled=true; $('resumeMsg').textContent=''; },400);
+  }
+};
+$('lobbyResumeCode').addEventListener('input',function(){
+  this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,7);
+  $('lobbyResumeBtn').disabled=parseResumeInput(this.value).code.length!==6;
+  $('lobbyResumeMsg').textContent=''; $('lobbyResumeMsg').classList.remove('ok');
+});
+$('lobbyResumeCode').addEventListener('keydown',function(e){ if(e.key==='Enter' && !$('lobbyResumeBtn').disabled) $('lobbyResumeBtn').click(); });
+$('lobbyResumeBtn').onclick=function(){
+  var p=parseResumeInput($('lobbyResumeCode').value);
+  if(p.code.length!==6) return;
+  var d=loadMatch(p.code);
+  if(d){
+    // You have this gamestate on this device. The Multiverse choice: finish it solo vs the AI,
+    // or open it in the Taberna so a real rival takes the other side from the exact position.
+    showConfirm('Partida '+p.code+' encontrada. ¿Cómo la sigues?','Con la IA','Con un rival').then(function(withAI){
+      if(withAI){ tryResumeCode($('lobbyResumeCode').value,$('lobbyResumeMsg'),true); }
+      else { hostGamestateForRival(p.code); }
+    });
+  } else {
+    // Not on this device: it's a friend's room code. Go meet whoever is there.
+    joinRoomCode(p.code);
+  }
+};
+// Become host of this room with your saved gamestate; whoever opens the link takes over (Multiverse).
+function hostGamestateForRival(code){
+  currentRoom=code; netReset();
+  $('lobbyResumeMsg').textContent='Sala '+code+' lista. Comparte el link: el rival que entre tomará el otro bando desde esa posición.';
+  $('lobbyResumeMsg').classList.add('ok');
+  setTimeout(goOnline,250);
+}
+// Join an existing room code (a friend shared it) to find the host / rivals there.
+function joinRoomCode(code){
+  currentRoom=code; netReset();
+  $('lobbyResumeMsg').textContent='Entrando a la sala '+code+'. Si tu rival está en línea, aparecerá en la lista.';
+  $('lobbyResumeMsg').classList.remove('ok');
+  setTimeout(goOnline,250);
+}
+/* Lobby tutorial: dismissible, remembers the choice so it never nags returning visitors */
+function refreshLobbyTut(){
+  var hidden=false; try{ hidden=localStorage.getItem('losdosreinos_tut_hidden')==='1'; }catch(e){}
+  $('lobbyTut').classList.toggle('hidden',hidden);
+}
+$('lobbyTutX').onclick=function(){ try{ localStorage.setItem('losdosreinos_tut_hidden','1'); }catch(e){} $('lobbyTut').classList.add('hidden'); };
+$('lobbyShare').onclick=function(){
+  var url=currentRoom?roomLink(currentRoom):'https://jfcarpiopuntocom.github.io/ajedrez-16bit/';
+  var b=$('lobbyShare'); var orig=b.innerHTML;
+  var done=function(){ b.classList.add('copied'); b.textContent='✓ Link copiado!'; setTimeout(function(){ b.classList.remove('copied'); b.innerHTML=orig; },1800); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(done,function(){
+      var ta=document.createElement('textarea'); ta.value=url; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+      ta.select(); try{ document.execCommand('copy'); done(); }catch(e){} document.body.removeChild(ta);
+    });
+  } else {
+    var ta=document.createElement('textarea'); ta.value=url; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+    ta.select(); try{ document.execCommand('copy'); done(); }catch(e){} document.body.removeChild(ta);
+  }
+};
+$('lobbyMute').onclick=function(){ setTavernMute(!tavernMuted); };
+$('lobbyMuteLbl').onclick=function(){ setTavernMute(!tavernMuted); };
+setTavernMute(tavernMuted); // reflect persisted state on the button at load
+$('renamePseudo').onclick=function(){
+  if(!net.peer||net.conn) return;
+  netReset(); myPseudo=genPseudo(); saveIdentity(); $('myName').value=myPseudo;
+  setTimeout(goOnline,300);
+};
+$('newRoom').onclick=function(){
+  if(!net.peer||net.conn) return;
+  netReset(); currentRoom=genCode();
+  setTimeout(goOnline,300);
+};
+function commitPseudo(){
+  var v=($('myName').value||'').trim().replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ0-9 ]/g,'').slice(0,30);
+  if(!v){ v=genPseudo(); $('myName').value=v; }
+  if(v===myPseudo) return;
+  myPseudo=v; saveIdentity();
+  if(net.peer && !net.conn){ netReset(); setTimeout(goOnline,300); }
+}
+$('myName').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); $('myName').blur(); commitPseudo(); } });
+$('savePseudo').onclick=commitPseudo;
+/* ===== Partidas Célebres: gamestates históricos que cualquiera puede tomar desde el filo =====
+   Cada FEN se generó del PGN real y se validó jugada por jugada con chess.js (legal y auto-consistente).
+   La posición arranca en el instante crítico, justo antes de la genialidad.
+   'take' = bando que mueve (el del golpe genial). col 'w' = Azul, 'b' = Rojo.
+   --- NOTA DE PERSISTENCIA / FORK FUTURO ---
+   Hoy todo vive serverless: localStorage + IndexedDB + export JSON, y el estado viaja DENTRO del
+   código/URL. Esto es free-forever de verdad y nunca depende de un tercero que pueda dejar de ser gratis.
+   Si algún día se quiere un log compartido entre dispositivos, opciones a evaluar (con sus riesgos):
+     - Pantry (getpantry.cloud): JSON gratis, pero baskets caducan a 30 días de inactividad.
+     - IPxS/IPFS via web3.storage o nft.storage: content-addressed, gratis con límites.
+     - OP_RETURN en Bitcoin o una cadena de ajedrez: permanente pero CUESTA fees por tx, NO es free-forever.
+   Regla: ningún proveedor externo debe volverse dependencia dura. El estado autocontenido en el código
+   es la fuente de verdad; cualquier capa remota es bonus y debe poder apagarse sin romper nada. */
+const FAMOUS=[
+  {key:'opera',name:'La Partida de la Ópera',players:'Morphy vs Duque de Brunswick y Conde Isouard',year:1858,take:'w',
+   fen:'4kb1r/p2n1ppp/4q3/4p1B1/4P3/1Q6/PPP2PPP/2KR4 w k - 0 16',
+   blurb:'París, 1858. En un palco de la ópera, mientras sonaba El barbero de Sevilla, Paul Morphy jugaba contra dos aristócratas aliados sin apenas mirar el tablero. Con piezas de menos pero todas apuntando al rey, entregó torre y dama en cadena para rematar con una sola torre. Tomas el bando azul en el instante previo al sacrificio de dama. ¿Encuentras el mate que deslumbró al mundo?'},
+  {key:'immortal',name:'La Inmortal',players:'Anderssen vs Kieseritzky',year:1851,take:'w',
+   fen:'rnb1k1nr/p2p1ppp/8/1pbN1N1P/4PBP1/3P1Q2/PqP5/R4KR1 w kq - 0 18',
+   blurb:'Londres, 1851, una partida amistosa entre rondas del primer torneo internacional. Anderssen regaló un alfil, las dos torres y la dama, quedándose con mínimo material, y aun así dio mate con tres piezas menores. La llamaron La Inmortal y se estudia hace más de 170 años. Tomas las azules justo antes del golpe silencioso que lo cambia todo. El acero importa menos que la iniciativa.'},
+  {key:'evergreen',name:'La Siempreviva',players:'Anderssen vs Dufresne',year:1852,take:'w',
+   fen:'1r2k1r1/pbppnp1p/1bn2P2/7q/Q7/B1PB1N2/P4PPP/R3R1K1 w - - 1 19',
+   blurb:'Berlín, 1852. Wilhelm Steinitz la bautizó La Siempreviva por su belleza imperecedera. Anderssen teje una combinación final donde cada pieza cumple un papel exacto, culminando en un sacrificio de dama y un mate de alfiles. Tomas las azules en el momento en que una jugada tranquila de torre prepara la tormenta. La red ya está tendida: encuéntrala.'},
+  {key:'century',name:'La Partida del Siglo',players:'Donald Byrne vs Bobby Fischer (13 años)',year:1956,take:'b',
+   fen:'r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R b - - 3 17',
+   blurb:'Nueva York, 1956. Un niño de trece años llamado Bobby Fischer enfrenta a un maestro consagrado. Con un alfil clavado y la dama en el aire, Fischer juega Ae6, ofreciendo su dama por una combinación que nadie había visto venir. La revista Chess Review la llamó La Partida del Siglo. Tomas el bando rojo en ese instante exacto. Atrévete al sacrificio que hizo historia.'},
+  {key:'deepblue',name:'La máquina vence al campeón',players:'Deep Blue vs Kasparov, Partida 6',year:1997,take:'w',
+   fen:'r1bqkb1r/pp1n1pp1/2p1pn1p/6N1/3P4/3B1N2/PPP2PPP/R1BQK2R w KQkq - 0 8',
+   blurb:'Nueva York, 1997. Por primera vez una máquina vence a un campeón mundial en un match. En la sexta y decisiva partida, Deep Blue sacrifica un caballo en e6 contra la Caro-Kann de Kasparov y destroza su posición en apenas diecinueve jugadas. El campeón se levantó furioso de la mesa. Tomas el lado de la máquina, justo antes del sacrificio. ¿Lo ejecutas igual de frío?'},
+  {key:'legal',name:'El Mate de Légal',players:'Légal de Kermeur vs Saint-Brie',year:1750,take:'w',
+   fen:'rn1qkbnr/ppp2p1p/3p2p1/4p3/2B1P1b1/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 0 5',
+   blurb:'Café de la Régence, París, mediados del siglo XVIII. El Sire de Légal, el mejor jugador de Francia, deja su dama en aparente jaque para tender una trampa mortal con caballo y alfil. Es el mate que lleva su nombre y la lección eterna sobre no codiciar la dama enemiga. Tomas las azules antes del sacrificio. El cebo está servido: que el rival lo muerda.'},
+  {key:'fools',name:'El Mate del Loco',players:'El mate más rápido posible',year:0,take:'b',
+   fen:'rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2',
+   blurb:'El mate más rápido del ajedrez: dos jugadas. Si las blancas abren con f3 y g4, debilitando de forma fatal a su propio rey, las negras rematan con la dama a h4 y se acabó. Ningún gran maestro cae jamás en él, pero todo principiante debe verlo una vez para entender por qué los flancos del rey son sagrados. Tomas las rojas y das el legendario mate del loco.'},
+  {key:'scholars',name:'El Mate del Pastor',players:'La celada clásica de principiante',year:0,take:'w',
+   fen:'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4',
+   blurb:'El Mate del Pastor, la primera celada que aprende todo ajedrecista del mundo. La dama y el alfil apuntan juntos al peón de f7, el punto más débil del enroque antes de mover. Cuatro jugadas y se termina la partida. Conocerlo es poder defenderse de él para siempre. Tomas las azules en el instante del golpe a f7. Remata la lección que todos recuerdan.'},
+  {key:'reti',name:'Miniatura de Réti',players:'Réti vs Tartakower',year:1910,take:'w',
+   fen:'rnb1kb1r/pp3ppp/2p5/4q3/4n3/3Q4/PPPB1PPP/2KR1BNR w kq - 0 9',
+   blurb:'Viena, 1910. Una miniatura perfecta. Richard Réti enfrenta una Caro-Kann y, tras enrocar largo, entrega la dama con jaque en d8. El rey negro es arrastrado a campo abierto y un alfil sella el mate. Veinte jugadas de pura precisión que todo aficionado debería conocer. Tomas las azules antes del sacrificio de dama. La cacería comienza ahora.'},
+  {key:'lasker',name:'La caminata del rey',players:'Edward Lasker vs George Thomas',year:1912,take:'w',
+   fen:'rn3rk1/pbppq1pp/1p2pb2/4N2Q/3PN3/3B4/PPP2PPP/R3K2R w KQ - 6 11',
+   blurb:'Londres, 1912. Edward Lasker sacrifica la dama en h7 y obliga al rey negro a caminar desde su propia casa hasta la última fila contraria, escoltado a la fuerza por las piezas blancas hasta el mate. Es una de las cacerías de rey más famosas de toda la historia. Tomas las azules justo antes del sacrificio. Empuja al monarca enemigo hacia su destino.'},
+  {key:'peruvian',name:'La Inmortal Peruana',players:'Esteban Canal vs aficionado',year:1934,take:'w',
+   fen:'2kr2nr/pp1n1ppp/2p1p3/8/1P1P1B2/2N2Q1P/1PPKBPP1/7q w - - 0 13',
+   blurb:'Budapest, 1934. Esteban Canal, el gran maestro peruano, en una exhibición de simultáneas regala torre, dama y ambas torres a un aficionado, y aun así da mate con un alfil y un caballo. La bautizaron La Inmortal Peruana y es la joya del ajedrez latinoamericano. Tomas las azules en el momento del sacrificio de dama en c6. La codicia del rival será su tumba.'},
+  {key:'paulsen',name:'El sacrificio de dama de Morphy',players:'Paulsen vs Morphy',year:1857,take:'b',
+   fen:'4r1k1/p1pb1ppp/Qbp1r3/8/1P6/2Pq1B2/R2P1PPP/2B2RK1 b - - 4 17',
+   blurb:'Primer Congreso Americano, Nueva York, 1857. Frente a Louis Paulsen, Paul Morphy entrega su dama con Dxf3, abriendo el enroque blanco a un ataque imparable de torres y alfiles. Fue la partida que lo coronó como el mejor jugador del mundo y selló su leyenda. Tomas el bando rojo en ese instante. La dama vale menos que el ataque que viene detrás.'}
+];
+/* Real moves up to the critical instant. Replaying them (instead of just loading the FEN)
+   rebuilds the full history, so "Deshacer" puede deshilachar hacia atrás hasta la jugada 1
+   y el jugador puede ramificarse libremente por otro camino desde cualquier punto. */
+const FAMOUS_MOVES={
+  opera:["e4","e5","Nf3","d6","d4","Bg4","dxe5","Bxf3","Qxf3","dxe5","Bc4","Nf6","Qb3","Qe7","Nc3","c6","Bg5","b5","Nxb5","cxb5","Bxb5+","Nbd7","O-O-O","Rd8","Rxd7","Rxd7","Rd1","Qe6","Bxd7+","Nxd7"],
+  immortal:["e4","e5","f4","exf4","Bc4","Qh4+","Kf1","b5","Bxb5","Nf6","Nf3","Qh6","d3","Nh5","Nh4","Qg5","Nf5","c6","g4","Nf6","Rg1","cxb5","h4","Qg6","h5","Qg5","Qf3","Ng8","Bxf4","Qf6","Nc3","Bc5","Nd5","Qxb2"],
+  evergreen:["e4","e5","Nf3","Nc6","Bc4","Bc5","b4","Bxb4","c3","Ba5","d4","exd4","O-O","d3","Qb3","Qf6","e5","Qg6","Re1","Nge7","Ba3","b5","Qxb5","Rb8","Qa4","Bb6","Nbd2","Bb7","Ne4","Qf5","Bxd3","Qh5","Nf6+","gxf6","exf6","Rg8"],
+  century:["Nf3","Nf6","c4","g6","Nc3","Bg7","d4","O-O","Bf4","d5","Qb3","dxc4","Qxc4","c6","e4","Nbd7","Rd1","Nb6","Qc5","Bg4","Bg5","Na4","Qa3","Nxc3","bxc3","Nxe4","Bxe7","Qb6","Bc4","Nxc3","Bc5","Rfe8+","Kf1"],
+  deepblue:["e4","c6","d4","d5","Nc3","dxe4","Nxe4","Nd7","Ng5","Ngf6","Bd3","e6","N1f3","h6"],
+  legal:["e4","e5","Bc4","d6","Nf3","Bg4","Nc3","g6"],
+  fools:["f3","e5","g4"],
+  scholars:["e4","e5","Bc4","Nc6","Qh5","Nf6"],
+  reti:["e4","c6","d4","d5","Nc3","dxe4","Nxe4","Nf6","Qd3","e5","dxe5","Qa5+","Bd2","Qxe5","O-O-O","Nxe4"],
+  lasker:["d4","e6","Nf3","f5","Nc3","Nf6","Bg5","Be7","Bxf6","Bxf6","e4","fxe4","Nxe4","b6","Ne5","O-O","Bd3","Bb7","Qh5","Qe7"],
+  peruvian:["e4","d5","exd5","Qxd5","Nc3","Qa5","d4","c6","Nf3","Bg4","Bf4","e6","h3","Bxf3","Qxf3","Bb4","Be2","Nd7","a3","O-O-O","axb4","Qxa1+","Kd2","Qxh1"],
+  paulsen:["e4","e5","Nf3","Nc6","Nc3","Nf6","Bb5","Bc5","O-O","O-O","Nxe5","Re8","Nxc6","dxc6","Bc4","b5","Be2","Nxe4","Nxe4","Rxe4","Bf3","Re6","c3","Qd3","b4","Bb6","a4","bxa4","Qxa4","Bd7","Ra2","Rae8","Qa6"]
+};
+function famousFromKey(k){ for(var i=0;i<FAMOUS.length;i++) if(FAMOUS[i].key===k) return FAMOUS[i]; return null; }
+let celebrePick={key:null,col:null};
+function openCelebre(key){
+  var g=famousFromKey(key); if(!g) return;
+  celebrePick={key:key,col:g.take};
+  $('celTitle').textContent=g.name;
+  $('celPlayers').textContent=g.players+(g.year?(' · '+g.year):'');
+  $('celBlurb').textContent=g.blurb;
+  paintCelColor();
+  var lv=$('celLevels'); lv.innerHTML='';
+  LEVELS.forEach(function(L){
+    var b=document.createElement('button'); b.className='cel-lv';
+    b.innerHTML='<span class="cel-lv-n">'+L.name+'</span>'+(L.tag?('<span class="cel-lv-t">'+L.tag+'</span>'):'');
+    b.onclick=function(){ startCelebre(L.key); };
+    lv.appendChild(b);
+  });
+  $('matchesVeil').classList.remove('show');
+  $('celebreVeil').classList.add('show');
+}
+function paintCelColor(){
+  $('celAzul').classList.toggle('cel-sel',celebrePick.col==='w');
+  $('celRojo').classList.toggle('cel-sel',celebrePick.col==='b');
+}
+function startCelebre(levelKey){
+  var g=famousFromKey(celebrePick.key); if(!g) return;
+  for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].key===levelKey){ level=LEVELS[i]; break; }
+  var col=celebrePick.col||g.take;
+  pendingResume={data:{fen:g.fen,tab:pickTablero().key,m:'ai',col:col,lvl:level.key,creator:myPseudo,
+    caps:{w:[],b:[]},moves:(FAMOUS_MOVES[g.key]||[]).slice(),lineage:[{at:0,opp:'Célebre: '+g.name,mode:'celebre'}]},code:genCode()};
+  $('celebreVeil').classList.remove('show'); $('matchesVeil').classList.remove('show');
+  setTimeout(function(){ startGame('ai'); },150);
+}
+function openLibrary(){
+  var cl=$('celebreList'); cl.innerHTML='';
+  FAMOUS.forEach(function(g){
+    var li=document.createElement('li'); li.className='cel-item';
+    var left=document.createElement('div'); left.className='mleft';
+    var nm=document.createElement('span'); nm.className='mcode cel-name'; nm.textContent=g.name;
+    var meta=document.createElement('span'); meta.className='mmeta'; meta.textContent=g.players+(g.year?(' · '+g.year):'');
+    left.appendChild(nm); left.appendChild(meta);
+    var right=document.createElement('div'); right.className='mright cel-take'; right.textContent=g.take==='w'?'Azul':'Rojo';
+    li.appendChild(left); li.appendChild(right);
+    li.onclick=function(){ openCelebre(g.key); };
+    cl.appendChild(li);
+  });
+  var ul=$('matchesList'); ul.innerHTML='';
+  var codes=indexList();
+  if(codes.length===0){
+    var li=document.createElement('li'); li.className='matches-empty';
+    li.textContent='Aún no tienes partidas guardadas. Juega y vuelve.';
+    ul.appendChild(li);
+  } else {
+    codes.forEach(function(code){
+      var d=loadMatch(code); if(!d) return;
+      var li=document.createElement('li');
+      var left=document.createElement('div'); left.className='mleft';
+      var c=document.createElement('span'); c.className='mcode'; c.textContent=code;
+      var meta=document.createElement('span'); meta.className='mmeta';
+      var modeLbl=d.m==='ai'?('vs IA '+(d.lvl||'?')):d.m;
+      var tabLbl=d.tab?(' &middot; Tablero '+tableroFromKey(d.tab).name):'';
+      meta.innerHTML=modeLbl+tabLbl;
+      left.appendChild(c); left.appendChild(meta);
+      var right=document.createElement('div'); right.className='mright';
+      var age=d.ts?Math.floor((Date.now()-d.ts)/60000):0;
+      right.textContent=age<1?'recién':(age<60?(age+' min'):(Math.floor(age/60)+' h'));
+      li.appendChild(left); li.appendChild(right);
+      // Only AI-mode games can be handed off to a rival (online matches already have a live opponent).
+      // Tag them as Multiverse-ready and, while connected to the Taberna, offer a one-tap publish.
+      if(d.m==='ai'){
+        c.insertAdjacentHTML('afterbegin','&#127744; ');
+        if(net.peer && !net.peer.destroyed){
+          var pub=document.createElement('button'); pub.className='mpublish'; pub.textContent='📣 Publicar';
+          pub.title='Publicarla en la Taberna para que cualquiera la tome';
+          pub.onclick=function(e){ e.stopPropagation(); publishMultiverse(code,d); pub.textContent='✓ Publicada'; pub.disabled=true; };
+          right.appendChild(pub);
+        }
+      }
+      li.onclick=function(){
+        $('matchesVeil').classList.remove('show');
+        pendingResume={data:d,code:code};
+        if(d.lvl){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].key===d.lvl){ level=LEVELS[i]; break; } }
+        setTimeout(function(){ startGame(d.m||'ai'); },200);
+      };
+      ul.appendChild(li);
+    });
+  }
+  $('matchesVeil').classList.add('show');
+}
+$('myMatches').onclick=openLibrary;
+$('libFixedBtn').onclick=openLibrary;
+$('matchesClose').onclick=function(){ $('matchesVeil').classList.remove('show'); };
+$('matchesExport').onclick=function(){
+  var codes=indexList(); var all=[];
+  codes.forEach(function(c){ var d=loadMatch(c); if(d) all.push({code:c,data:d}); });
+  var dump={app:'losdosreinos',version:1,player:myPseudo,exported:new Date().toISOString(),matches:all};
+  var json=JSON.stringify(dump,null,2);
+  var blob=new Blob([json],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a'); a.href=url;
+  a.download='losdosreinos-'+myPseudo.toLowerCase()+'-'+(new Date().toISOString().slice(0,10))+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); },2000);
+  var btn=$('matchesExport'); var orig=btn.innerHTML;
+  btn.textContent='✓ Descargado'; setTimeout(function(){ btn.innerHTML=orig; },1800);
+};
+$('matchesVeil').addEventListener('click',function(e){ if(e.target===$('matchesVeil')) $('matchesVeil').classList.remove('show'); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape' && $('matchesVeil').classList.contains('show')) $('matchesVeil').classList.remove('show'); });
+$('celAzul').onclick=function(){ celebrePick.col='w'; paintCelColor(); };
+$('celRojo').onclick=function(){ celebrePick.col='b'; paintCelColor(); };
+$('celClose').onclick=function(){ $('celebreVeil').classList.remove('show'); };
+$('celebreVeil').addEventListener('click',function(e){ if(e.target===$('celebreVeil')) $('celebreVeil').classList.remove('show'); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape' && $('celebreVeil').classList.contains('show')) $('celebreVeil').classList.remove('show'); });
+
+/* Zoom / focus mode */
+$('zoombtn').onclick=()=>{ const on=document.body.classList.toggle('focusmode');
+  $('zoombtn').innerHTML=on?'<span class="zi">✕</span> Salir':'<span class="zi">⛶</span> Zoom'; $('zoombtn').title=on?'Salir de zoom':'Expandir tablero';
+  requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); }); };
+
+/* Start-of-match flash: cinematic reveal that fades out so the board takes over.
+   Force-restart the animation by reflowing between class toggles, then auto-remove the class. */
+function flashStartOverlay(){
+  var ov=document.getElementById('startOverlay'); if(!ov || ov.classList.contains('noimg')) return;
+  ov.classList.remove('show'); void ov.offsetWidth; ov.classList.add('show');
+  setTimeout(function(){ ov.classList.remove('show'); }, 1750);
+}
+
+/* ===== Quick-chat (online 1v1) — preset phrases only. Sin texto libre = jamás insultos ni flag wars.
+   Funciona sobre el mismo canal WebRTC P2P (netSend), gratis y sin servidor. Se envía solo el índice. ===== */
+const CHAT_ITEMS=['👑 ¡Buena jugada!','⚔️ ¡A la batalla!','🛡️ Bien defendido','🤝 ¡Suerte!','👏 ¡Bravo!','🐉 Cuidado…','🦁 ¡Valiente!','🔥 ¡Qué jugada!','♟️ Tu turno','😅 ¡Uf!','🤔 Mmm…','⏳ Pensando…','🏰 Bien enrocado','🙏 Gracias','🔁 ¿Revancha?','🎉 ¡GG! Buena partida'];
+let chatCooldown=0;
+function buildChatQuick(){
+  var q=$('chatQuick'); if(q.childElementCount) return;
+  CHAT_ITEMS.forEach(function(txt,i){
+    var b=document.createElement('button'); b.textContent=txt; b.onclick=function(){ sendChat(i); };
+    q.appendChild(b);
+  });
+}
+function sendChat(i){
+  var now=Date.now(); if(now<chatCooldown) return; chatCooldown=now+1200;
+  if(mode==='online') netSend({t:'chat',i:i});
+  showChat(myPseudo,i,true);
+}
+function showChat(name,i,mine){
+  if(typeof i!=='number'||i<0||i>=CHAT_ITEMS.length) return;
+  var log=$('chatLog'); var empty=log.querySelector('.chat-empty'); if(empty) empty.remove();
+  var m=document.createElement('div'); m.className='chat-msg'+(mine?' mine':'');
+  var nm=document.createElement('b'); nm.textContent=name+': ';
+  m.appendChild(nm); m.appendChild(document.createTextNode(CHAT_ITEMS[i]));
+  log.appendChild(m);
+  // Keep only the last 5 visible — the panel stays compact and never grows.
+  while(log.childElementCount>5) log.removeChild(log.firstChild);
+}
+function resetChat(){ $('chatLog').innerHTML='<div class="chat-empty">Solo gestos corteses. Sin texto libre.</div>'; $('chatQuick').classList.remove('open'); }
+function showChatUI(on){
+  if(on){ buildChatQuick(); resetChat(); $('chatPanel').style.display='block'; }
+  else { $('chatPanel').style.display='none'; $('chatQuick').classList.remove('open'); }
+}
+$('chatReplyBtn').onclick=function(){
+  var q=$('chatQuick'); var open=q.classList.toggle('open');
+  $('chatReplyBtn').textContent=open?'Cerrar':'Responder +';
+};
+
+let pendingResume=null;
+function applyTablero(t){
+  TABLEROS.forEach(function(x){ $('app').classList.remove('t-'+x.key); });
+  $('app').classList.add('t-'+t.key);
+}
 function startGame(m){
-  mode=m; started=true;
+  stopTavernMusic();
+  mode=m; started=true; resigned=false;
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; flipped=false; redoStack.length=0;
+  if(pendingResume && pendingResume.data){
+    var d=pendingResume.data;
+    // Replay the real moves so the full history exists (undo unravels to move 1, free branching).
+    // Falls back to a plain FEN load if the move list is missing or doesn't replay cleanly.
+    var replayed=false;
+    if(Array.isArray(d.moves) && d.moves.length){
+      replayed=true;
+      for(var mi=0; mi<d.moves.length; mi++){
+        if(!(game.move(d.moves[mi]) || game.move(d.moves[mi],{sloppy:true}))){ replayed=false; break; }
+      }
+      if(replayed && d.fen && game.fen()!==d.fen){ /* tolerate clock diffs; position is what matters */ }
+      if(!replayed) game.reset();
+    }
+    if(!replayed){ try{ game.load(d.fen); }catch(e){} }
+    currentTablero=tableroFromKey(d.tab); matchCode=pendingResume.code;
+    if(d.bk) blueKing=d.bk; if(d.rk) redKing=d.rk;
+    if(d.col) playerColor=d.col;
+    if(replayed){ rebuildCaptures(); }
+    else if(d.caps){
+      if(Array.isArray(d.caps.w)) for(var i=0;i<d.caps.w.length;i++) capW.push(d.caps.w[i]);
+      if(Array.isArray(d.caps.b)) for(var j=0;j<d.caps.b.length;j++) capB.push(d.caps.b[j]);
+    }
+    matchLineage=Array.isArray(d.lineage)?d.lineage.slice():[];
+    // If the resume crosses universes (was AI, now online with a human), record the takeover
+    if(m==='online' && d.m==='ai'){
+      var movesNow=(d.moves&&d.moves.length)||0;
+      matchLineage.push({at:movesNow,opp:(net.rivalName||'rival'),mode:'online'});
+    }
+    pendingResume=null;
+  } else {
+    // matchCode must NEVER reuse the lobby's room code for AI/2P games: currentRoom can linger after
+    // visiting the lobby (netReset doesn't clear it), and with a shared default room (Plaza Pública)
+    // many different players would otherwise collide on the exact same matchCode, corrupting each
+    // other's saved gamestate in localStorage. Only online games legitimately want matchCode=currentRoom
+    // (so the room link points at the live game's state).
+    currentTablero=pickTablero(); matchCode=(m==='online' && currentRoom)?currentRoom:genCode();
+    var initialOpp = (m==='ai')?('IA '+(level?level.name:'?'))
+                  : (m==='2p')?'2P en persona'
+                  : (net.rivalName||'rival');
+    matchLineage=[{at:0,opp:initialOpp,mode:m}];
+  }
+  applyTablero(currentTablero);
+  if(m==='online' && net.myColor==='b') flipped=true;
+  if(m==='ai' && playerColor==='b') flipped=true;
+  $('zoombtn').style.display='block';
+  showChatUI(mode==='online');
+  var pc=$('peaceCard'); if(pc) pc.style.display='none';
   $('start').classList.add('hidden'); $('app').style.display='flex';
+  flashStartOverlay();
+  $('lobby').classList.remove('show'); $('colorpick').classList.remove('show');
   $('rematch').style.display='none';
-  if(mode==='ai') boot();
-  render(); status(); startQuotes(); renderHistory();
+  $('resign').style.display='';
+  $('drawbtn').style.display=m==='ai'?'none':'';
+  // Online duels: no take-backs while live (king of the hill). Re-enabled at game end for review.
+  var hideUR=(m==='online');
+  $('undo').style.display=hideUR?'none':''; $('redo').style.display=hideUR?'none':'';
+  if(mode==='ai'){ boot(); if((ready||fallback)&&!game.game_over()&&game.turn()!==playerColor) setTimeout(aiMove,400);
+    setTimeout(aiWatchdog,9000); setTimeout(aiWatchdog,16000); }
+  render(); status(); startQuotes(); renderHistory(); saveMatch();
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); });
 }
 function backToStart(){
-  started=false; $('app').style.display='none'; $('start').classList.remove('hidden');
-  levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none';
+  started=false; resigned=false; netReset(); document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='<span class="zi">⛶</span> Zoom'; showChatUI(false);
+  $('app').style.display='none'; $('start').classList.remove('hidden');
+  $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
+  $('colorpick').classList.remove('show'); playerColor='w';
+  $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden'); $('uniCallout').classList.remove('hidden');
+  levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none';
+  TABLEROS.forEach(function(x){ $('app').classList.remove('t-'+x.key); });
+  currentTablero=null; matchCode=null;
 }
 
 /* ===== Coordinates ===== */
@@ -392,12 +2127,16 @@ function sqAt(r,c){ const f=flipped?7-c:c, rk=flipped?r+1:8-r; return FILES[f]+r
 function render(){
   labels(); gridEl.innerHTML='';
   const board=game.board();
+  // In human-vs-human (2p / online) the opponent sits across: rotate their (top) pieces 180deg
+  const topColor=(mode==='2p'||mode==='online') ? (flipped?'w':'b') : null;
   for(let r=0;r<8;r++)for(let c=0;c<8;c++){
     const sq=sqAt(r,c); const cell=document.createElement('div'); cell.className='cell'; cell.dataset.sq=sq;
     const f=FILES.indexOf(sq[0]), rk=parseInt(sq[1]); const p=board[8-rk][f];
     if(p){ const img=document.createElement('img'); img.src=PIECE(p.color,p.type); img.alt=p.color+p.type;
       img.dataset.t=p.type; img.dataset.c=p.color;
-      if(needFlip(p.color,p.type)) img.classList.add('flip'); cell.appendChild(img); }
+      if(needFlip(p.color,p.type)) img.classList.add('flip');
+      if(topColor && p.color===topColor) img.classList.add('rot');
+      cell.appendChild(img); }
     if(lastMove&&(sq===lastMove.from||sq===lastMove.to)) cell.classList.add('last');
     if(p&&p.type==='k'&&p.color===game.turn()&&game.in_check()) cell.classList.add('check');
     gridEl.appendChild(cell);
@@ -411,6 +2150,9 @@ function renderCaptured(){
     add(w,capW); add(b,capB);
     const sw=capW.reduce((a,p)=>a+VAL[p.type],0), sb=capB.reduce((a,p)=>a+VAL[p.type],0), d=sw-sb;
     $('scoreW').textContent=d>0?`+${d}`:''; $('scoreB').textContent=d<0?`+${-d}`:'';
+    // Rotate the red capture bar 180° ONLY in face-to-face 2P so the second player reads it from their side.
+    // In online, each player sees their own normal orientation, so no rotation.
+    document.querySelector('.cap.red').classList.toggle('rotcap',mode==='2p');
   }catch(e){ console.warn('[cap]',e); }
 }
 function audit(){
@@ -422,7 +2164,9 @@ function audit(){
 function heal(why){ if(healing) return; healing=true; try{ render(); } finally{ healing=false; } }
 
 /* ===== Pure drag ===== */
-function canDrag(color){ if(busy||game.game_over()) return false; if(color!==game.turn()) return false; return mode==='2p'?true:color==='w'; }
+function canDrag(color){ if(busy||game.game_over()||resigned) return false; if(color!==game.turn()) return false;
+  if(mode==='online') return net.active && color===net.myColor;
+  return mode==='2p'?true:color===playerColor; }
 let drag=null;
 function killGhost(){ document.querySelectorAll('.drag-ghost').forEach(g=>g.remove()); }
 function cleanupDrag(){ killGhost(); gridEl.querySelectorAll('img[style*="hidden"]').forEach(i=>i.style.visibility=''); drag=null; }
@@ -468,18 +2212,19 @@ function tryMove(from,to){
   if(ms.some(m=>m.promotion)){ doMove({from,to,promotion:'q'}); return; }
   doMove({from,to});
 }
-function doMove(mv){
+function doMove(mv,fromRemote){
   const res=game.move({from:mv.from,to:mv.to,promotion:mv.promotion||undefined});
   if(!res){ render(); return; }
   if(res.captured) (res.color==='w'?capW:capB).push({color:res.color==='w'?'b':'w',type:res.captured});
   lastMove={from:res.from,to:res.to}; redoStack.length=0;
+  if(mode==='online' && !fromRemote) netSend({t:'move', mv:{from:res.from,to:res.to,promotion:mv.promotion||undefined}});
   actxInit();
   if(game.in_checkmate()) SFX.mate();
   else if(game.in_check()) SFX.check();
   else if(res.captured) SFX.capture();
   else SFX.move();
-  render(); status(); renderHistory(); maybeShowRematch();
-  if(mode==='ai' && !game.game_over() && game.turn()==='b') setTimeout(aiMove,200);
+  render(); status(); renderHistory(); maybeShowRematch(); saveMatch();
+  if(mode==='ai' && !game.game_over() && game.turn()!==playerColor) setTimeout(aiMove,200);
 }
 
 /* ===== Status ===== */
@@ -491,8 +2236,15 @@ function status(){
   else if(game.insufficient_material()) s='Tablas: material insuficiente.';
   else if(game.in_draw()) s='Tablas (50 movimientos).';
   else if(game.in_check()) s='<span class="warn">¡Jaque!</span>';
-  else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul">Turno Azul</span>':'<span class="chip rojo">Turno Rojo</span>');
-  else s=(game.turn()==='w'?'<span class="chip azul">Tu turno</span>':'<span class="chip rojo">Piensa el Rojo…</span>');
+  else if(mode==='online') s=(game.turn()===net.myColor?'<span class="chip '+(net.myColor==='w'?'azul':'rojo')+'">Tu turno</span>':'<span class="chip '+(net.myColor==='w'?'rojo':'azul')+'">Turno de '+(net.rivalName||'rival')+'…</span>');
+  else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul"><img src="assets/shield-blue.png" class="chip-icon"> Turno Azul</span>':'<span class="chip rojo"><img src="assets/shield-red.png" class="chip-icon"> Turno Rojo</span>');
+  else{ var eng=fallback?'IA local':'Stockfish'; var ln=level.name+' &middot; powered by '+eng;
+    s=(game.turn()===playerColor?'<span class="chip '+(playerColor==='w'?'azul':'rojo')+'">Tu turno</span> <span class="lvl">vs. '+ln+'</span>':'<span class="chip '+(playerColor==='w'?'rojo':'azul')+'">Piensa el rival…</span> <span class="lvl">'+ln+'</span>'); }
+  if(matchCode && mode!=='online'){
+    s+=' <span class="lvl tablero-tag">'
+      +'Código para continuar la jugada como Rey Azul: <b>'+sideCodeFor(matchCode,'w')+'</b>'
+      +'<br>Código para continuar la jugada como Rey Rojo: <b>'+sideCodeFor(matchCode,'b')+'</b></span>';
+  }
   statusEl.innerHTML=s;
 }
 
@@ -509,15 +2261,30 @@ async function boot(){
     setTimeout(()=>{ if(!ready) toFallback('timeout'); },6500);
   }catch(e){ toFallback(e.message); }
 }
-function toFallback(w){ if(fallback) return; fallback=true; ready=true; note.textContent='IA local ('+w+')'; }
+function toFallback(w){ if(fallback) return; fallback=true; ready=true; note.textContent='IA local ('+w+')';
+  // Critical: if the engine died/timed out on the AI's turn, kick the local-fallback move
+  // so the board never deadlocks (bad browsers, WhatsApp in-app webview, slow/blocked fetch).
+  if(mode==='ai'&&!game.game_over()&&!resigned&&game.turn()!==playerColor&&!busy) setTimeout(aiMove,200); }
+// Ultimate safety net: if it's ever the AI's turn and nothing is computing a move, force one.
+// Only acts on a genuine stall (busy stays true during any real engine/fallback think), so it
+// can never interrupt a legitimate move or double-move. Cheap insurance against unknown hangs.
+function aiWatchdog(){
+  if(mode!=='ai'||!started||resigned||game.game_over()) return;
+  if(game.turn()===playerColor||busy) return;
+  aiMove();
+}
 function onMsg(e){ const l=typeof e.data==='string'?e.data:'';
-  if((l.includes('uciok')||l.includes('readyok'))&&!ready){ ready=true; configEngine(); note.textContent='Stockfish · '+level.name; }
+  if((l.includes('uciok')||l.includes('readyok'))&&!ready){ ready=true; configEngine();
+    if(mode==='ai'&&!game.game_over()&&game.turn()!==playerColor) setTimeout(aiMove,200); }
   if(l.startsWith('bestmove')){ const mv=l.split(' ')[1]; if(mv&&mv!=='(none)') engMove(mv); else { busy=false; status(); } }
 }
-function configEngine(){ note.textContent=(fallback?'IA local · ':'Stockfish · ')+level.name;
+function configEngine(){ note.textContent=''; status();
   if(!engine||fallback) return;
   if(level.elo){ engine.postMessage('setoption name UCI_LimitStrength value true'); engine.postMessage('setoption name UCI_Elo value '+level.elo); }
-  else engine.postMessage('setoption name UCI_LimitStrength value false');
+  else{
+    engine.postMessage('setoption name UCI_LimitStrength value false');
+    engine.postMessage('setoption name Contempt value 100');
+  }
   engine.postMessage('setoption name Skill Level value '+level.skill);
 }
 function aiMove(){ if(game.game_over()) return; busy=true; status();
@@ -527,7 +2294,7 @@ function aiMove(){ if(game.game_over()) return; busy=true; status();
 function engMove(uci){ const from=uci.slice(0,2), to=uci.slice(2,4), promo=uci.length>4?uci[4]:undefined;
   const res=game.move({from,to,promotion:promo}); busy=false;
   if(!res){ render(); status(); return; }
-  if(res.captured) capB.push({color:'w',type:res.captured});
+  if(res.captured) (res.color==='w'?capW:capB).push({color:res.color==='w'?'b':'w',type:res.captured});
   lastMove={from:res.from,to:res.to};
   actxInit();
   if(game.in_checkmate()) SFX.mate();
@@ -548,20 +2315,139 @@ function rebuildCaptures(){ capW.length=0; capB.length=0;
   const h=game.history({verbose:true}); lastMove=h.length?{from:h[h.length-1].from,to:h[h.length-1].to}:null;
 }
 $('undo').onclick=()=>{ if(busy) return;
+  // King of the hill stays serious: no take-backs while an online human duel is live.
+  if(mode==='online' && !game.game_over() && !resigned) return;
   const u1=game.undo(); if(u1) redoStack.push(u1);
   if(mode==='ai'){ const u2=game.undo(); if(u2) redoStack.push(u2); }
   rebuildCaptures(); render(); status(); renderHistory(); maybeShowRematch(); };
 $('redo').onclick=()=>{ if(busy||!redoStack.length) return;
+  if(mode==='online' && !game.game_over() && !resigned) return;
   const steps=mode==='ai'?2:1;
   for(let i=0;i<steps && redoStack.length;i++){
     const mv=redoStack.pop();
     game.move({from:mv.from,to:mv.to,promotion:mv.promotion});
   }
   rebuildCaptures(); render(); status(); renderHistory(); maybeShowRematch(); };
-$('rematch').onclick=()=>{ game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0;
-  $('rematch').style.display='none'; render(); status(); renderHistory();
-  if(mode==='ai') boot(); };
+$('rematch').onclick=()=>{
+  // Online: tell the rival a rematch is on. Both reset to start; colors swap so each plays the other side.
+  if(mode==='online'){
+    if(net.conn && net.conn.open){ try{ netSend({t:'rematch'}); }catch(e){} }
+    net.myColor=(net.myColor==='w'?'b':'w'); flipped=(net.myColor==='b');
+  } else if(mode==='2p'){
+    // Face-to-face: swap colors so the loser starts white.
+    playerColor=(playerColor==='w'?'b':'w');
+  }
+  game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0; resigned=false;
+  // Restore the in-game HUD (Deshacer/Rehacer hidden again in online live).
+  var hideUR=(mode==='online'); $('undo').style.display=hideUR?'none':''; $('redo').style.display=hideUR?'none':'';
+  var pc=$('peaceCard'); if(pc) pc.style.display='none';
+  $('resign').style.display=''; $('drawbtn').style.display=(mode==='ai')?'none':'';
+  $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
+  render(); status(); renderHistory(); saveMatch();
+  if(mode==='ai') boot();
+};
 $('mutebtn').onclick=()=>{ muted=!muted; $('mutebtn').textContent=muted?'🔇':'🔊'; actxInit(); };
+
+/* ===== Resign / Draw ===== */
+// Host reports the finished duel to the hub; the winner keeps the seat, next challenger is summoned.
+function reportMatchEnd(){
+  if(!net.isHost || mode!=='online' || net.endReported) return;
+  net.endReported=true;
+  if(fenStreamTimer){ clearInterval(fenStreamTimer); fenStreamTimer=null; }
+  var winnerColor;
+  if(game.in_checkmate()) winnerColor=(game.turn()==='w')?'b':'w'; // side to move was mated
+  else if(net.iResigned) winnerColor=(net.myColor==='w')?'b':'w';  // I (host) resigned, rival wins
+  else winnerColor=net.myColor; // rival resigned / draw / disconnect: host keeps the seat
+  var guestId=net.conn&&net.conn.peer;
+  var winnerId,winnerName;
+  if(winnerColor===net.myColor){ winnerId=net.peer.id; winnerName=myPseudo; }
+  else { winnerId=guestId; winnerName=net.rivalName; }
+  reportMatch({live:false,winnerId:winnerId,winnerName:winnerName});
+}
+function showEndButtons(){
+  $('resign').style.display='none'; $('drawbtn').style.display='none'; $('rematch').style.display='';
+  $('backLobbyBtn').style.display=(mode==='online')?'':'none';
+  // Take-backs unlock once the duel is over (review-mode).
+  $('undo').style.display=''; $('redo').style.display='';
+  // Peace card slides into the left rail: the image (and its subtitle) speaks for itself.
+  var pc=$('peaceCard'); if(pc) pc.style.display='';
+  reportMatchEnd();
+}
+function backToLobby(){
+  try{ if(net.conn) net.conn.close(); }catch(e){}
+  net.conn=null; net.active=false; net.isHost=false; net.myColor='w'; net.rivalName='';
+  resigned=false; started=false;
+  game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0;
+  document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='<span class="zi">⛶</span> Zoom'; showChatUI(false);
+  $('app').style.display='none'; $('start').classList.remove('hidden');
+  $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
+  $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
+  $('backBtn').style.display='block'; $('lobby').classList.add('show');
+  $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
+  $('start').classList.add('in-lobby');
+  $('startH2').textContent='La Taberna'; $('myName').value=myPseudo; playTavernMelody();
+  if(net.peer && !net.peer.destroyed){
+    $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
+    if(net.isHub){ renderLobby(); }
+    else if(net.hubConn && net.hubConn.open){ renderLobby(); try{ net.hubConn.send({t:'lobby-ping',id:net.peer.id}); }catch(e){} }
+    else { tryConnectHub(); }
+    if(!trysteroRoom) initTrysteroLobby();
+    else renderLobby();
+  } else { goOnline(); }
+}
+$('backLobbyBtn').onclick=backToLobby;
+
+let __confirmResolver=null;
+function showConfirm(msg,yesLabel,noLabel){
+  $('confirmMsg').textContent=msg;
+  $('confirmYes').textContent=yesLabel||'Sí';
+  $('confirmNo').textContent=noLabel||'Cancelar';
+  $('confirmModal').classList.add('show');
+  return new Promise(function(res){ __confirmResolver=res; });
+}
+function __closeConfirm(v){
+  $('confirmModal').classList.remove('show');
+  var r=__confirmResolver; __confirmResolver=null;
+  if(r) r(v);
+}
+$('confirmYes').onclick=function(){ __closeConfirm(true); };
+$('confirmNo').onclick=function(){ __closeConfirm(false); };
+$('confirmModal').addEventListener('click',function(e){ if(e.target===$('confirmModal')) __closeConfirm(false); });
+document.addEventListener('keydown',function(e){
+  if(!$('confirmModal').classList.contains('show')) return;
+  if(e.key==='Escape') __closeConfirm(false);
+  else if(e.key==='Enter') __closeConfirm(true);
+});
+
+async function doResign(){
+  if(game.game_over()||busy||resigned) return;
+  var ok=await showConfirm('¿Rendirse?','Sí, rendirme','Seguir jugando');
+  if(!ok) return;
+  resigned=true;
+  if(mode==='online'){ net.iResigned=true; netSend({t:'resign'}); }
+  var loser=mode==='online'?net.myColor:game.turn();
+  statusEl.innerHTML=loser==='w'
+    ?'<span class="warn">Azul se rindió. Vence el Rojo. 🐉</span>'
+    :'<span class="win">Rojo se rindió. Vence el Azul. 🦁</span>';
+  SFX.mate(); showEndButtons();
+}
+async function offerDraw(){
+  if(game.game_over()||busy||resigned) return;
+  if(mode==='ai'){ return; }
+  if(mode==='online'){
+    netSend({t:'draw-offer'});
+    statusEl.innerHTML='<span class="warn">Tablas ofrecidas a '+(net.rivalName||'rival')+'…</span>';
+    return;
+  }
+  var ok=await showConfirm('¿Ambos jugadores aceptan tablas?','Sí, tablas','Cancelar');
+  if(ok){
+    resigned=true;
+    statusEl.innerHTML='<span class="warn">Tablas por acuerdo mutuo.</span>';
+    showEndButtons();
+  }
+}
+$('resign').onclick=doResign;
+$('drawbtn').onclick=offerDraw;
 
 function renderHistory(){
   const h=game.history(); const ol=$('histlist'); ol.innerHTML='';
@@ -573,23 +2459,184 @@ function renderHistory(){
   }
   ol.parentElement.scrollTop=ol.parentElement.scrollHeight;
 }
-function maybeShowRematch(){ $('rematch').style.display=game.game_over()?'':'none'; }
+function maybeShowRematch(){
+  var over=game.game_over()||resigned;
+  $('rematch').style.display=over?'':'none';
+  if(over) showEndButtons();
+}
 
 let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(fitBoard,90); });
-window.addEventListener('orientationchange',()=>setTimeout(fitBoard,200));
+function refitChain(){ fitBoard(); setTimeout(fitBoard,150); setTimeout(fitBoard,400); setTimeout(fitBoard,800); }
+window.addEventListener('orientationchange',refitChain);
+if(window.screen && window.screen.orientation){ try{ window.screen.orientation.addEventListener('change',refitChain); }catch(e){} }
+if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(fitBoard,90); }); }
 
 /* footer mail link, obfuscated: (1) base64, (2) string reversed, (3) the address
    and the scheme are assembled only on click — the static DOM/source contains
    no e-mail address and no scheme literal, so scrapers get nothing. */
 (function(){
-  var c=document.getElementById('credit'); if(!c) return;
   var enc='t92YuwWah12ZA9WawJXYjZma';
-  c.addEventListener('click', function(e){
+  var addrOf=function(){ return atob(enc.split('').reverse().join('')); };
+  var c=document.getElementById('credit');
+  if(c) c.addEventListener('click', function(e){
     e.preventDefault();
-    var addr=atob(enc.split('').reverse().join(''));
-    window.location.href=['mai','lto',':'].join('')+addr;
+    window.location.href=['mai','lto',':'].join('')+addrOf();
+  });
+  // Help modal handlers
+  var helpVeil=document.getElementById('helpVeil');
+  document.getElementById('helpBtn').addEventListener('click', function(){ helpVeil.classList.add('show'); });
+  document.getElementById('helpClose').addEventListener('click', function(){ helpVeil.classList.remove('show'); });
+  helpVeil.addEventListener('click', function(e){ if(e.target===helpVeil) helpVeil.classList.remove('show'); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && helpVeil.classList.contains('show')) helpVeil.classList.remove('show'); });
+  document.getElementById('helpSupport').addEventListener('click', function(e){
+    e.preventDefault();
+    var subj=encodeURIComponent('Apoyar Los Dos Reinos');
+    var body=encodeURIComponent('Hola Juan Fernando, quiero apoyar el proyecto Los Dos Reinos. Cuéntame cómo.');
+    window.location.href=['mai','lto',':'].join('')+addrOf()+'?subject='+subj+'&body='+body;
+  });
+  // Patrocínalo: native mailto in the href handles it (no JS hijack). The legacy obfuscation
+  // path stays only for the Apoyar CTA, which keeps a body template.
+  document.getElementById('helpSponsor').addEventListener('click', function(e){
+    return; // native mailto handles it
+    var subj=encodeURIComponent('Patrocinar un tablero - Los Dos Reinos');
+    var body=encodeURIComponent('Hola Juan Fernando, quiero patrocinar un tablero futuro con mi marca. Hablemos.');
+    window.location.href=['mai','lto',':'].join('')+addrOf()+'?subject='+subj+'&body='+body;
   });
 })();
+
+/* ===== Tavern Music — epic medieval score: brass + harp + heroic lead + romantic-piano wash
+   (Chopin / Rachmaninoff in style) + battle pulse + strings pad + bells + woodwind + light percussion ===== */
+var tavernCtx=null, tavernGain=null, tavernPlaying=false, tavernTimer=null;
+var MUSIC_VOL=0.045; // habitual: accompanies without intruding
+var tavernMuted=(function(){ try{ return localStorage.getItem('losdosreinos_muted')==='1'; }catch(e){ return false; } })();
+function tavernNoteFreq(n){ return 440*Math.pow(2,(n-69)/12); }
+/* Mobile/tablet failsafe: iOS and Android suspend AudioContext on lock-screen, tab switch,
+   or background, and only let it resume from inside a real user gesture. A single click on
+   "Jugar online" usually unlocks it, but if the lobby was entered via a shared link (setTimeout,
+   not a gesture) or the OS suspended it later, music silently never starts. Two nets below fix this
+   without adding any audio file / MIDI dependency (which would break the zero-download, fully
+   procedural design): (1) the very first tap/touch/click anywhere primes the context, and
+   (2) returning to the tab re-resumes it and restarts the loop if it had stalled. */
+function tavernEnsureRunning(){
+  if(!tavernCtx) return;
+  if(tavernCtx.state==='suspended'){ try{ tavernCtx.resume(); }catch(e){} }
+  if(tavernPlaying && tavernCtx.state==='running' && !tavernTimer){
+    // Loop died silently (suspended context stalls the currentTime clock) — restart it.
+    (function loop(){
+      if(!tavernPlaying) return;
+      var dur=tavernScheduleSection(tavernCtx.currentTime+0.05);
+      tavernTimer=setTimeout(loop,(dur-0.15)*1000);
+    })();
+  }
+}
+['touchstart','pointerdown','click'].forEach(function(ev){
+  document.addEventListener(ev,function(){
+    if(!tavernCtx){ try{ tavernCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+    tavernEnsureRunning();
+  },{passive:true});
+});
+document.addEventListener('visibilitychange',function(){ if(!document.hidden) tavernEnsureRunning(); });
+var tavernScheduleSection=null; // assigned inside playTavernMelody so the failsafe above can call it
+function playTavernMelody(){
+  if(tavernPlaying) return;
+  if(!tavernCtx) tavernCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(tavernCtx.state==='suspended') tavernCtx.resume();
+  tavernGain=tavernCtx.createGain(); tavernGain.gain.value=tavernMuted?0:MUSIC_VOL;
+  tavernGain.connect(tavernCtx.destination);
+  tavernPlaying=true;
+  var BEAT=0.575; // ~15% slower tempo than prior 0.5
+  // Heroic minor-key progression (D minor / F major), 16 chords x 2 beats = 32 beats
+  var prog=[
+    [[50,53,57],2],[[46,50,53],2],[[53,57,60],2],[[48,52,55],2],
+    [[55,58,62],2],[[46,50,53],2],[[57,61,64],2],[[50,53,57],2],
+    [[53,57,60],2],[[48,52,55],2],[[50,53,57],2],[[57,61,64],2],
+    [[46,50,53],2],[[53,57,60],2],[[55,58,62],2],[[57,61,64],2]
+  ];
+  // Heroic lead melody, [midi,beats], 32 beats total
+  var lead=[
+    69,2, 65,1, 67,1, 69,2, 72,1, 69,1,
+    74,2, 72,1, 69,1, 70,2, 69,1, 67,1,
+    65,1, 69,1, 72,2, 71,1, 69,1, 67,2,
+    74,2, 73,1, 72,1, 69,2, 74,2
+  ];
+  function tone(midi,t,dur,vol,wave,detune,attack,rel){
+    var osc=tavernCtx.createOscillator(), env=tavernCtx.createGain();
+    osc.type=wave; osc.frequency.value=tavernNoteFreq(midi);
+    if(detune) osc.detune.value=detune;
+    var a=attack||0.01, r=rel||0.18;
+    env.gain.setValueAtTime(0.0001,t);
+    env.gain.exponentialRampToValueAtTime(vol,t+a);
+    env.gain.exponentialRampToValueAtTime(vol*r,t+dur*0.8);
+    env.gain.linearRampToValueAtTime(0.0001,t+dur*0.99);
+    osc.connect(env); env.connect(tavernGain);
+    osc.start(t); osc.stop(t+dur);
+  }
+  function scheduleSection(startT){
+    var t=startT;
+    for(var i=0;i<prog.length;i++){
+      var chord=prog[i][0], beats=prog[i][1], cdur=beats*BEAT;
+      // battle brass: root+fifth+octave, sustained, sawtooth (warm, layered)
+      tone(chord[0]-12,t,cdur,0.5,'sawtooth',0,0.06);
+      tone(chord[0],t,cdur,0.32,'sawtooth',-6,0.06);
+      tone(chord[2],t,cdur,0.26,'sawtooth',5,0.06);
+      // battle pulse: low timpani-like thud on the downbeat
+      tone(chord[0]-24,t,0.5,0.6,'sine',0,0.004,0.02);
+      // harp: ascending+descending arpeggio, 8 plucks across 2 beats
+      var notes=chord.concat([chord[0]+12,chord[1]+12]);
+      var seq=notes.concat(notes.slice().reverse());
+      var step=cdur/seq.length;
+      for(var h=0;h<seq.length;h++){
+        tone(seq[h]+12,t+h*step,step*1.6,0.45,'triangle',0,0.004);
+      }
+      // romantic-piano wash (~10%): a softly rolled chord, longer release, expressive 7th color
+      var roll=[chord[0],chord[1],chord[2],chord[1]+12,chord[0]+(beats>1?14:12)];
+      for(var p=0;p<roll.length;p++){
+        tone(roll[p],t+0.05+p*0.055,cdur*0.92,0.12,'sine',0,0.03,0.4);
+      }
+      // strings pad: lush sawtooth bed, slow swell, sustains the chord up high
+      tone(chord[1]+12,t,cdur,0.16,'sawtooth',-4,0.28,0.7);
+      tone(chord[2]+12,t,cdur,0.12,'sawtooth',6,0.32,0.7);
+      // bell / glockenspiel: bright ring on the downbeat (every other chord), long shimmer
+      if(i%2===0) tone(chord[0]+24,t,cdur*0.95,0.13,'sine',0,0.002,0.8);
+      // tambourine-ish tick on the half-beat: tiny percussive blip
+      tone(95,t+cdur*0.5,0.05,0.05,'square',0,0.001,0.04);
+      // recorder/woodwind: airy triangle an octave over the chord root, gentle
+      tone(chord[0]+12,t+cdur*0.25,cdur*0.6,0.1,'triangle',3,0.06,0.5);
+      t+=cdur;
+    }
+    // Heroic lead over the top, doubled with a soft sine (piano-ish) at low level
+    var lt=startT;
+    for(var k=0;k<lead.length;k+=2){
+      var m=lead[k], ldur=lead[k+1]*BEAT;
+      if(m>0){
+        tone(m,lt,ldur*0.95,0.6,'triangle',0,0.02);
+        tone(m,lt,ldur*0.95,0.2,'square',8,0.02);
+        tone(m,lt,ldur*0.95,0.1,'sine',0,0.04,0.5); // romantic doubling
+      }
+      lt+=ldur;
+    }
+    return 32*BEAT; // section length in seconds
+  }
+  tavernScheduleSection=scheduleSection; // expose so the mobile failsafe above can restart a stalled loop
+  function loop(){
+    if(!tavernPlaying) return;
+    var dur=scheduleSection(tavernCtx.currentTime+0.05);
+    tavernTimer=setTimeout(loop,(dur-0.15)*1000);
+  }
+  loop();
+}
+function stopTavernMusic(){
+  tavernPlaying=false;
+  if(tavernTimer){ clearTimeout(tavernTimer); tavernTimer=null; }
+  if(tavernGain){ try{ tavernGain.gain.linearRampToValueAtTime(0,tavernCtx.currentTime+0.5); }catch(e){} }
+}
+function setTavernMute(muted){
+  tavernMuted=!!muted;
+  try{ localStorage.setItem('losdosreinos_muted',tavernMuted?'1':'0'); }catch(e){}
+  if(tavernGain && tavernCtx){ try{ tavernGain.gain.linearRampToValueAtTime(tavernMuted?0:MUSIC_VOL,tavernCtx.currentTime+0.25); }catch(e){} }
+  var b=document.getElementById('lobbyMute'); if(b){ b.textContent=tavernMuted?'🔇':'🔊'; b.title=tavernMuted?'Música apagada':'Música de taberna'; }
+  var lbl=document.getElementById('lobbyMuteLbl'); if(lbl){ lbl.textContent=tavernMuted?'activar ambiente de la taberna':'mutear ambiente de la taberna'; }
+}
 </script>
 </body>
 </html>
