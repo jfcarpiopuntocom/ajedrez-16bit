@@ -841,6 +841,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <button id="backLobbyBtn" style="display:none">&larr; Taberna</button>
     <button id="mutebtn" title="Sonido">🔊</button>
     <button id="exportPgn" title="Exportar PGN (compatible con chess.com y lichess)">📋 PGN</button>
+    <button id="themeBtn" title="Cambiar tema del tablero">🎨</button>
   </div>
   <div class="note" id="note"></div>
 </div>
@@ -2529,6 +2530,16 @@ $('rematch').onclick=()=>{
   if(mode==='ai') boot();
 };
 $('mutebtn').onclick=()=>{ muted=!muted; $('mutebtn').textContent=muted?'🔇':'🔊'; actxInit(); };
+$('themeBtn').onclick=function(){
+  var idx=TABLEROS.indexOf(currentTablero);
+  idx=(idx+1)%TABLEROS.length;
+  currentTablero=TABLEROS[idx];
+  applyTablero(currentTablero);
+  try{ localStorage.setItem('losdosreinos_theme',currentTablero.key); }catch(e){}
+  note.textContent='Tema: '+currentTablero.name;
+  setTimeout(function(){ if(note.textContent.indexOf('Tema:')===0) note.textContent=''; },2000);
+};
+(function(){ try{ var tk=localStorage.getItem('losdosreinos_theme'); if(tk){ var t=tableroFromKey(tk); if(t) currentTablero=t; } }catch(e){} })();
 $('exportPgn').onclick=function(){
   var headers='[Event "Los Dos Reinos"]\n[Site "jfcarpiopuntocom.github.io/ajedrez-16bit"]\n'
     +'[Date "'+new Date().toISOString().slice(0,10).replace(/-/g,'.')+'\"]\n'
