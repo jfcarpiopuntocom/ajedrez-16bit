@@ -42,8 +42,8 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .start.hidden{ display:none }
 .start img.banner{ flex:0 0 auto; width:100%; max-width:620px; height:auto; max-height:18vh; object-fit:contain }
 .start-body{ flex:1 1 auto; display:flex; flex-direction:row; align-items:stretch; justify-content:center; gap:18px; width:100%; min-height:0 }
-.start-art{ flex:0 0 360px; max-width:42vw; align-self:center; border:2px solid var(--gold); border-radius:14px; overflow:hidden;
-  box-shadow:0 6px 22px rgba(0,0,0,.55); background:#0a0604 }
+/* JFC 2026-06-18: splash art hidden until 16-bit compatible versions are ready */
+.start-art{ display:none !important }
 .start-art img{ width:100%; height:auto; display:block; max-height:72vh; object-fit:cover; image-rendering:pixelated; filter:contrast(1.06) saturate(.95) }
 .start-rail{ flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
   min-width:0; max-width:430px; overflow-y:auto; max-height:100%; padding:4px 2px }
@@ -309,9 +309,8 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 #zoombtn .zi{ font-size:18px }
 /* Start-of-match flash: brief reveal, then fades so the board takes over. pointer-events:none so it never blocks input.
    If the image is missing (.noimg), the whole overlay is skipped — never blocks gameplay. */
-.start-overlay{ position:fixed; inset:0; z-index:400; display:none; pointer-events:none; align-items:center; justify-content:center;
-  background:radial-gradient(closest-side,rgba(10,6,4,.78),rgba(10,6,4,.94)) }
-.start-overlay.noimg, .start-overlay.noimg.show{ display:none !important }
+/* JFC 2026-06-18: start-of-match splash flash hidden until 16-bit art is ready */
+.start-overlay, .start-overlay.show, .start-overlay.noimg{ display:none !important }
 .start-overlay img{ width:auto; max-width:88vw; height:auto; max-height:78vh; object-fit:contain;
   border:2px solid var(--gold); border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,.6), 0 0 28px rgba(232,160,32,.35);
   image-rendering:pixelated; filter:contrast(1.06) saturate(.95) }
@@ -421,7 +420,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .cell.check::after{ content:""; position:absolute; inset:5%; border:3px solid #ff5252; border-radius:7px; box-shadow:0 0 12px #ff2020 }
 
 /* ---------- History panel (always visible, left of board) ---------- */
-.peace-card{ flex:0 0 auto; width:100%; max-width:430px; margin-top:6px; border:2px solid var(--gold); border-radius:12px; overflow:hidden;
+/* JFC 2026-06-18: peace-card hidden until 16-bit art is ready */
+.peace-card{ display:none !important; flex:0 0 auto; width:100%; max-width:430px; margin-top:6px; border:2px solid var(--gold); border-radius:12px; overflow:hidden;
   background:linear-gradient(160deg,#1f160d,#0a0604); box-shadow:0 4px 16px rgba(0,0,0,.55) }
 .peace-card img{ width:100%; height:auto; display:block; image-rendering:pixelated; filter:contrast(1.05) saturate(.95) }
 .peace-card p{ margin:0; padding:7px 10px; font-size:13px; font-style:italic; text-align:center; line-height:1.35;
