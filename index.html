@@ -200,6 +200,13 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .lobby-list li .li-shield{ height:22px; width:auto; flex-shrink:0 }
 .lobby-list li .li-name{ flex:1 }
 .lobby-list li .li-arrow{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:18px; flex-shrink:0 }
+/* Busy rivals: visibly mid-duel, not clickable. Solid muted colors (never opacity) so text stays
+   fully legible while still reading as "not available" at a glance. */
+.lobby-list li.busy{ cursor:default; background:#15110b; border-color:#5a5248 }
+.lobby-list li.busy:hover,.lobby-list li.busy:active{ background:#15110b }
+.lobby-list li.busy .li-name{ color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+.lobby-list li.busy .li-arrow{ font-size:13px }
+.li-busy-tag{ font-size:12px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; flex-shrink:0 }
 .lobby-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:20px 0 }
 .lobby-tavern-wrap{ flex:0 0 280px; border-radius:12px; overflow:hidden; border:2px solid var(--gold); box-shadow:0 4px 18px rgba(0,0,0,.5); align-self:stretch }
 .lobby-tavern{ width:100%; height:100%; display:block; object-fit:cover; filter:contrast(1.1) saturate(.85) }
@@ -1065,6 +1072,7 @@ $('backBtn').onclick=()=>{
   if($('colorpick').classList.contains('show')){ $('colorpick').classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); levelsEl.classList.add('show'); $('startH2').textContent='Elige el nivel del Rival'; return; }
   levelsEl.classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden'); $('uniCallout').classList.remove('hidden'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML=''; stopTavernMusic();
   $('start').classList.remove('in-lobby');
+  currentRoom=null; // leaving the lobby fully: next "Jugar online" re-derives room from the URL or defaults back to the Plaza Pública
   $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none'; };
 $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(!b) return;
   const row=b.closest('.kingrow'); if(row.dataset.side==='w') blueKing=b.dataset.k; else redKing=b.dataset.k;
@@ -1072,7 +1080,15 @@ $('kingpick').addEventListener('click',e=>{ const b=e.target.closest('button[dat
 
 /* ===== Online 1 vs 1 (PeerJS / WebRTC P2P) — lobby with hub-based presence ===== */
 const HUB_ID_BASE='jfreino-lobby-hub';
-let currentRoom=null; // 6-char room id; set by entering online flow
+// Plaza Pública: the default shared room when nobody passed a #multiverso= link. Without this,
+// every visitor landed in their own random genCode() room and could never see each other unless
+// they exchanged a link by hand — "todos deben verse" was structurally impossible. Each player's
+// PeerJS id still derives from their own permanent pid (see goOnline), so many simultaneous players
+// here never collide on identity; the only shared resource is the room's single hub peer (see
+// ROSTER_CAP below for the fan-out safeguard).
+const PUBLIC_PLAZA='PLAZA1';
+const ROSTER_CAP=40; // soft cap on the hub's broadcast/connection fan-out in one room
+let currentRoom=null; // 6-char room id (or PUBLIC_PLAZA); set by entering online flow
 /* URL scheme: #multiverso= is the primary form. #partida= and #room= stay readable
    low-key so older links (incl. ones already shared on WhatsApp) never break. */
 function roomFromUrl(){
@@ -1125,7 +1141,8 @@ function wireConn(c){
           startGame('online');
         }
         // King of the hill: announce the live duel to the room + stream position for forks
-        reportMatch({live:true,hostId:net.peer.id,hostName:myPseudo,guestName:net.rivalName,
+        reportMatch({live:true,hostId:net.peer.id,hostName:myPseudo,
+          guestId:net.conn?net.conn.peer:null,guestName:net.rivalName,
           fen:game.fen(),tab:currentTablero?currentTablero.key:'capablanca',
           bk:blueKing,rk:redKing,moves:game.history(),lineage:matchLineage.slice()});
         startFenStream();
@@ -1185,15 +1202,21 @@ let lobbyTimer=null, hubHeartbeat=null, fenStreamTimer=null;
 const trysteroPeers={}; // trysteroId -> {name, peerJsId}
 let trysteroRoom=null, trysteroSendInfo=null, trysteroHeartbeat=null;
 
-function mkLi(id,name,shield,isSelf){
+function mkLi(id,name,shield,isSelf,busy){
   var li=document.createElement('li');
   if(isSelf) li.className='self';
+  else if(busy) li.className='busy';
   var img=document.createElement('img'); img.className='li-shield'; img.src=shield;
   var sp=document.createElement('span'); sp.className='li-name'; sp.textContent=isSelf?(name+' (tu)'):name;
-  var ar=document.createElement('span'); ar.className='li-arrow'; ar.innerHTML=isSelf?'&#9733;':'&#9876;';
+  var ar=document.createElement('span'); ar.className='li-arrow';
+  // Busy rivals are visibly playing right now: show a live dot instead of the challenge sword,
+  // and skip the onclick entirely instead of letting a real connect attempt fail after ~10s
+  // (lobbyConnect's old behavior when targeting someone already in net.conn elsewhere).
+  ar.innerHTML=isSelf?'&#9733;':(busy?'&#128308;':'&#9876;');
   li.appendChild(img); li.appendChild(sp); li.appendChild(ar);
   li.dataset.pid=id;
-  if(!isSelf) li.onclick=function(){ lobbyConnect(id,name); };
+  if(!isSelf && !busy) li.onclick=function(){ lobbyConnect(id,name); };
+  if(busy){ var tag=document.createElement('span'); tag.className='li-busy-tag'; tag.textContent='jugando'; li.appendChild(tag); }
   return li;
 }
 
@@ -1227,10 +1250,15 @@ function renderLobby(){
   $('lobbyStatus').innerHTML=(others.length>0
     ?'<span class="lobby-searching">'+others.length+' rival'+(others.length>1?'es':'')+' conectado'+(others.length>1?'s':'')+hubTag+netTag+'</span>'
     :'<span class="lobby-searching">Esperando que se conecten rivales...'+hubTag+netTag+'</span>')+paraTag;
+  // Names already in the live duel are disabled instead of clickable: clicking them used to silently
+  // start a 10s connect attempt that only then revealed "ese jugador ya tiene rival".
+  var mi=net.matchInfo;
+  var busyIds={};
+  if(mi && mi.live){ if(mi.hostId) busyIds[mi.hostId]=true; if(mi.guestId) busyIds[mi.guestId]=true; }
   if(selfEntry) ul.appendChild(mkLi(selfEntry.id,selfEntry.name,'assets/shield-blue.png',true));
   others.forEach(function(p,i){
     var shield=i%2===0?'assets/shield-red.png':'assets/shield-blue.png';
-    ul.appendChild(mkLi(p.id,p.name,shield,false));
+    ul.appendChild(mkLi(p.id,p.name,shield,false,!!busyIds[p.id]));
   });
   if(others.length===0){
     var li=document.createElement('li'); li.className='lobby-empty';
@@ -1389,7 +1417,10 @@ function startFenStream(){
   if(fenStreamTimer) clearInterval(fenStreamTimer);
   fenStreamTimer=setInterval(function(){
     if(net.active && net.isHost && typeof game!=='undefined'){
-      reportMatch({live:true,hostId:net.peer.id,hostName:myPseudo,guestName:net.rivalName,
+      // guestId lets the roster badge the opponent's exact row (by peerJsId), not just show their name
+      // in the separate "live match" box — see renderLobby/mkLi.
+      reportMatch({live:true,hostId:net.peer.id,hostName:myPseudo,
+        guestId:net.conn?net.conn.peer:null,guestName:net.rivalName,
         fen:game.fen(),tab:currentTablero?currentTablero.key:'capablanca',
         bk:blueKing,rk:redKing,moves:game.history(),lineage:matchLineage.slice()});
     }
@@ -1410,6 +1441,9 @@ function tryClaimHub(){
           var jpid=String(d.pid||'').slice(0,40);
           // Dedupe by pid too: same identity reclaims its slot (old ghost evicted) instead of stacking a twin.
           net.roster=net.roster.filter(function(p){ return p.id!==d.id && (!jpid || p.pid!==jpid); });
+          // Safeguard: cap one hub's fan-out (matters most for the shared Plaza Pública, which can
+          // attract many simultaneous strangers, unlike a private room shared by direct link).
+          if(net.roster.length>=ROSTER_CAP){ try{ c.send({t:'plaza-full'}); }catch(e){} return; }
           entry={id:d.id,name:String(d.name||'???').slice(0,30),pid:jpid,last:Date.now(),conn:c};
           net.roster.push(entry); broadcastRoster();
         } else if(d.t==='lobby-ping' && entry){ entry.last=Date.now(); }
@@ -1462,7 +1496,9 @@ function tryConnectHub(){
   hc.on('data',function(d){
     if(!d||!d.t) return;
     if(d.t==='lobby-roster'){
-      net.roster=(d.list||[]).map(function(p){ return {id:p.id,name:p.name,last:Date.now(),conn:null}; });
+      // pid must travel through (was being dropped here), or the ghost-twin dedupe in renderLobby
+      // only ever worked from the hub's own vantage point and never for any other participant.
+      net.roster=(d.list||[]).map(function(p){ return {id:p.id,name:p.name,pid:p.pid||'',last:Date.now(),conn:null}; });
       if(d.match) net.matchInfo=d.match;
       if(d.queue) net.queue=d.queue;
       renderLobby();
@@ -1471,6 +1507,9 @@ function tryConnectHub(){
       // The hub promoted me from the queue: challenge the reigning champion now
       $('lobbyStatus').innerHTML='<span class="lobby-searching">¡Es tu turno! Retando a '+(d.targetName||'el campeón')+'…</span>';
       setTimeout(function(){ lobbyConnect(d.targetId,d.targetName||'el campeón'); },600);
+    }
+    else if(d.t==='plaza-full'){
+      $('lobbyStatus').innerHTML='<span class="lobby-searching">La Plaza Pública está llena ahora mismo. Toca &#x21bb; "Nueva sala" para abrir una privada.</span>';
     }
   });
   hc.on('close',function(){
@@ -1496,9 +1535,11 @@ function goOnline(){
   $('start').classList.add('in-lobby');
   $('startH2').textContent='La Taberna';
   playTavernMelody(); refreshLobbyTut();
-  if(!currentRoom){ currentRoom=roomFromUrl()||genCode(); }
+  // No link in the URL? Default to the shared Plaza Pública (not a fresh random room) so strangers
+  // who just open the site actually land together and can see/challenge each other.
+  if(!currentRoom){ currentRoom=roomFromUrl()||PUBLIC_PLAZA; }
   setRoomInUrl(currentRoom);
-  $('roomCode').textContent=currentRoom;
+  $('roomCode').textContent=(currentRoom===PUBLIC_PLAZA)?'Plaza Pública':currentRoom;
   $('myName').value=myPseudo;
   // Peer id derives from the PERMANENT pid (not the editable name), so a refresh reclaims the same
   // slot instead of spawning a ghost twin. net.idSalt only bumps if the id is momentarily taken.
@@ -1927,7 +1968,12 @@ function startGame(m){
     }
     pendingResume=null;
   } else {
-    currentTablero=pickTablero(); matchCode=currentRoom||genCode();
+    // matchCode must NEVER reuse the lobby's room code for AI/2P games: currentRoom can linger after
+    // visiting the lobby (netReset doesn't clear it), and with a shared default room (Plaza Pública)
+    // many different players would otherwise collide on the exact same matchCode, corrupting each
+    // other's saved gamestate in localStorage. Only online games legitimately want matchCode=currentRoom
+    // (so the room link points at the live game's state).
+    currentTablero=pickTablero(); matchCode=(m==='online' && currentRoom)?currentRoom:genCode();
     var initialOpp = (m==='ai')?('IA '+(level?level.name:'?'))
                   : (m==='2p')?'2P en persona'
                   : (net.rivalName||'rival');
