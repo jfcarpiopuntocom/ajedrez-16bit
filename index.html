@@ -31,8 +31,8 @@ body{ font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif;
 img{ -webkit-user-drag:none; user-select:none }
 h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
-.app{ height:100vh; height:100svh; max-width:1180px; margin:0 auto; padding:5px 6px;
-  display:flex; flex-direction:column; gap:4px; overflow:hidden }
+.app{ height:100vh; height:100svh; max-width:1180px; margin:0 auto; padding:4px 6px;
+  display:flex; flex-direction:column; gap:2px; overflow:hidden }
 
 /* ---------- START SCREEN ---------- */
 /* Splash: title masthead on top (always centered), then below it art+rail in two columns on desktop.
@@ -359,7 +359,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .status .chip.rojo{ background:var(--crimson) }
 .status .warn{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .status .win{ color:var(--emerald) !important; -webkit-text-fill-color:var(--emerald) !important }
-.status .lvl{ font-size:13px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; margin-left:6px }
+.status .lvl{ font-size:12px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; margin-left:4px }
 .status .lvl.tablero-tag{ display:block; margin-left:0; margin-top:2px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:13px }
 .status .lvl.tablero-tag b{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; letter-spacing:1px }
 /* Tablero themes - background applied to .app */
@@ -383,7 +383,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .lobby-resume-msg.ok{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 
 /* ---------- Stage ---------- */
-.stage{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; align-items:center; gap:3px; width:100% }
+.stage{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; align-items:center; gap:2px; width:100% }
 .board-area{ flex:1 1 auto; min-height:0; width:100%; display:flex; align-items:center; justify-content:center }
 .board-frame{ display:grid; grid-template-columns:var(--g) auto var(--g); grid-template-rows:var(--g) auto var(--g) }
 .coord{ display:flex; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:13px; font-weight:800; line-height:1; align-items:center; justify-content:center }
@@ -451,11 +451,11 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .cap .slots img{ height:20px; width:auto }
 
 /* ---------- Buttons (bottom) ---------- */
-.hud{ flex:0 0 auto; display:flex; flex-wrap:wrap; gap:6px; justify-content:center; align-items:center; padding:3px 4px 4px; min-height:48px }
-.hud button{ font-size:13px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
-  background:linear-gradient(#5a2a14,#3a1a0c); border:2px solid var(--gold); border-radius:10px; padding:8px 10px; min-height:44px; cursor:pointer; flex:0 0 auto }
+.hud{ flex:0 0 auto; display:flex; flex-wrap:wrap; gap:5px; justify-content:center; align-items:center; padding:2px 4px 3px; min-height:auto }
+.hud button{ font-size:12px; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  background:linear-gradient(#5a2a14,#3a1a0c); border:2px solid var(--gold); border-radius:8px; padding:6px 12px; min-height:36px; cursor:pointer; flex:0 0 auto }
 .hud button.gold{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
-@media (min-width:600px){ .hud{ gap:10px } .hud button{ font-size:15px; padding:9px 18px } }
+@media (min-width:600px){ .hud{ gap:8px } .hud button{ font-size:13px; padding:7px 14px; min-height:38px } }
 /* In-game confirm modal (replaces window.confirm) */
 .modal-veil{ position:fixed; inset:0; z-index:200; background:rgba(8,4,2,.78); display:none; align-items:center; justify-content:center; padding:18px }
 .modal-veil.show{ display:flex }
@@ -507,8 +507,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif; word-wrap:break-word; overflow-wrap:break-word;
   display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden }
 .quote b{ font-style:normal; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; display:block; margin-top:4px }
-.quote-top{ margin:0 auto 2px; max-width:600px; font-size:12px; padding:4px 8px }
-.codes-bar{ flex:0 0 auto; width:100%; text-align:center; font-size:13px; line-height:1.5; padding:6px 12px;
+.quote-top{ margin:0 auto 1px; max-width:600px; font-size:11px; padding:3px 6px; min-height:auto }
+.codes-bar{ flex:0 0 auto; width:100%; text-align:center; font-size:12px; line-height:1.3; padding:4px 8px;
   color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; min-height:auto }
 .codes-bar b{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-size:13px; font-weight:900 }
 .code-val{ font-family:Georgia,"Times New Roman",serif; font-weight:900; letter-spacing:2px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:16px }
