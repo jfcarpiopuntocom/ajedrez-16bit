@@ -1825,8 +1825,9 @@ function enterBoard(boardCode,ownerName){
   myBoard.targetBoard=boardCode;
   myBoard.targetOwner=ownerName;
   status('Entrando a board de '+ownerName+'...');
+  currentRoom=boardCode; // Temporarily use boardCode as the room
   if(!net.peer){ netInit(); }
-  setTimeout(function(){ netConnect(boardCode); },200);
+  setTimeout(function(){ netConnect(); },200);
 }
 $('copyBoardLink').onclick=function(){
   var url='https://jfcarpiopuntocom.github.io/ajedrez-16bit/#myboard='+myBoard.boardCode;
