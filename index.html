@@ -175,6 +175,10 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .mpublish:disabled{ background:#1a3a2c; border-color:#28ECAA; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; cursor:default }
 .lobby-btn-row{ display:flex; gap:8px; width:100% }
 .lobby-btn-row .lobby-share{ flex:1; font-size:13px; padding:8px 10px; min-height:38px }
+.my-board-section{ background:linear-gradient(#2a1a0c,#1a100a); border:2px solid var(--gold); padding:12px; border-radius:10px; margin-bottom:12px }
+.my-board-section h3{ margin:0 0 8px; font-size:14px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.board-code{ font-family:Georgia,"Times New Roman",serif; font-size:16px; font-weight:900; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; letter-spacing:2px; margin:4px 0; text-align:center }
+.board-status{ font-size:13px; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; margin:4px 0; text-align:center }
 .lobby-multi-list li{ cursor:pointer }
 .matches-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:18px 0; font-weight:600 }
 .lib-section{ margin:14px 0 2px; font-size:15px; font-weight:900; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:left; letter-spacing:.5px }
@@ -680,6 +684,22 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   <div class="lobby" id="lobby">
     <div class="lobby-tavern-wrap"><img class="lobby-tavern" src="assets/lobby-tavern.png" alt="La Taberna de los Reyes"></div>
     <div class="lobby-panel">
+      <!-- 🎯 MI BOARD PERSONAL -->
+      <div class="my-board-section">
+        <h3>🎯 Mi Board</h3>
+        <p class="board-code" id="myBoardCode">------</p>
+        <p class="board-status" id="myBoardStatus">Esperando rival aquí</p>
+        <button id="copyBoardLink" class="lobby-share" style="width:100%;margin-bottom:6px">Copiar link</button>
+        <details style="margin-bottom:12px">
+          <summary style="cursor:pointer;font-weight:700">👑 Mis Partidas (<span id="myGameCount">0</span>)</summary>
+          <ul class="lobby-list" id="myGamesList" style="margin-top:6px"></ul>
+        </details>
+      </div>
+
+      <!-- 📖 TABLEROS ABIERTOS -->
+      <h3 class="lobby-h">📖 Tableros Abiertos</h3>
+      <ul class="lobby-list" id="openBoardsList"></ul>
+
       <div class="lobby-tut" id="lobbyTut">
         <button class="lobby-tut-x" id="lobbyTutX" title="Ocultar guía">&#10005;</button>
         <p class="lobby-tut-h">Cómo funciona la Taberna</p>
@@ -1122,8 +1142,22 @@ const HUB_ID_BASE='jfreino-lobby-hub';
 // here never collide on identity; the only shared resource is the room's single hub peer (see
 // ROSTER_CAP below for the fan-out safeguard).
 const PUBLIC_PLAZA='PLAZA1';
-const ROSTER_CAP=40; // soft cap on the hub's broadcast/connection fan-out in one room
-let currentRoom=null; // 6-char room id (or PUBLIC_PLAZA); set by entering online flow
+const ROSTER_CAP=40;
+let currentRoom=null;
+// MI BOARD PERSONAL (Opción B — Tableros Vivos)
+let myBoard={boardCode:null,ownerId:null,ownerName:null,status:'open',currentGame:null,gameHistory:[]};
+function loadMyBoard(){
+  try{
+    myBoard.ownerId=myPid; myBoard.ownerName=myPseudo;
+    var saved=JSON.parse(localStorage.getItem('board_'+myPid));
+    if(saved){ myBoard=Object.assign(myBoard,saved); }
+    if(!myBoard.boardCode) myBoard.boardCode=genCode();
+    saveMyBoard();
+  }catch(e){ myBoard.boardCode=genCode(); saveMyBoard(); }
+}
+function saveMyBoard(){
+  try{ localStorage.setItem('board_'+myPid,JSON.stringify(myBoard)); idbPut('myboard',myBoard); }catch(e){}
+}
 /* URL scheme: #multiverso= is the primary form. #partida= and #room= stay readable
    low-key so older links (incl. ones already shared on WhatsApp) never break. */
 function roomFromUrl(){
@@ -1138,7 +1172,7 @@ function roomLink(code){ return 'https://jfcarpiopuntocom.github.io/ajedrez-16bi
 const PRESENCE_TTL=20000; // 20s (4x guest ping)
 const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'',
             hubPeer:null, hubConn:null, isHub:false, roster:[],
-            matchInfo:{live:false}, queue:[], openMulti:{} };
+            matchInfo:{live:false}, queue:[], openMulti:{}, openBoards:[] };
 const MULTI_CAP=12; // soft cap on how many published Multiverse gamestates a room keeps at once
 function netReset(){
   try{ if(net.conn) net.conn.close(); }catch(e){}
@@ -1613,12 +1647,13 @@ function tryConnectHub(){
 
 function goOnline(){
   if(typeof Peer==='undefined'){ $('startH2').textContent='No se pudo cargar el modo online.'; return; }
+  loadMyBoard();
   $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
   $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
   $('start').classList.add('in-lobby');
   $('startH2').textContent='La Taberna';
-  playTavernMelody(); refreshLobbyTut();
+  playTavernMelody(); refreshLobbyTut(); renderMyBoard(); renderOpenBoards();
   // No link in the URL? Default to the shared Plaza Pública (not a fresh random room) so strangers
   // who just open the site actually land together and can see/challenge each other.
   if(!currentRoom){ currentRoom=roomFromUrl()||PUBLIC_PLAZA; }
@@ -1758,6 +1793,52 @@ function refreshLobbyTut(){
   var hidden=false; try{ hidden=localStorage.getItem('losdosreinos_tut_hidden')==='1'; }catch(e){}
   $('lobbyTut').classList.toggle('hidden',hidden);
 }
+function renderMyBoard(){
+  $('myBoardCode').textContent=myBoard.boardCode||'------';
+  $('myBoardStatus').textContent=net.active?'Esperando rival aquí':'Conectando...';
+  var hist=$('myGamesList'); hist.innerHTML='';
+  (myBoard.gameHistory||[]).forEach(function(g){
+    var li=document.createElement('li');
+    li.innerHTML='<span style="font-size:13px"><b>'+g.matchCode+'</b> vs '+g.against+'</span>';
+    li.onclick=function(){ resumeGame(g.matchCode); };
+    hist.appendChild(li);
+  });
+  $('myGameCount').textContent=(myBoard.gameHistory||[]).length;
+}
+function renderOpenBoards(){
+  var list=$('openBoardsList'); list.innerHTML='';
+  if(!net.openBoards || net.openBoards.length===0){
+    list.innerHTML='<li style="text-align:center;color:#999;font-size:12px">Esperando tableros abiertos...</li>';
+    return;
+  }
+  net.openBoards.forEach(function(b){
+    if(b.boardCode===myBoard.boardCode) return;
+    if(b.peers>=2) return;
+    var badge=b.peers===1?'[🎮]':'[🟢]';
+    var li=document.createElement('li');
+    li.innerHTML=b.ownerName+' '+badge;
+    li.onclick=function(){ enterBoard(b.boardCode,b.ownerName); };
+    list.appendChild(li);
+  });
+}
+function enterBoard(boardCode,ownerName){
+  myBoard.targetBoard=boardCode;
+  myBoard.targetOwner=ownerName;
+  status('Entrando a board de '+ownerName+'...');
+  if(!net.peer){ netInit(); }
+  setTimeout(function(){ netConnect(boardCode); },200);
+}
+$('copyBoardLink').onclick=function(){
+  var url='https://jfcarpiopuntocom.github.io/ajedrez-16bit/#myboard='+myBoard.boardCode;
+  var b=$('copyBoardLink'); var orig=b.innerHTML;
+  var done=function(){ b.textContent='✓ Link copiado!'; setTimeout(function(){ b.innerHTML=orig; },1800); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(done,function(){
+      var ta=document.createElement('textarea'); ta.value=url; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+      ta.select(); try{ document.execCommand('copy'); done(); }catch(e){} document.body.removeChild(ta);
+    });
+  }else{ done(); }
+};
 $('lobbyTutX').onclick=function(){ try{ localStorage.setItem('losdosreinos_tut_hidden','1'); }catch(e){} $('lobbyTut').classList.add('hidden'); };
 $('lobbyShare').onclick=function(){
   var url=currentRoom?roomLink(currentRoom):'https://jfcarpiopuntocom.github.io/ajedrez-16bit/';
