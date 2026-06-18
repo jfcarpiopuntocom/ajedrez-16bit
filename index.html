@@ -1469,6 +1469,7 @@ function forkMultiverse(mi){
     stopTavernMusic();
     var forkColor=(mi.fen.indexOf(' w ')>0)?'w':'b'; // side to move forks the position
     var newCode=genCode();
+    var st=loadStats(); st.forks=(st.forks||0)+1; saveStats(st);
     pendingResume={data:{fen:mi.fen,tab:mi.tab||'capablanca',m:'ai',col:forkColor,
       bk:mi.bk||'k_bkA',rk:mi.rk||'k_rkA',moves:(mi.moves||[]).slice(),
       lineage:(mi.lineage||[]).concat([{at:(mi.moves||[]).length,opp:'Fork Multiverse',mode:'ai'}])},code:newCode};
@@ -2396,6 +2397,30 @@ function doMove(mv,fromRemote){
   if(mode==='ai' && !game.game_over() && game.turn()!==playerColor) setTimeout(aiMove,200);
 }
 
+/* ══════ LOCAL ANALYTICS ══════
+   Tracks game stats in localStorage. No external services. */
+const STATS_KEY='losdosreinos_stats';
+function loadStats(){ try{ return JSON.parse(localStorage.getItem(STATS_KEY))||{}; }catch(e){ return {}; } }
+function saveStats(s){ try{ localStorage.setItem(STATS_KEY,JSON.stringify(s)); }catch(e){} }
+function trackGame(result,opponent,moveCount){
+  var s=loadStats();
+  if(!s.total) s.total=0; if(!s.wins) s.wins=0; if(!s.losses) s.losses=0; if(!s.draws) s.draws=0;
+  if(!s.forks) s.forks=0; if(!s.avgMoves) s.avgMoves=0; if(!s.byLevel) s.byLevel={};
+  s.total++; s[result]=(s[result]||0)+1;
+  s.avgMoves=Math.round(((s.avgMoves*(s.total-1))+moveCount)/s.total);
+  if(mode==='ai'&&level){ var lk=level.key; if(!s.byLevel[lk]) s.byLevel[lk]={w:0,l:0,d:0}; s.byLevel[lk][result==='wins'?'w':result==='losses'?'l':'d']++; }
+  s.lastPlayed=Date.now();
+  saveStats(s);
+}
+function getStatsText(){
+  var s=loadStats(); if(!s.total) return 'Sin partidas registradas aun.';
+  var pct=s.total>0?Math.round((s.wins/s.total)*100):0;
+  var t='Partidas: '+s.total+' | Victorias: '+s.wins+' ('+pct+'%) | Derrotas: '+s.losses+' | Tablas: '+s.draws;
+  if(s.avgMoves) t+=' | Promedio: '+s.avgMoves+' jugadas';
+  if(s.forks) t+=' | Multiversos: '+s.forks;
+  return t;
+}
+
 /* ══════ GAME STATUS & VICTORY ══════
    Updates status bar text + triggers victory overlay on game end.
    Calls addGameToHistory() for Mi Tablero record-keeping.
@@ -2410,6 +2435,7 @@ function status(){
       var result=(mode==='online'?(winner===net.myColor?'win':'loss'):(playerColor===game.turn()?'loss':'win'));
       var opp=(mode==='online'?net.rivalName:'IA');
       addGameToHistory(matchCode,opp,result);
+      trackGame(result==='win'?'wins':result==='loss'?'losses':'draws',opp,game.history().length);
     }
     var winner=(game.turn()==='w'?'b':'w');
     if(typeof showVictory==='function') setTimeout(function(){ showVictory(winner); },600);
@@ -2427,6 +2453,7 @@ function status(){
     if(matchCode && myBoard) addGameToHistory(matchCode,mode==='online'?net.rivalName:'IA','draw');
   }
   if(game.in_stalemate()||game.in_threefold_repetition()||game.insufficient_material()||game.in_draw()){
+    trackGame('draws',mode==='online'?net.rivalName:'IA',game.history().length);
     if(typeof showDraw==='function') setTimeout(function(){ showDraw(); },600);
   }
   else if(game.in_check()) s='<span class="warn">¡Jaque!</span>';
