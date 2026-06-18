@@ -1107,6 +1107,7 @@ const BOARD_W=472, BOARD_H=536, ASPECT=BOARD_W/BOARD_H, FILES='abcdefgh';
 
 let mode='2p', level=LEVELS[1];
 let started=false, flipped=false, lastMove=null, busy=false, healing=false, resigned=false, playerColor='w';
+let spectating=false, specFenTimer=null;
 const game=new Chess(); const capW=[], capB=[];
 let muted=false, redoStack=[];
 
@@ -1435,6 +1436,10 @@ function renderLiveBlock(){
     fb.textContent='✦ Abrir Multiverse aquí';
     fb.onclick=function(){ forkMultiverse(mi); };
     btns.appendChild(fb);
+    var wb=document.createElement('button'); wb.className='btn-fork';
+    wb.textContent='👁 Ver partida';
+    wb.onclick=function(){ enterSpectator(mi); };
+    btns.appendChild(wb);
   }
   box.appendChild(h); box.appendChild(vs); box.appendChild(q); box.appendChild(btns);
 }
@@ -1454,6 +1459,56 @@ function forkMultiverse(mi){
     netReset(); currentRoom=newCode;
     setTimeout(function(){ startGame('ai'); },300);
   });
+}
+
+/* ══════ SPECTATOR MODE ══════
+   Read-only view of a live match. Board updates via hub FEN stream every 4s.
+   No moves allowed; status shows participants. Exit returns to lobby. */
+function enterSpectator(mi){
+  if(!mi||!mi.fen) return;
+  spectating=true;
+  stopTavernMusic();
+  var tab=tableroFromKey(mi.tab||'capablanca');
+  currentTablero=tab;
+  if(mi.bk) blueKing=mi.bk; if(mi.rk) redKing=mi.rk;
+  game.load(mi.fen);
+  capW.length=0; capB.length=0; lastMove=null;
+  started=true; mode='2p'; resigned=false;
+  $('start').classList.add('hidden');
+  $('app').style.display='flex';
+  $('newgame').style.display='none';
+  $('undo').style.display='none';
+  $('redo').style.display='none';
+  $('drawbtn').style.display='none';
+  $('resign').style.display='none';
+  $('rematch').style.display='none';
+  var blb=$('backLobbyBtn'); if(blb){ blb.style.display='inline-block'; blb.textContent='← Salir'; blb.onclick=exitSpectator; }
+  render(); renderHistory();
+  statusEl.innerHTML='<span class="chip azul">👁 Observando:</span> '+(mi.hostName||'?')+' vs '+(mi.guestName||'?');
+  specFenTimer=setInterval(function(){
+    var fresh=net.matchInfo;
+    if(!fresh||!fresh.live||!fresh.fen){ exitSpectator(); return; }
+    var oldFen=game.fen();
+    if(fresh.fen!==oldFen){
+      game.load(fresh.fen);
+      if(fresh.bk) blueKing=fresh.bk; if(fresh.rk) redKing=fresh.rk;
+      render(); renderHistory();
+      statusEl.innerHTML='<span class="chip azul">👁 Observando:</span> '+(fresh.hostName||'?')+' vs '+(fresh.guestName||'?');
+    }
+  },2000);
+  startQuotes();
+}
+function exitSpectator(){
+  spectating=false;
+  if(specFenTimer){ clearInterval(specFenTimer); specFenTimer=null; }
+  started=false;
+  $('app').style.display='none';
+  $('start').classList.remove('hidden');
+  $('newgame').style.display='';
+  $('undo').style.display='';
+  $('redo').style.display='';
+  var blb=$('backLobbyBtn'); if(blb){ blb.onclick=null; }
+  renderLobby();
 }
 
 /* ===== Publish a saved AI gamestate to the room so ANYONE present can take it over =====
@@ -2303,6 +2358,7 @@ window.addEventListener('pointerup',e=>{ if(drag) endDrag(e,false); });
 window.addEventListener('blur',()=>cleanupDrag());
 
 function tryMove(from,to){
+  if(spectating) return;
   const ms=game.moves({square:from,verbose:true}).filter(m=>m.to===to);
   if(!ms.length){ render(); return; }
   if(ms.some(m=>m.promotion)){ doMove({from,to,promotion:'q'}); return; }
