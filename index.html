@@ -47,6 +47,10 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .start-art img{ width:100%; height:auto; display:block; max-height:72vh; object-fit:cover; image-rendering:pixelated; filter:contrast(1.06) saturate(.95) }
 .start-rail{ flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
   min-width:0; max-width:430px; overflow-y:auto; max-height:100%; padding:4px 2px }
+/* Theme-pack caption: Los Dos Reinos is the first of several board themes (sci-fi, jungle,
+   conquistadors). Small and quiet — a label, not a second headline. */
+.theme-caption{ margin:6px 0 0; font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
+  color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center }
 /* When the lobby is in front, hide the splash art/rail so the lobby (with its tavern image) owns the screen. */
 .start.in-lobby .start-body{ display:none }
 /* Safety net: the lobby is sized to fit without scrolling, but if a device's visual viewport
@@ -55,8 +59,12 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .start.in-lobby{ overflow-y:auto; -webkit-overflow-scrolling:touch }
 @media (max-width:720px){
   /* Mobile: original tight layout (title + controls only). The duel art is desktop-only —
-     on mobile it crowded the rail and pushed buttons down. Splash-start flash + peace-card still work. */
-  .start{ justify-content:center; padding:10px 12px 18px }
+     on mobile it crowded the rail and pushed buttons down. Splash-start flash + peace-card still work.
+     Anchored to the top (not centered): centering made each step (menu / level-pick / color-pick /
+     lobby) float at a different height depending on how much content it had, leaving an inconsistent,
+     sometimes large gap under the fixed back/help/crown buttons. Top-anchored + a fixed clearance
+     padding keeps every step starting at the same, predictable spot right under those buttons. */
+  .start, .start.in-lobby{ justify-content:flex-start; padding:calc(max(10px,env(safe-area-inset-top)) + 54px) 12px 18px }
   .start-body{ flex-direction:column; align-items:center; gap:6px; flex:0 1 auto }
   .start-art{ display:none }
   .start-rail{ max-height:none; overflow-y:visible; max-width:380px; justify-content:flex-start }
@@ -235,9 +243,14 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   .lobby-room-bar{ padding:5px 10px }
   .lobby-resume{ margin:0 }
 }
-.lobby-room-bar{ display:flex; align-items:center; gap:8px; width:100%; max-width:380px; padding:6px 12px; border-radius:10px; background:#1c140d; border:1px solid rgba(232,160,32,.25) }
-.lobby-room-label{ font-size:14px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; flex:1 }
+/* flex-wrap so a long label (e.g. "Plaza Pública") drops the buttons to their own row instead of
+   breaking the label text mid-word against them. */
+.lobby-room-bar{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; width:100%; max-width:380px; padding:6px 12px; border-radius:10px; background:#1c140d; border:1px solid rgba(232,160,32,.25) }
+.lobby-room-label{ font-size:14px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; flex:1 1 auto; min-width:0 }
 .lobby-room-label strong{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:16px; letter-spacing:2px; font-family:Georgia,"Times New Roman",serif; margin-left:4px }
+/* The Plaza's friendly name is longer than a 6-char code: drop the NES-style spacing/size so it
+   reads as a normal label instead of stretching wide and forcing an awkward wrap. */
+.lobby-room-label strong.room-long{ font-size:14px; letter-spacing:0; font-family:inherit }
 .lobby-share-sm{ font-size:13px !important; padding:5px 10px !important; min-height:32px !important }
 /* King of the Hill: live match + queue */
 .lobby-live{ width:100%; border:2px solid var(--crimson); border-radius:12px; padding:10px 12px; background:linear-gradient(160deg,#2a0e12,#1a0608); display:flex; flex-direction:column; gap:8px }
@@ -329,7 +342,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .chat-quick button{ font-size:13px; font-weight:700; padding:7px 6px; min-height:34px; border-radius:8px; border:1px solid var(--gold);
   background:#241a10; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; cursor:pointer; text-align:left; line-height:1.15 }
 .chat-quick button:hover,.chat-quick button:active{ background:#34260f; border-color:#FFD060 }
-.chat-quick button:disabled{ opacity:1; color:#777777 !important; -webkit-text-fill-color:#777777 !important; cursor:wait }
+.chat-quick button:disabled{ color:#999999 !important; -webkit-text-fill-color:#999999 !important; cursor:wait }
 body.focusmode .title-img, body.focusmode .status, body.focusmode .left-rail,
 body.focusmode .note, body.focusmode .hud, body.focusmode .site-credit,
 body.focusmode #chatPanel{ display:none !important }
@@ -358,10 +371,10 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .lobby-resume{ display:flex; gap:6px; width:100%; max-width:360px; align-items:center }
 .lobby-resume input{ flex:1; font-size:15px; font-weight:800; padding:8px 10px; min-height:40px; border:2px solid var(--gold); border-radius:10px;
   background:#1c140d; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; text-align:center; text-transform:uppercase; letter-spacing:2px }
-.lobby-resume input::placeholder{ color:#777 !important; -webkit-text-fill-color:#777 !important; letter-spacing:0 }
+.lobby-resume input::placeholder{ color:#999999 !important; -webkit-text-fill-color:#999999 !important; letter-spacing:0 }
 .lobby-resume button{ font-size:14px; font-weight:800; padding:8px 12px; min-height:40px; border-radius:10px; border:2px solid var(--gold);
   background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important; cursor:pointer }
-.lobby-resume button:disabled{ background:#2a1a0c; color:#777 !important; -webkit-text-fill-color:#777 !important; cursor:not-allowed }
+.lobby-resume button:disabled{ background:#2a1a0c; color:#999999 !important; -webkit-text-fill-color:#999999 !important; cursor:not-allowed }
 .lobby-resume-msg{ margin:0; font-size:12px; min-height:14px; color:#FF8888 !important; -webkit-text-fill-color:#FF8888 !important; text-align:center }
 .lobby-resume-msg.ok{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 
@@ -484,14 +497,14 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .help-modal .help-thanks{ margin:10px 0 0; font-size:13px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; font-weight:800; letter-spacing:.5px }
 .help-modal .help-thanks-top{ margin:14px 0 6px; font-size:16px; font-style:italic }
 .note{ flex:0 0 auto; text-align:center; font-size:13px; min-height:15px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
-/* Quote: own gentle frame so it never visually bleeds into the move history below.
-   Truncates to 3 lines with ellipsis to keep the layout stable when an aphorism is long. */
 .quote{ flex:0 0 auto; width:100%; max-width:430px; text-align:center; font-style:italic; font-size:13px; line-height:1.35;
   color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; padding:6px 10px; min-height:17px; transition:opacity .35s;
   background:linear-gradient(160deg,#1f160d,#150e07); border:1px solid rgba(232,160,32,.3); border-radius:8px; margin-bottom:2px;
   font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif; word-wrap:break-word; overflow-wrap:break-word;
   display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden }
 .quote b{ font-style:normal; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; display:block; margin-top:4px }
+.quote-top{ margin:0 auto 4px; max-width:600px }
+.codes-bar{ text-align:center; font-size:13px; padding:4px 8px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
 
 /* ---------- Desktop / tablet ---------- */
 @media (min-width:900px){
@@ -504,8 +517,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   .board-area{ flex:1 1 auto; order:0; align-self:stretch }
   .cap.red{ order:1 } .cap.blue{ order:2 }
   .left-rail{ order:-1; display:flex; flex-direction:column; gap:10px; flex:0 0 210px; width:210px; max-width:210px; align-self:stretch }
-  .quote{ flex:0 1 auto; width:100%; max-width:100%; display:block; text-align:center;
-    font-size:14px; line-height:1.45; padding:12px; min-height:0; border:2px solid var(--gold); border-radius:12px; background:linear-gradient(160deg,#241a10,#140d07) }
+  .quote-top{ max-width:700px; font-size:14px; line-height:1.45; padding:10px 16px; border:2px solid var(--gold); border-radius:12px; background:linear-gradient(160deg,#241a10,#140d07) }
   .history{ flex:1 1 auto; width:100%; max-width:100%; max-height:none }
   .history ol{ columns:1 }
   .title-img{ max-height:12vh }
@@ -557,7 +569,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     </ul>
 
     <h3>Próximamente</h3>
-    <p>Más tableros: <span class="accent">el espacio</span> y <span class="accent">la selva</span>. Cada uno con su propio fondo y atmósfera.</p>
+    <p><span class="accent">Los Dos Reinos</span> es el primero de varios tableros temáticos. Vienen en camino: <span class="accent">sci-fi</span>, <span class="accent">la selva</span> y <span class="accent">españoles vs. indios</span>. Cada uno con su propio fondo, atmósfera y reyes.</p>
 
     <p class="help-thanks help-thanks-top">Gracias por jugar.</p>
     <div class="help-footer">
@@ -593,8 +605,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <p class="cel-blurb" id="celBlurb">&mdash;</p>
     <p class="cel-q">¿Qué bando tomas a cargo?</p>
     <div class="cel-colors">
-      <button id="celAzul" class="bigbtn"><img src="assets/shield-blue.png" class="shield-icon"> Azul</button>
-      <button id="celRojo" class="bigbtn ai"><img src="assets/shield-red.png" class="shield-icon"> Rojo</button>
+      <button id="celAzul" class="bigbtn"><img src="assets/shield-blue.png" class="shield-icon"> Azul (blancas)</button>
+      <button id="celRojo" class="bigbtn ai"><img src="assets/shield-red.png" class="shield-icon"> Rojo (negras)</button>
     </div>
     <p class="cel-q">Dificultad de la IA rival. Juega el otro bando: tú la observas en acción.</p>
     <div class="cel-levels" id="celLevels"></div>
@@ -638,23 +650,24 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   <p class="lobby-resume-msg" id="resumeMsg"></p>
   <div class="levels" id="levels"></div>
   <div class="colorpick" id="colorpick">
-    <button class="bigbtn" id="pickBlue"><img src="assets/shield-blue.png" class="shield-icon"> Azul</button>
-    <button class="bigbtn ai" id="pickRed"><img src="assets/shield-red.png" class="shield-icon"> Rojo</button>
+    <button class="bigbtn" id="pickBlue"><img src="assets/shield-blue.png" class="shield-icon"> Azul (blancas)</button>
+    <button class="bigbtn ai" id="pickRed"><img src="assets/shield-red.png" class="shield-icon"> Rojo (negras)</button>
   </div>
   <div class="kingpick" id="kingpick">
     <div class="kingrow" data-side="w">
-      <span class="lbl">Elegir Rey Azul:</span>
+      <span class="lbl">Elegir Rey Azul (blancas):</span>
       <button data-k="k_bkA" class="active"><img src="assets/pieces/k_bkA_hi.png?v=22" alt="Rey azul 1"></button>
       <button data-k="k_bkB"><img src="assets/pieces/k_bkB_hi.png?v=22" alt="Rey azul 2"></button>
       <button data-k="k_bkC"><img src="assets/pieces/k_bkC_hi.png?v=22" alt="Rey azul 3"></button>
     </div>
     <div class="kingrow" data-side="b">
-      <span class="lbl">Elegir Rey Rojo:</span>
+      <span class="lbl">Elegir Rey Rojo (negras):</span>
       <button data-k="k_rkA" class="active"><img src="assets/pieces/k_rkA_hi.png?v=22" alt="Rey rojo 1"></button>
       <button data-k="k_rkB"><img src="assets/pieces/k_rkB_hi.png?v=22" alt="Rey rojo 2"></button>
       <button data-k="k_rkC"><img src="assets/pieces/k_rkC_hi.png?v=22" alt="Rey rojo 3"></button>
     </div>
   </div>
+  <p class="theme-caption">Los Dos Reinos</p>
   </div><!-- /.start-rail -->
   </div><!-- /.start-body -->
   <div class="lobby" id="lobby">
@@ -705,10 +718,12 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <!-- ===== GAME ===== -->
 <div class="app" id="app" style="display:none">
   <img class="title-img" src="assets/title.png" alt="Los Dos Reinos: ¡ajedrez fantástico!">
+  <div class="quote quote-top" id="quote"></div>
   <div class="status" id="status"></div>
+  <div class="codes-bar" id="codesBar"></div>
 
   <div class="stage">
-    <section class="cap red"><h3><img src="assets/shield-red.png" class="cap-icon"> Capturas Rojo <span class="score" id="scoreB"></span></h3><div class="slots" id="capB"></div></section>
+    <section class="cap red"><h3><img src="assets/shield-red.png" class="cap-icon"> Capturas Rojo (negras) <span class="score" id="scoreB"></span></h3><div class="slots" id="capB"></div></section>
     <div class="board-area">
       <div class="board-frame">
         <div></div><div class="coord files" id="filesTop"></div><div></div>
@@ -718,9 +733,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
         <div></div><div class="coord files" id="filesBot"></div><div></div>
       </div>
     </div>
-    <section class="cap blue"><h3><img src="assets/shield-blue.png" class="cap-icon"> Capturas Azul <span class="score" id="scoreW"></span></h3><div class="slots" id="capW"></div></section>
+    <section class="cap blue"><h3><img src="assets/shield-blue.png" class="cap-icon"> Capturas Azul (blancas) <span class="score" id="scoreW"></span></h3><div class="slots" id="capW"></div></section>
     <div class="left-rail">
-      <div class="quote" id="quote"></div>
       <aside class="history" id="history"><h4>Jugadas</h4><ol id="histlist"></ol></aside>
       <!-- End-of-game card: image speaks for itself. Subtitle echoes the alt text. -->
       <div class="peace-card" id="peaceCard" style="display:none">
@@ -1568,7 +1582,7 @@ function tryConnectHub(){
       setTimeout(function(){ lobbyConnect(d.targetId,d.targetName||'el campeón'); },600);
     }
     else if(d.t==='plaza-full'){
-      $('lobbyStatus').innerHTML='<span class="lobby-searching">La Plaza Pública está llena ahora mismo. Toca &#x21bb; "Nueva sala" para abrir una privada.</span>';
+      $('lobbyStatus').innerHTML='<span class="lobby-searching">La Taberna está llena ahora mismo. Toca &#x21bb; "Nueva sala" para abrir una privada.</span>';
     }
   });
   hc.on('close',function(){
@@ -1598,7 +1612,8 @@ function goOnline(){
   // who just open the site actually land together and can see/challenge each other.
   if(!currentRoom){ currentRoom=roomFromUrl()||PUBLIC_PLAZA; }
   setRoomInUrl(currentRoom);
-  $('roomCode').textContent=(currentRoom===PUBLIC_PLAZA)?'Plaza Pública':currentRoom;
+  $('roomCode').textContent=(currentRoom===PUBLIC_PLAZA)?'La Taberna':currentRoom;
+  $('roomCode').classList.toggle('room-long',currentRoom===PUBLIC_PLAZA);
   $('myName').value=myPseudo;
   // Peer id derives from the PERMANENT pid (not the editable name), so a refresh reclaims the same
   // slot instead of spawning a ghost twin. net.idSalt only bumps if the id is momentarily taken.
@@ -1877,7 +1892,7 @@ function openLibrary(){
     var nm=document.createElement('span'); nm.className='mcode cel-name'; nm.textContent=g.name;
     var meta=document.createElement('span'); meta.className='mmeta'; meta.textContent=g.players+(g.year?(' · '+g.year):'');
     left.appendChild(nm); left.appendChild(meta);
-    var right=document.createElement('div'); right.className='mright cel-take'; right.textContent=g.take==='w'?'Azul':'Rojo';
+    var right=document.createElement('div'); right.className='mright cel-take'; right.textContent=g.take==='w'?'Azul (blancas)':'Rojo (negras)';
     li.appendChild(left); li.appendChild(right);
     li.onclick=function(){ openCelebre(g.key); };
     cl.appendChild(li);
@@ -2215,22 +2230,26 @@ function doMove(mv,fromRemote){
 /* ===== Status ===== */
 function status(){
   let s='';
-  if(game.in_checkmate()) s=game.turn()==='w'?'<span class="warn">¡Jaque mate! Vence el Rojo. 🐉</span>':'<span class="win">¡Jaque mate! Vence el Azul. 🦁</span>';
+  if(game.in_checkmate()) s=game.turn()==='w'?'<span class="warn">¡Jaque mate! Vence el Rojo (negras). 🐉</span>':'<span class="win">¡Jaque mate! Vence el Azul (blancas). 🦁</span>';
   else if(game.in_stalemate()) s='Tablas por ahogado.';
   else if(game.in_threefold_repetition()) s='Tablas por repetición.';
   else if(game.insufficient_material()) s='Tablas: material insuficiente.';
   else if(game.in_draw()) s='Tablas (50 movimientos).';
   else if(game.in_check()) s='<span class="warn">¡Jaque!</span>';
   else if(mode==='online') s=(game.turn()===net.myColor?'<span class="chip '+(net.myColor==='w'?'azul':'rojo')+'">Tu turno</span>':'<span class="chip '+(net.myColor==='w'?'rojo':'azul')+'">Turno de '+(net.rivalName||'rival')+'…</span>');
-  else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul"><img src="assets/shield-blue.png" class="chip-icon"> Turno Azul</span>':'<span class="chip rojo"><img src="assets/shield-red.png" class="chip-icon"> Turno Rojo</span>');
+  else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul"><img src="assets/shield-blue.png" class="chip-icon"> Turno Azul (blancas)</span>':'<span class="chip rojo"><img src="assets/shield-red.png" class="chip-icon"> Turno Rojo (negras)</span>');
   else{ var eng=fallback?'IA local':'Stockfish'; var ln=level.name+' &middot; powered by '+eng;
     s=(game.turn()===playerColor?'<span class="chip '+(playerColor==='w'?'azul':'rojo')+'">Tu turno</span> <span class="lvl">vs. '+ln+'</span>':'<span class="chip '+(playerColor==='w'?'rojo':'azul')+'">Piensa el rival…</span> <span class="lvl">'+ln+'</span>'); }
-  if(matchCode && mode!=='online'){
-    s+=' <span class="lvl tablero-tag">'
-      +'Código para continuar la jugada como Rey Azul: <b>'+sideCodeFor(matchCode,'w')+'</b>'
-      +'<br>Código para continuar la jugada como Rey Rojo: <b>'+sideCodeFor(matchCode,'b')+'</b></span>';
-  }
   statusEl.innerHTML=s;
+  var cb=$('codesBar');
+  if(cb){
+    if(matchCode && mode!=='online'){
+      cb.innerHTML='<span class="lvl tablero-tag">'
+        +'Continuar como Azul (blancas): <b>'+sideCodeFor(matchCode,'w')+'</b>'
+        +' &nbsp;·&nbsp; Rojo (negras): <b>'+sideCodeFor(matchCode,'b')+'</b></span>';
+      cb.style.display='';
+    } else { cb.innerHTML=''; cb.style.display='none'; }
+  }
 }
 
 /* ===== Stockfish ===== */
@@ -2412,8 +2431,8 @@ async function doResign(){
   if(mode==='online'){ net.iResigned=true; netSend({t:'resign'}); }
   var loser=mode==='online'?net.myColor:game.turn();
   statusEl.innerHTML=loser==='w'
-    ?'<span class="warn">Azul se rindió. Vence el Rojo. 🐉</span>'
-    :'<span class="win">Rojo se rindió. Vence el Azul. 🦁</span>';
+    ?'<span class="warn">Azul se rindió. Vence el Rojo (negras). 🐉</span>'
+    :'<span class="win">Rojo se rindió. Vence el Azul (blancas). 🦁</span>';
   SFX.mate(); showEndButtons();
 }
 async function offerDraw(){
