@@ -662,6 +662,9 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
       <li><span class="accent">Música viva:</span> la melodía de la Taberna se compone en tiempo real con Web Audio, nota por nota. No hay archivo de audio que cargar.</li>
     </ul>
 
+    <h3>Tus estadísticas</h3>
+    <p id="helpStats" class="help-stats"></p>
+
     <h3>Próximamente</h3>
     <p><span class="accent">Los Dos Reinos</span> es el primero de varios tableros temáticos. Vienen en camino: <span class="accent">sci-fi</span>, <span class="accent">la selva</span> y <span class="accent">españoles vs. indios</span>. Cada uno con su propio fondo, atmósfera y reyes.</p>
 
@@ -2782,7 +2785,7 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
   });
   // Help modal handlers
   var helpVeil=document.getElementById('helpVeil');
-  document.getElementById('helpBtn').addEventListener('click', function(){ helpVeil.classList.add('show'); });
+  document.getElementById('helpBtn').addEventListener('click', function(){ helpVeil.classList.add('show'); var hs=$('helpStats'); if(hs) hs.textContent=getStatsText(); });
   document.getElementById('helpClose').addEventListener('click', function(){ helpVeil.classList.remove('show'); });
   helpVeil.addEventListener('click', function(e){ if(e.target===helpVeil) helpVeil.classList.remove('show'); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && helpVeil.classList.contains('show')) helpVeil.classList.remove('show'); });
