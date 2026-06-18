@@ -1178,7 +1178,9 @@ const SFX={
   // Distant bell warning
   check:   ()=>{ tone(880,0.32,'sine',0.07,0,2400); tone(1320,0.22,'sine',0.04,0.05,2600); },
   // Solemn descending bell sequence
-  mate:    ()=>{ [880,659,523,392].forEach((f,i)=>tone(f,0.40,'sine',0.08,i*0.22,2200)); }
+  mate:    ()=>{ [880,659,523,392].forEach((f,i)=>tone(f,0.40,'sine',0.08,i*0.22,2200)); },
+  // Two neutral tones (neither triumphant nor mournful)
+  draw:    ()=>{ tone(523,0.30,'sine',0.06,0,2000); tone(523,0.30,'sine',0.06,0.35,2000); }
 };
 
 const $=id=>document.getElementById(id);
@@ -2457,6 +2459,7 @@ function status(){
   }
   if(game.in_stalemate()||game.in_threefold_repetition()||game.insufficient_material()||game.in_draw()){
     trackGame('draws',mode==='online'?net.rivalName:'IA',game.history().length);
+    SFX.draw();
     if(typeof showDraw==='function') setTimeout(function(){ showDraw(); },600);
   }
   else if(game.in_check()) s='<span class="warn">¡Jaque!</span>';
