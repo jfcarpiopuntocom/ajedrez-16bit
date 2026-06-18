@@ -2506,8 +2506,10 @@ async function doResign(){
   if(mode==='online'){ net.iResigned=true; netSend({t:'resign'}); }
   var loser=mode==='online'?net.myColor:game.turn();
   statusEl.innerHTML=loser==='w'
-    ?'<span class="warn">Azul se rindió. Vence el Rojo. 🐉</span>'
-    :'<span class="win">Rojo se rindió. Vence el Azul. 🦁</span>';
+    ?'<span class="warn">Azul se rindió. Vence el Rojo (negras). 🐉</span>'
+    :'<span class="win">Rojo se rindió. Vence el Azul (blancas). 🦁</span>';
+  var winner=(loser==='w'?'b':'w');
+  if(typeof showVictory==='function') setTimeout(function(){ showVictory(winner); },600);
   SFX.mate(); showEndButtons();
 }
 async function offerDraw(){
