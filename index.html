@@ -729,7 +729,6 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
         <p><b>3.</b> ¿Tienes un código de partida? Síguelo con la IA, o ábrelo para que un rival lo termine contigo.</p>
       </div>
       <p class="lobby-name"><input class="lobby-name-input" id="myName" maxlength="30" autocomplete="off" spellcheck="false" placeholder="Tu nombre"> <button class="lobby-rename" id="renamePseudo" title="Generar al azar">&#x21bb;</button> <button class="lobby-rename" id="savePseudo" title="Guardar nombre">&#10003;</button></p>
-      <p class="lobby-mute-row"><button class="lobby-mute" id="lobbyMute" title="Música de taberna">&#128266;</button> <span class="lobby-mute-lbl" id="lobbyMuteLbl">mutear ambiente de la taberna</span></p>
       <div class="lobby-live" id="lobbyLive" style="display:none"></div>
       <h3 class="lobby-h">Jugadores en la Taberna</h3>
       <ul class="lobby-list" id="lobbyList"></ul>
@@ -748,9 +747,10 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
         <button id="lobbyResumeBtn" disabled>&#9654; Ir</button>
       </div>
       <p class="lobby-resume-msg" id="lobbyResumeMsg"></p>
-      <div class="lobby-btn-row">
-        <button class="lobby-share" id="myMatches" style="background:linear-gradient(#2a1a0c,#1a100a)">👑 Librería Real</button>
-        <button class="lobby-share" id="lobbyFamous" style="background:linear-gradient(#14302a,#0c1a16)">⚔️ Partidas Famosas</button>
+      <div class="lobby-btn-row" style="gap:6px">
+        <button class="lobby-share" id="myMatches" style="background:linear-gradient(#2a1a0c,#1a100a);flex:1.5">👑 Librería Real</button>
+        <button class="lobby-share" id="lobbyFamous" style="background:linear-gradient(#14302a,#0c1a16);flex:1">⚔️ Famosas</button>
+        <button class="lobby-share" id="lobbyMute" title="Mutear música de taberna" style="flex:0.6;background:#241a10;border:1px solid #2a2010;padding:8px 6px;min-width:40px;font-size:14px">&#128266;</button>
       </div>
     </div>
   </div>
