@@ -840,6 +840,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <button id="rematch" style="display:none">Revancha</button>
     <button id="backLobbyBtn" style="display:none">&larr; Taberna</button>
     <button id="mutebtn" title="Sonido">🔊</button>
+    <button id="exportPgn" title="Exportar PGN (compatible con chess.com y lichess)">📋 PGN</button>
   </div>
   <div class="note" id="note"></div>
 </div>
@@ -2528,6 +2529,17 @@ $('rematch').onclick=()=>{
   if(mode==='ai') boot();
 };
 $('mutebtn').onclick=()=>{ muted=!muted; $('mutebtn').textContent=muted?'🔇':'🔊'; actxInit(); };
+$('exportPgn').onclick=function(){
+  var headers='[Event "Los Dos Reinos"]\n[Site "jfcarpiopuntocom.github.io/ajedrez-16bit"]\n'
+    +'[Date "'+new Date().toISOString().slice(0,10).replace(/-/g,'.')+'\"]\n'
+    +'[White "Azul'+(mode==='ai'&&playerColor==='w'?' ('+myPseudo+')':'')+'"]\n'
+    +'[Black "Rojo'+(mode==='ai'&&playerColor==='b'?' ('+myPseudo+')':'')+'"]\n'
+    +'[Result "'+(game.in_checkmate()?(game.turn()==='w'?'0-1':'1-0'):(game.game_over()?'1/2-1/2':'*'))+'\"]\n\n';
+  var pgn=headers+game.history().join(' ');
+  if(navigator.clipboard){ navigator.clipboard.writeText(pgn).then(function(){
+    var b=$('exportPgn'); var o=b.textContent; b.textContent='Copiado!'; setTimeout(function(){ b.textContent=o; },1500);
+  }).catch(function(){}); }
+};
 
 /* ===== Resign / Draw ===== */
 // Host reports the finished duel to the hub; the winner keeps the seat, next challenger is summoned.
