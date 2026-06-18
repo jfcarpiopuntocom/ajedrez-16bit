@@ -152,7 +152,13 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .matches-list li .mleft{ display:flex; flex-direction:column; gap:1px; text-align:left }
 .matches-list li .mcode{ font-size:16px; font-weight:900; letter-spacing:2px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-family:Georgia,"Times New Roman",serif }
 .matches-list li .mmeta{ font-size:11px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
-.matches-list li .mright{ font-size:11px; font-weight:700; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:right; min-width:70px }
+.matches-list li .mright{ font-size:11px; font-weight:700; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:right; min-width:70px;
+  display:flex; flex-direction:column; align-items:flex-end; gap:4px }
+.mpublish{ font-size:11px; font-weight:800; padding:4px 8px; min-height:26px; border-radius:8px; border:1px solid var(--gold);
+  background:#241a10; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; cursor:pointer; white-space:nowrap }
+.mpublish:hover,.mpublish:active{ background:#34260f }
+.mpublish:disabled{ background:#1a3a2c; border-color:#28ECAA; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; cursor:default }
+.lobby-multi-list li{ cursor:pointer }
 .matches-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:18px 0; font-weight:600 }
 .lib-section{ margin:14px 0 2px; font-size:15px; font-weight:900; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:left; letter-spacing:.5px }
 .lib-section-sub{ margin:0 0 8px; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:left; line-height:1.4; font-weight:600 }
@@ -667,6 +673,10 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
       <h3 class="lobby-h">Jugadores en la Taberna</h3>
       <ul class="lobby-list" id="lobbyList"></ul>
       <p class="lobby-status" id="lobbyStatus"><span class="lobby-searching">Buscando rivales...</span></p>
+      <div id="lobbyMultiBox" style="display:none">
+        <h3 class="lobby-h">&#127744; Multiverse abiertos aquí</h3>
+        <ul class="lobby-list lobby-multi-list" id="lobbyMultiList"></ul>
+      </div>
       <div class="lobby-room-bar">
         <span class="lobby-room-label">Partida <strong id="roomCode">------</strong></span>
         <button class="lobby-rename" id="newRoom" title="Nueva sala">&#x21bb;</button>
@@ -1103,7 +1113,8 @@ function roomLink(code){ return 'https://jfcarpiopuntocom.github.io/ajedrez-16bi
 const PRESENCE_TTL=20000; // 20s (4x guest ping)
 const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'',
             hubPeer:null, hubConn:null, isHub:false, roster:[],
-            matchInfo:{live:false}, queue:[] };
+            matchInfo:{live:false}, queue:[], openMulti:{} };
+const MULTI_CAP=12; // soft cap on how many published Multiverse gamestates a room keeps at once
 function netReset(){
   try{ if(net.conn) net.conn.close(); }catch(e){}
   try{ if(net.hubConn) net.hubConn.close(); }catch(e){}
@@ -1111,7 +1122,7 @@ function netReset(){
   try{ if(net.peer) net.peer.destroy(); }catch(e){}
   net.active=false; net.peer=null; net.conn=null; net.isHost=false; net.myColor='w'; net.rivalName='';
   net.hubPeer=null; net.hubConn=null; net.isHub=false; net.roster=[];
-  net.matchInfo={live:false}; net.queue=[]; net.iResigned=false; net.endReported=false;
+  net.matchInfo={live:false}; net.queue=[]; net.iResigned=false; net.endReported=false; net.openMulti={};
   if(lobbyTimer){ clearInterval(lobbyTimer); lobbyTimer=null; }
   if(hubHeartbeat){ clearInterval(hubHeartbeat); hubHeartbeat=null; }
   if(fenStreamTimer){ clearInterval(fenStreamTimer); fenStreamTimer=null; }
@@ -1266,6 +1277,28 @@ function renderLobby(){
     ul.appendChild(li);
   }
   renderLiveBlock();
+  renderMultiBlock();
+}
+
+// Open Multiverse gamestates published to this room: anyone here can pick one and fork it, no
+// code needed by hand. This is what lets "elegir la partida en vez de pedir un código" work.
+function renderMultiBlock(){
+  var box=$('lobbyMultiBox'), ul=$('lobbyMultiList'); if(!box||!ul) return;
+  var list=Object.values(net.openMulti||{}).filter(function(e){ return !myPid||e.creatorPid!==myPid; });
+  if(!list.length){ box.style.display='none'; ul.innerHTML=''; return; }
+  list.sort(function(a,b){ return (b.ts||0)-(a.ts||0); }); // most recently published first
+  box.style.display='block'; ul.innerHTML='';
+  list.forEach(function(e){
+    var li=document.createElement('li');
+    var left=document.createElement('div'); left.className='mleft';
+    var nm=document.createElement('span'); nm.className='mcode'; nm.textContent=tableroFromKey(e.tab).name;
+    var meta=document.createElement('span'); meta.className='mmeta'; meta.textContent='de '+(e.creator||'alguien')+(e.lvl?(' · vs IA '+e.lvl):'');
+    left.appendChild(nm); left.appendChild(meta);
+    var right=document.createElement('div'); right.className='mright'; right.textContent='Tomar 🌀';
+    li.appendChild(left); li.appendChild(right);
+    li.onclick=function(){ forkMultiverse(e); };
+    ul.appendChild(li);
+  });
 }
 
 function renderLiveBlock(){
@@ -1314,6 +1347,28 @@ function forkMultiverse(mi){
   });
 }
 
+/* ===== Publish a saved AI gamestate to the room so ANYONE present can take it over =====
+   This is what makes the Plaza Pública's "todos se ven" actually useful for Multiverse: instead of
+   needing someone's exact 6/7-char code by hand, an open gamestate just shows up in everyone's lobby,
+   clickable. Taking it over reuses forkMultiverse() unchanged — same mechanism as the live-duel fork. */
+function publishMultiverse(code,d){
+  if(!net.peer||net.peer.destroyed) return;
+  var entry={code:code,creator:myPseudo,creatorPid:myPid,tab:d.tab,fen:d.fen,bk:d.bk,rk:d.rk,
+    moves:(d.moves||[]).slice(),lineage:(d.lineage||[]).slice(),lvl:d.lvl,ts:Date.now()};
+  if(net.isHub){ hubAddOpenMulti(entry); }
+  else if(net.hubConn && net.hubConn.open){ try{ net.hubConn.send({t:'multi-open',entry:entry}); }catch(e){} }
+}
+function hubAddOpenMulti(entry){
+  if(!net.isHub||!entry||!entry.code) return;
+  net.openMulti[entry.code]=entry;
+  // Cap: evict the oldest entries beyond MULTI_CAP so a busy Plaza never grows this unbounded.
+  var keys=Object.keys(net.openMulti);
+  if(keys.length>MULTI_CAP){
+    keys.sort(function(a,b){ return (net.openMulti[a].ts||0)-(net.openMulti[b].ts||0); });
+    for(var i=0;i<keys.length-MULTI_CAP;i++) delete net.openMulti[keys[i]];
+  }
+  broadcastRoster();
+}
 function initTrysteroLobby(){
   if(!window.__trystero || !window.__trystero.joinRoom){
     window.addEventListener('trystero-ready',initTrysteroLobby,{once:true}); return;
@@ -1368,7 +1423,7 @@ function trysteroLeave(){
 function broadcastRoster(){
   if(!net.isHub) return;
   var publicList=net.roster.map(function(p){ return {id:p.id,name:p.name,pid:p.pid||''}; });
-  var payload={t:'lobby-roster',list:publicList,match:net.matchInfo,queue:net.queue};
+  var payload={t:'lobby-roster',list:publicList,match:net.matchInfo,queue:net.queue,multi:Object.values(net.openMulti)};
   net.roster.forEach(function(p){
     if(p.conn && p.conn.open){ try{ p.conn.send(payload); }catch(e){} }
   });
@@ -1449,6 +1504,7 @@ function tryClaimHub(){
         } else if(d.t==='lobby-ping' && entry){ entry.last=Date.now(); }
         else if(d.t==='match-status'){ hubSetMatch(d.info); }
         else if(d.t==='queue-join' && d.id){ if(net.queue.indexOf(d.id)<0){ net.queue.push(d.id); broadcastRoster(); } }
+        else if(d.t==='multi-open' && d.entry && d.entry.code){ hubAddOpenMulti(d.entry); }
       });
       c.on('close',function(){
         if(entry){
@@ -1501,6 +1557,9 @@ function tryConnectHub(){
       net.roster=(d.list||[]).map(function(p){ return {id:p.id,name:p.name,pid:p.pid||'',last:Date.now(),conn:null}; });
       if(d.match) net.matchInfo=d.match;
       if(d.queue) net.queue=d.queue;
+      if(d.multi){
+        var om={}; d.multi.forEach(function(e){ if(e&&e.code) om[e.code]=e; }); net.openMulti=om;
+      }
       renderLobby();
     }
     else if(d.t==='your-turn'){
@@ -1844,6 +1903,17 @@ function openLibrary(){
       var age=d.ts?Math.floor((Date.now()-d.ts)/60000):0;
       right.textContent=age<1?'recién':(age<60?(age+' min'):(Math.floor(age/60)+' h'));
       li.appendChild(left); li.appendChild(right);
+      // Only AI-mode games can be handed off to a rival (online matches already have a live opponent).
+      // Tag them as Multiverse-ready and, while connected to the Taberna, offer a one-tap publish.
+      if(d.m==='ai'){
+        c.insertAdjacentHTML('afterbegin','&#127744; ');
+        if(net.peer && !net.peer.destroyed){
+          var pub=document.createElement('button'); pub.className='mpublish'; pub.textContent='📣 Publicar';
+          pub.title='Publicarla en la Taberna para que cualquiera la tome';
+          pub.onclick=function(e){ e.stopPropagation(); publishMultiverse(code,d); pub.textContent='✓ Publicada'; pub.disabled=true; };
+          right.appendChild(pub);
+        }
+      }
       li.onclick=function(){
         $('matchesVeil').classList.remove('show');
         pendingResume={data:d,code:code};
