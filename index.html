@@ -311,8 +311,10 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 #zoombtn .zi{ font-size:18px }
 /* Start-of-match flash: brief reveal, then fades so the board takes over. pointer-events:none so it never blocks input.
    If the image is missing (.noimg), the whole overlay is skipped — never blocks gameplay. */
-.start-overlay{ position:fixed; inset:0; z-index:400; display:none; pointer-events:none; align-items:center; justify-content:center;
+.start-overlay{ position:fixed; inset:0; z-index:400; display:none; pointer-events:none; flex-direction:column; align-items:center; justify-content:center; gap:8px;
   background:radial-gradient(closest-side,rgba(10,6,4,.78),rgba(10,6,4,.94)) }
+.overlay-caption{ margin:0; font-size:15px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; text-align:center; text-shadow:0 2px 8px rgba(0,0,0,.7) }
 .start-overlay.noimg, .start-overlay.noimg.show{ display:none !important }
 .start-overlay img{ width:auto; max-width:88vw; height:auto; max-height:78vh; object-fit:contain;
   border:2px solid var(--gold); border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,.6), 0 0 28px rgba(232,160,32,.35);
@@ -673,7 +675,6 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
       <button data-k="k_rkC"><img src="assets/pieces/k_rkC_hi.png?v=22" alt="Rey rojo 3"></button>
     </div>
   </div>
-  <p class="theme-caption">Los Dos Reinos</p>
   </div><!-- /.start-rail -->
   </div><!-- /.start-body -->
   <div class="lobby" id="lobby">
@@ -768,7 +769,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 
 <button id="zoombtn" title="Expandir tablero" style="display:none"><span class="zi">⛶</span> Zoom</button>
 <!-- Start-of-match flash: dramatic reveal that fades out fast so the board owns the screen. -->
-<div class="start-overlay" id="startOverlay" aria-hidden="true"><img src="assets/splash-start.png" alt="" onerror="this.parentNode.classList.add('noimg')"></div>
+<div class="start-overlay" id="startOverlay" aria-hidden="true"><img src="assets/splash-start.png" alt="" onerror="this.parentNode.classList.add('noimg')"><p class="overlay-caption">Los Dos Reinos</p></div>
 <!-- Quick-chat (online 1v1 only): preset phrases, no free text, so jamás hay insultos ni flag wars.
      Mini feed always visible (last 5); the reply panel (16 phrases) expands on demand. -->
 <div id="chatPanel" style="display:none">
