@@ -707,7 +707,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <div class="lobby-panel">
       <!-- 🎯 MI BOARD PERSONAL -->
       <div class="my-board-section">
-        <h3>🎯 Mi Board Personal</h3>
+        <h3>🎯 Mi Tablero (tu base)</h3>
+        <p style="font-size:11px;color:#999;margin:0 0 6px;font-weight:600">Tu código permanente para invitar rivales</p>
         <p class="board-code" id="myBoardCode">------</p>
         <p class="board-status" id="myBoardStatus">🟢 Esperando rival aquí</p>
         <button id="copyBoardLink" class="lobby-share" style="width:100%;margin-bottom:8px;font-weight:700;background:linear-gradient(135deg,#3a2410,#2a1a0c);border:2px solid var(--gold2)">📋 Copiar link para invitar</button>
@@ -717,8 +718,16 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
         </details>
       </div>
 
+      <!-- ⭐ MULTIVERSE EXPLAINER -->
+      <div style="background:linear-gradient(135deg,#1f1508,#1a1206);border:1px solid #3a2810;border-radius:8px;padding:10px;margin:12px 0;font-size:12px;line-height:1.5">
+        <p style="margin:0 0 6px;color:var(--gold2) !important;-webkit-text-fill-color:var(--gold2) !important;font-weight:700">✨ Cómo funciona el Multiverse:</p>
+        <p style="margin:4px 0;color:#CCCCCC !important;-webkit-text-fill-color:#CCCCCC !important"><b>Tablero</b> = tu espacio fijo para invitar rivales 1v1</p>
+        <p style="margin:4px 0;color:#CCCCCC !important;-webkit-text-fill-color:#CCCCCC !important"><b>Partida</b> = un juego específico (vs IA, 1v1, Multiverse)</p>
+        <p style="margin:4px 0;color:#CCCCCC !important;-webkit-text-fill-color:#CCCCCC !important"><b>Multiverse</b> = bifurca desde cualquier posición → ramas paralelas infinitas</p>
+      </div>
+
       <!-- 📖 TABLEROS ABIERTOS -->
-      <h3 class="lobby-h" style="margin-top:14px;margin-bottom:8px">📖 Rivales Disponibles</h3>
+      <h3 class="lobby-h" style="margin-top:12px;margin-bottom:8px">📖 Rivales Disponibles</h3>
       <ul class="lobby-list" id="openBoardsList" style="min-height:60px"></ul>
 
       <div class="lobby-tut" id="lobbyTut">
@@ -1724,7 +1733,7 @@ function goOnline(){
     $('backBtn').style.display='block'; $('lobby').classList.add('show');
     $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
     $('start').classList.add('in-lobby');
-    $('startH2').textContent='La Taberna';
+    $('startH2').textContent='La Taberna (Multiverse)';
     playTavernMelody(); refreshLobbyTut(); renderMyBoard(); renderOpenBoards();
     if(!currentRoom){ currentRoom=roomFromUrl()||PUBLIC_PLAZA; }
     setRoomInUrl(currentRoom);
