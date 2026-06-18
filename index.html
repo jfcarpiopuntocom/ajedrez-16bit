@@ -187,13 +187,21 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .my-board-section summary:hover{ color:#FFD060 !important; -webkit-text-fill-color:#FFD060 !important }
 .my-board-section .lobby-list{ margin:8px 0 0 }
 .my-board-section .lobby-list li{ font-size:12px; padding:6px 8px; border-left:3px solid var(--gold2) }
-.lobby-multi-list li{ cursor:pointer; padding:10px 12px; margin:4px 0; border-radius:8px; background:#1a1206; border:1px solid #2a2010; transition:all .15s ease; line-height:1.4; font-size:13px; word-break:break-word }
+.lobby-multi-list li{ cursor:pointer; padding:10px 12px; margin:4px 0; border-radius:8px; background:#1a1206; border:1px solid #2a2010; transition:all .15s ease; line-height:1.4; font-size:13px; word-break:break-word; display:flex; align-items:center; justify-content:space-between; gap:8px }
 .lobby-multi-list li:hover{ background:#2a1a0c; border-color:var(--gold); box-shadow:0 2px 8px rgba(245,184,0,.12) }
 .lobby-multi-list li:active{ transform:scale(.98) }
+.lobby-multi-list li span:first-child{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .matches-empty{ font-size:13px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:16px 8px; font-weight:600; line-height:1.4 }
 #openBoardsList.lobby-list { margin-bottom:16px; }
-#openBoardsList.lobby-list li { background:linear-gradient(135deg,#1f1508,#1a1206); border:1px solid #3a2810; }
+#openBoardsList.lobby-list li { background:linear-gradient(135deg,#1f1508,#1a1206); border:1px solid #3a2810; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+#openBoardsList.lobby-list li span:first-child { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#openBoardsList.lobby-list li span:last-child { flex-shrink:0; white-space:nowrap; }
 #openBoardsList.lobby-list li:hover { background:linear-gradient(135deg,#2a1a0c,#251505); border-color:var(--gold); }
+@media (max-width:480px){
+  #openBoardsList.lobby-list li span:first-child { font-size:12px; }
+  .my-board-section { padding:10px; }
+  .my-board-section h3 { font-size:13px; }
+}
 .lib-section{ margin:14px 0 2px; font-size:15px; font-weight:900; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:left; letter-spacing:.5px }
 .lib-section-sub{ margin:0 0 8px; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:left; line-height:1.4; font-weight:600 }
 .cel-item .cel-name{ letter-spacing:0; font-size:15px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-family:inherit }
@@ -1197,7 +1205,17 @@ function roomFromUrl(){
   // Check for myboard hash first (personal board invite)
   if(h.startsWith('myboard=')){
     var code=h.substring(8).toUpperCase();
-    if(code.length>=4){ setTimeout(()=>{ if(!net.active && !net.conn) enterBoard(code); },500); return code; }
+    if(code.length>=4){
+      // Find owner name from openBoards list if available, otherwise use generic label
+      setTimeout(function(){
+        if(!net.active && !net.conn){
+          var board=net.openBoards&&net.openBoards.filter(function(b){ return b.boardCode===code; })[0];
+          var owner=board?board.ownerName:'Rival';
+          enterBoard(code,owner);
+        }
+      },600);
+      return code;
+    }
   }
   // Otherwise check for game/room code
   var m=h.match(/(?:multiverso|partida|room)=([A-Z0-9]{4,8})/i);
@@ -1856,9 +1874,13 @@ function renderMyBoard(){
     if(!myBoard || !myBoard.boardCode) return;
     var codeEl=$('myBoardCode'); if(codeEl) codeEl.textContent=myBoard.boardCode;
     var statusEl=$('myBoardStatus'); if(statusEl){
-      if(!net.active){ statusEl.textContent='📡 Conectando...'; }
-      else if(myBoard.currentGame){ statusEl.innerHTML='🎮 <b>Partida en vivo</b> vs '+myBoard.currentGame.against; }
-      else { statusEl.textContent='🟢 Esperando rival aquí'; }
+      if(myBoard.currentGame && started){
+        statusEl.innerHTML='🎮 <b>Partida en vivo</b> vs '+myBoard.currentGame.against;
+      } else if(!net.active){
+        statusEl.textContent='📡 Conectando al lobby...';
+      } else {
+        statusEl.textContent='🟢 Disponible — Esperando rival';
+      }
     }
     var hist=$('myGamesList'); if(!hist) return;
     hist.innerHTML='';
@@ -1885,41 +1907,48 @@ function renderOpenBoards(){
     var list=$('openBoardsList'); if(!list) return;
     list.innerHTML='';
     if(!Array.isArray(net.openBoards) || net.openBoards.length===0){
-      list.innerHTML='<li style="text-align:center;color:#999;font-size:12px;padding:12px;font-weight:600">Esperando rivales…</li>';
+      list.innerHTML='<li style="text-align:center;color:#999;font-size:12px;padding:12px;font-weight:600;border:none;background:transparent">Esperando rivales…</li>';
       return;
     }
     var available=net.openBoards.filter(function(b){
       return b && b.boardCode && b.boardCode!==myBoard.boardCode && b.peers<2;
     });
     if(available.length===0){
-      list.innerHTML='<li style="text-align:center;color:#999;font-size:12px;padding:12px">Todos están jugando</li>';
+      list.innerHTML='<li style="text-align:center;color:#999;font-size:12px;padding:12px;border:none;background:transparent">Todos están jugando</li>';
       return;
     }
     available.forEach(function(b){
       try{
         var li=document.createElement('li');
         var badge=b.peers===1?'🎮':'🟢';
-        var status=b.peers===1?'Jugando':'Listo';
-        li.innerHTML='<span style="font-weight:700">'+b.ownerName+'</span> <span style="font-size:11px;color:#999">'+badge+' '+status+'</span>';
+        var status=b.peers===1?'(Jugando)':'(Listo)';
+        // Create name span for ellipsis
+        var nameSpan=document.createElement('span');
+        nameSpan.innerHTML='<b>'+b.ownerName+'</b>';
+        // Create status span
+        var statusSpan=document.createElement('span');
+        statusSpan.innerHTML='<span style="font-size:11px;color:#999;white-space:nowrap">'+badge+' '+status+'</span>';
+        li.appendChild(nameSpan);
+        li.appendChild(statusSpan);
         li.style.cursor='pointer';
         li.onclick=function(){ enterBoard(b.boardCode,b.ownerName); };
         list.appendChild(li);
-      }catch(e){}
+      }catch(e){ console.error('renderOpenBoards item',e); }
     });
   }catch(e){ console.error('renderOpenBoards',e); }
 }
 function enterBoard(boardCode,ownerName){
-  if(!boardCode || !ownerName) return;
+  if(!boardCode) return;
   try{
-    if(net.conn && net.active){ status('Ya estás en una partida. Termina primero.'); return; }
+    if(net.conn && net.active){ var st=$('lobbyStatus'); if(st) st.textContent='Ya estás en una partida. Termina primero.'; return; }
     myBoard.targetBoard=boardCode;
-    myBoard.targetOwner=ownerName;
-    status('Entrando al tablero de '+ownerName+'...');
+    myBoard.targetOwner=ownerName||'Rival';
+    var st=$('lobbyStatus'); if(st) st.innerHTML='<span class="lobby-searching">Entrando al tablero de '+myBoard.targetOwner+'…</span>';
     currentRoom=boardCode;
     setRoomInUrl(currentRoom);
     if(!net.peer || net.peer.destroyed){ netInit(); }
-    setTimeout(function(){ netConnect(boardCode); },300);
-  }catch(e){ console.error('enterBoard failed',e); status('Error: no se pudo entrar'); }
+    setTimeout(function(){ netConnect(boardCode); },400);
+  }catch(e){ console.error('enterBoard failed',e); var st=$('lobbyStatus'); if(st) st.textContent='Error: no se pudo entrar'; }
 }
 $('copyBoardLink').onclick=function(){
   try{
@@ -2301,6 +2330,11 @@ function startGame(m){
                   : (net.rivalName||'rival');
     matchLineage=[{at:0,opp:initialOpp,mode:m}];
   }
+  // Track current game in myBoard for status display
+  if(myBoard && matchCode){
+    myBoard.currentGame={matchCode:matchCode,against:(mode==='online'?net.rivalName:(mode==='ai'?(level?level.name:'IA'):'Otro')),mode:mode,started:Date.now()};
+    saveMyBoard();
+  }
   applyTablero(currentTablero);
   if(m==='online' && net.myColor==='b') flipped=true;
   if(m==='ai' && playerColor==='b') flipped=true;
@@ -2323,6 +2357,8 @@ function startGame(m){
 }
 function backToStart(){
   started=false; resigned=false; netReset(); document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='<span class="zi">⛶</span> Zoom'; showChatUI(false);
+  // Clear current game from myBoard when returning to start
+  if(myBoard){ myBoard.currentGame=null; saveMyBoard(); renderMyBoard(); }
   $('app').style.display='none'; $('start').classList.remove('hidden');
   $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
   $('colorpick').classList.remove('show'); playerColor='w';
