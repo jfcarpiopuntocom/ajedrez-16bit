@@ -173,6 +173,8 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   background:#241a10; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; cursor:pointer; white-space:nowrap }
 .mpublish:hover,.mpublish:active{ background:#34260f }
 .mpublish:disabled{ background:#1a3a2c; border-color:#28ECAA; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; cursor:default }
+.lobby-btn-row{ display:flex; gap:8px; width:100% }
+.lobby-btn-row .lobby-share{ flex:1; font-size:13px; padding:8px 10px; min-height:38px }
 .lobby-multi-list li{ cursor:pointer }
 .matches-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:18px 0; font-weight:600 }
 .lib-section{ margin:14px 0 2px; font-size:15px; font-weight:900; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:left; letter-spacing:.5px }
@@ -291,16 +293,9 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 /* Title splendor: melt the flat banner edges into the page + warm golden glow + gentle float */
 @keyframes titleFloat{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-3px) } }
 .banner, .title-img{
-  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
-          mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
-  /* Tight gold outline traces the title's alpha so it doesn't look pasted on black, plus the existing glow + shadow. */
-  filter:
-    drop-shadow(0 0 0.6px var(--gold))
-    drop-shadow(0 0 0.6px var(--gold))
-    drop-shadow(0 0 1px rgba(232,160,32,.85))
-    drop-shadow(0 6px 16px rgba(0,0,0,.55))
-    drop-shadow(0 0 22px rgba(232,160,32,.32));
-  animation:titleFloat 5s ease-in-out infinite; }
+  border:2px solid var(--gold); border-radius:10px; padding:4px 8px;
+  box-shadow:0 4px 14px rgba(0,0,0,.55);
+  background:linear-gradient(160deg,#1a1006,#0a0604); }
 /* Footer: fixed bottom bar, always visible over both screens */
 .site-credit{ position:fixed; left:0; right:0; bottom:0; z-index:200; height:28px;
   display:flex; align-items:center; justify-content:center;
@@ -511,7 +506,11 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden }
 .quote b{ font-style:normal; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; display:block; margin-top:4px }
 .quote-top{ margin:0 auto 4px; max-width:600px }
-.codes-bar{ text-align:center; font-size:13px; padding:4px 8px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+.codes-bar{ flex:0 0 auto; width:100%; text-align:center; font-size:13px; line-height:1.4; padding:8px 10px;
+  color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important;
+  background:linear-gradient(160deg,#1f160d,#150e07); border:1px solid rgba(232,160,32,.3); border-radius:8px }
+.codes-bar b{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-size:14px }
+.code-val{ font-family:Georgia,"Times New Roman",serif; font-weight:900; letter-spacing:2px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:15px }
 
 /* ---------- Desktop / tablet ---------- */
 @media (min-width:900px){
@@ -647,11 +646,11 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     </div>
   </div>
   <div class="universo-callout" id="uniCallout">
-    <h3>Función Multiverse</h3>
-    <p><span class="pop">Empieza vs la IA. Termina con un amigo</span> (o al revés). El código abre el estado exacto para cualquiera que llegue a seguirla. La línea original queda viva en paralelo. Endless multiverse fun.</p>
+    <h3>Cada partida tiene un código</h3>
+    <p><span class="pop">Tu código guarda la posición exacta del tablero.</span> Compártelo: quien lo ingrese retoma la partida desde ese punto, con la IA o con otro jugador. La tuya sigue intacta en paralelo. Así funciona el Multiverse.</p>
   </div>
   <div class="lobby-resume" id="resumeRow">
-    <input type="text" id="resumeCode" placeholder="Código de partida? Continúa aquí" maxlength="7" autocomplete="off" spellcheck="false">
+    <input type="text" id="resumeCode" placeholder="Pega un código (7 letras)" maxlength="7" autocomplete="off" spellcheck="false">
     <button id="resumeBtn" disabled>▶ Ir</button>
   </div>
   <p class="lobby-resume-msg" id="resumeMsg"></p>
@@ -703,11 +702,14 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
         <button class="lobby-share lobby-share-sm" id="lobbyShare">Copiar link</button>
       </div>
       <div class="lobby-resume" id="lobbyResumeRow">
-        <input type="text" id="lobbyResumeCode" placeholder="Código de partida? Continúa" maxlength="7" autocomplete="off" spellcheck="false">
+        <input type="text" id="lobbyResumeCode" placeholder="Pega un código (7 letras)" maxlength="7" autocomplete="off" spellcheck="false">
         <button id="lobbyResumeBtn" disabled>&#9654; Ir</button>
       </div>
       <p class="lobby-resume-msg" id="lobbyResumeMsg"></p>
-      <button class="lobby-share" id="myMatches" style="background:linear-gradient(#2a1a0c,#1a100a)">Mis partidas guardadas</button>
+      <div class="lobby-btn-row">
+        <button class="lobby-share" id="myMatches" style="background:linear-gradient(#2a1a0c,#1a100a)">👑 Librería Real</button>
+        <button class="lobby-share" id="lobbyFamous" style="background:linear-gradient(#14302a,#0c1a16)">⚔️ Partidas Famosas</button>
+      </div>
     </div>
   </div>
   <button class="back" id="backBtn" style="display:none">&larr; volver</button>
@@ -727,7 +729,6 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   <img class="title-img" src="assets/title.png" alt="Los Dos Reinos: ¡ajedrez fantástico!">
   <div class="quote quote-top" id="quote"></div>
   <div class="status" id="status"></div>
-  <div class="codes-bar" id="codesBar"></div>
 
   <div class="stage">
     <section class="cap red"><h3><img src="assets/shield-red.png" class="cap-icon"> Capturas Rojo (negras) <span class="score" id="scoreB"></span></h3><div class="slots" id="capB"></div></section>
@@ -742,6 +743,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     </div>
     <section class="cap blue"><h3><img src="assets/shield-blue.png" class="cap-icon"> Capturas Azul (blancas) <span class="score" id="scoreW"></span></h3><div class="slots" id="capW"></div></section>
     <div class="left-rail">
+      <div class="codes-bar" id="codesBar"></div>
       <aside class="history" id="history"><h4>Jugadas</h4><ol id="histlist"></ol></aside>
       <!-- End-of-game card: image speaks for itself. Subtitle echoes the alt text. -->
       <div class="peace-card" id="peaceCard" style="display:none">
@@ -1840,7 +1842,40 @@ const FAMOUS=[
    blurb:'Budapest, 1934. Esteban Canal, el gran maestro peruano, en una exhibición de simultáneas regala torre, dama y ambas torres a un aficionado, y aun así da mate con un alfil y un caballo. La bautizaron La Inmortal Peruana y es la joya del ajedrez latinoamericano. Tomas las azules en el momento del sacrificio de dama en c6. La codicia del rival será su tumba.'},
   {key:'paulsen',name:'El sacrificio de dama de Morphy',players:'Paulsen vs Morphy',year:1857,take:'b',
    fen:'4r1k1/p1pb1ppp/Qbp1r3/8/1P6/2Pq1B2/R2P1PPP/2B2RK1 b - - 4 17',
-   blurb:'Primer Congreso Americano, Nueva York, 1857. Frente a Louis Paulsen, Paul Morphy entrega su dama con Dxf3, abriendo el enroque blanco a un ataque imparable de torres y alfiles. Fue la partida que lo coronó como el mejor jugador del mundo y selló su leyenda. Tomas el bando rojo en ese instante. La dama vale menos que el ataque que viene detrás.'}
+   blurb:'Primer Congreso Americano, Nueva York, 1857. Frente a Louis Paulsen, Paul Morphy entrega su dama con Dxf3, abriendo el enroque blanco a un ataque imparable de torres y alfiles. Fue la partida que lo coronó como el mejor jugador del mundo y selló su leyenda. Tomas el bando rojo en ese instante. La dama vale menos que el ataque que viene detrás.'},
+  {key:'zugzwang',name:'Zugzwang puro',players:'Sämisch vs Nimzowitsch',year:1923,take:'b',
+   fen:'5rk1/1p3ppp/pq3b2/8/8/1P1B3P/P1Q2PP1/3Rr1K1 b - - 0 25',
+   blurb:'Copenhague, 1923. Aarón Nimzowitsch comprime la posición de Fritz Sämisch hasta dejarla en zugzwang total: cualquier jugada que haga empeora su posición. Es la demostración clásica de este concepto único del ajedrez. Tomas las rojas y aprietas la soga.'},
+  {key:'marshall',name:'El Gambito Marshall',players:'Levitsky vs Marshall',year:1912,take:'b',
+   fen:'rq4k1/5pp1/4n2p/1pPPN3/8/P4PQ1/5P1P/1R4K1 b - - 0 23',
+   blurb:'Breslau, 1912. Frank Marshall supuestamente jugó una dama tan brillante que el público le lanzó monedas de oro al tablero. Cierta o no la leyenda, la combinación final es genuina y espectacular. Tomas las rojas en el clímax de la partida.'},
+  {key:'fischer60',name:'La Partida del Siglo XX',players:'Fischer vs Spassky, Partida 6',year:1972,take:'w',
+   fen:'r4rk1/p1q2ppp/1p1bpn2/2n5/2P5/1PN2NP1/PB3PBP/R2QR1K1 w - - 0 15',
+   blurb:'Reikiavik, 1972. Partida 6 del match por el campeonato del mundo. Bobby Fischer juega la Apertura Inglesa por primera y única vez en su vida, y produce una obra maestra posicional que Spassky aplaudió de pie. Tomas las azules en el momento de la expansión en el flanco de dama.'},
+  {key:'kasparovtopalov',name:'La Inmortal de Kasparov',players:'Kasparov vs Topalov',year:1999,take:'w',
+   fen:'1rr3k1/4ppbp/2q1bnp1/1p2B3/1P1N4/R1P2N1P/2Q2PP1/3R2K1 w - - 0 24',
+   blurb:'Wijk aan Zee, 1999. Garry Kasparov sacrifica una torre entera para iniciar una combinación de más de quince jugadas que termina en mate forzado. La llaman La Inmortal de Kasparov. Tomas las azules justo cuando el ataque se vuelve imparable.'},
+  {key:'brilliancy',name:'Ataque con doble sacrificio',players:'Pillsbury vs Lee',year:1899,take:'w',
+   fen:'r1b2rk1/2q1bppp/p1p1pn2/2Pp4/NP1P4/P3PN2/1B3PPP/R2QKB1R w KQ - 0 12',
+   blurb:'Londres, 1899. Harry Nelson Pillsbury, el meteoro americano que murió joven, despliega un ataque de flanco de rey que todavía se enseña. Una combinación clara y limpia que ilustra cómo romper una posición sólida. Tomas las azules antes del asalto.'},
+  {key:'tal',name:'El mago de Riga sacrifica todo',players:'Tal vs Larsen',year:1965,take:'w',
+   fen:'r4rk1/1bqn1pp1/pp2pn1p/8/1PP1NP2/P1N1B2P/1B4P1/R2Q1RK1 w - - 0 16',
+   blurb:'Match de Candidatos, 1965. Mijaíl Tal, el mago de Riga, entrega pieza tras pieza contra Bent Larsen en un torbellino táctico imposible de calcular hasta el final. Puro instinto genial. Tomas las azules cuando la tormenta comienza.'},
+  {key:'botvinnik',name:'La joya de Botvinnik',players:'Botvinnik vs Capablanca',year:1938,take:'w',
+   fen:'r1b1r1k1/pp3pp1/1qn1p2p/3pPn2/3P1N2/P1N2B1P/1PQ2PP1/R1B1R1K1 w - - 0 17',
+   blurb:'Torneo AVRO, 1938. Mijaíl Botvinnik derrota al legendario José Raúl Capablanca en una partida de ataque que selló su camino hacia el campeonato mundial. Un modelo de cómo explotar la iniciativa contra el mejor técnico de la historia. Tomas las azules.'},
+  {key:'smothered',name:'Mate ahogado clásico',players:'Patrón de mate fundamental',year:0,take:'w',
+   fen:'r1b1kb1r/pppp1ppp/5n2/4N1q1/2B1P3/2N5/PPPP1PPP/R1BQK2R w KQkq - 0 5',
+   blurb:'El mate ahogado: el caballo da jaque, la dama sacrificada cierra la ruta de escape del rey, y el caballo vuelve a dar mate. Es uno de los patrones más elegantes del ajedrez. Todo jugador debe conocerlo. Tomas las azules y ejecutas el remate.'},
+  {key:'polgar',name:'La reina del ajedrez',players:'Judit Polgár vs Kasparov',year:2003,take:'b',
+   fen:'3r2k1/1p3pp1/p1r1pn1p/8/3P4/1QN1P2P/PP3PP1/R4RK1 b - - 0 20',
+   blurb:'Rusia vs Resto del Mundo, 2003. Judit Polgár, la jugadora más fuerte de la historia, derrota al mismísimo Kasparov. Una victoria icónica que demostró que el talento no tiene género. Tomas las rojas y finalizas lo que Polgár empezó.'},
+  {key:'capablanca',name:'La máquina cubana',players:'Capablanca vs Bernstein',year:1914,take:'w',
+   fen:'r1bq1rk1/pp3ppp/2n1pn2/2pp4/1bPP4/2NBPN2/PP3PPP/R1BQ1RK1 w - - 0 8',
+   blurb:'San Petersburgo, 1914. José Raúl Capablanca juega con la precisión de una máquina. Cada pieza encuentra su casilla perfecta. La técnica pura del genio cubano que dominó el ajedrez sin estudiar teoría. Tomas las azules.'},
+  {key:'romantic',name:'El contragambito Budapest',players:'Kieninger vs Godai',year:1936,take:'b',
+   fen:'r1bqk2r/pppp1Npp/2n5/2b1p3/4n3/8/PPPP1PPP/RNBQKB1R b KQkq - 0 5',
+   blurb:'Viena, 1936. Un contragambito Budapest que termina en una de las miniaturas más vistosas de la historia. Las piezas negras vuelan sobre el tablero como una bandada en formación de ataque. Tomas las rojas y ejecutas la trampa.'}
 ];
 /* Real moves up to the critical instant. Replaying them (instead of just loading the FEN)
    rebuilds the full history, so "Deshacer" puede deshilachar hacia atrás hasta la jugada 1
@@ -1857,7 +1892,18 @@ const FAMOUS_MOVES={
   reti:["e4","c6","d4","d5","Nc3","dxe4","Nxe4","Nf6","Qd3","e5","dxe5","Qa5+","Bd2","Qxe5","O-O-O","Nxe4"],
   lasker:["d4","e6","Nf3","f5","Nc3","Nf6","Bg5","Be7","Bxf6","Bxf6","e4","fxe4","Nxe4","b6","Ne5","O-O","Bd3","Bb7","Qh5","Qe7"],
   peruvian:["e4","d5","exd5","Qxd5","Nc3","Qa5","d4","c6","Nf3","Bg4","Bf4","e6","h3","Bxf3","Qxf3","Bb4","Be2","Nd7","a3","O-O-O","axb4","Qxa1+","Kd2","Qxh1"],
-  paulsen:["e4","e5","Nf3","Nc6","Nc3","Nf6","Bb5","Bc5","O-O","O-O","Nxe5","Re8","Nxc6","dxc6","Bc4","b5","Be2","Nxe4","Nxe4","Rxe4","Bf3","Re6","c3","Qd3","b4","Bb6","a4","bxa4","Qxa4","Bd7","Ra2","Rae8","Qa6"]
+  paulsen:["e4","e5","Nf3","Nc6","Nc3","Nf6","Bb5","Bc5","O-O","O-O","Nxe5","Re8","Nxc6","dxc6","Bc4","b5","Be2","Nxe4","Nxe4","Rxe4","Bf3","Re6","c3","Qd3","b4","Bb6","a4","bxa4","Qxa4","Bd7","Ra2","Rae8","Qa6"],
+  zugzwang:["d4","Nf6","c4","e6","Nf3","Bb4+","Bd2","Bxd2+","Qxd2","d5","Nc3","O-O","e3","Qe7","Bd3","dxc4","Bxc4","e5","dxe5","Nfd7","e4","Nxe5","Nxe5","Qxe5","f4","Qe7","e5","Nb8","O-O","Nc6","f5","Bd7","Qf4","Na5","Bd3","Nc4","f6","Qe6","fxg7","Kxg7","Qf6+","Qxf6","exf6+","Kg8","Ne4","Rfe8","Ng5","Re2","Rd1","Nb6","Bxh7+","Kh8"],
+  marshall:["d4","e5","dxe5","d5","Nf3","Nc6","Nbd2","Nge7","Nb3","Nf5","Bd2","Be7","Be2","O-O","O-O","f6","exf6","Bxf6","c3","Nh4","Nxh4","Bxh4","Be3","Qf6","Nd4","Nxd4","Bxd4","Qf5","g3","Bf6","Bxf6","Qxf6","Qd4","Re8","Bf3","Qf5","Bg2","Qxc2","Rac1","Qe2","Qxb6","Bd7","Qb4","Re4","Qd6","Rg4"],
+  fischer60:["c4","e6","Nf3","d5","d4","Nf6","Nc3","Be7","Bg2","O-O","e4","dxe4","Nxe4","Nbd7","O-O","c5","d5","exd5","cxd5","Nb6","Nd4","Nbxd5","Nf5","Bc5","Nxg7","Kh8","Nf5","Ng8","Ne4","Bb6","Bg5","Qd7","Qh5","Bxf5","Nf6","Nxf6","Bxf6+","Kg8","Bxd5"],
+  kasparovtopalov:["e4","d6","d4","Nf6","Nc3","g6","Be3","Bg7","Qd2","c6","f3","b5","Nge2","Nbd7","Bh6","Bxh6","Qxh6","Bb7","a3","e5","O-O-O","Qe7","Kb1","a6","Nc1","O-O-O","Nb3","exd4","Rxd4","c5","Rd1","Nb6","g3","Kb8","Na5","Ba8","Bh3","d5","Qf4+","Ka7","Re1","d4","Nd5","Nbxd5","exd5","Qd6","Rxd4","cxd4","Re7+","Kb6","Qxd4+","Kxa5","b4+","Ka4","Qc3"],
+  brilliancy:["d4","d5","c4","e6","Nc3","Nf6","Nf3","Be7","e3","O-O","a3","c6","b4","Nbd7","Bb2","a6","c5","Ne4","Na4","f5","Nd2"],
+  tal:["e4","c5","Nf3","Nc6","d4","cxd4","Nxd4","e6","Nc3","d6","Be2","Nf6","O-O","Be7","Be3","O-O","f4","a6","a3","Qc7","Qd2","b5","Bf3","Bb7","Nxc6","Bxc6","b4","Bb7","Nc3","Nd7","c4"],
+  botvinnik:["d4","Nf6","c4","e6","Nc3","d5","Nf3","Be7","Bg5","Nbd7","e3","O-O","Bd3","c5","O-O","cxd4","exd4","dxc4","Bxc4","Nb6","Bb3","Bd7","Qd3","Nbd5","Ne5","Bc6","Rad1","Nb4","Qh3","Bd5","Nxd5","Nbxd5","f4","Rc8","Bxf6","Nxf6","f5"],
+  smothered:["e4","e5","Nf3","Nc6","Bc4","Nf6","Ng5","Qe7","Nxf7"],
+  polgar:["e4","e5","Nf3","Nc6","Bb5","Nf6","O-O","Nxe4","d4","Nd6","Bxc6","dxc6","dxe5","Nf5","Qxd8+","Kxd8","Nc3","Bd7","b3","Kc8","Bb2","Be7","Rad1","Be6","Rfe1","Rd8","Ne4","Nd4","Nxd4","Rxd4","Rxd4","Bd5","c4","Bc6","f3","a6","Kf2","Rd8","Ke3","Rxd4","Kxd4","f6"],
+  capablanca:["d4","d5","Nf3","Nf6","c4","e6","Nc3","Nbd7","Bg5","Be7","e3","O-O","Rc1","c6","Bd3","dxc4","Bxc4","Nd5","Bxe7","Qxe7","O-O","Nxc3","Rxc3","e5"],
+  romantic:["d4","Nf6","c4","e5","dxe5","Ng4","Nf3","Bc5","e3","Nc6","Be2","Ngxe5","Nxe5","Nxe5"]
 };
 function famousFromKey(k){ for(var i=0;i<FAMOUS.length;i++) if(FAMOUS[i].key===k) return FAMOUS[i]; return null; }
 let celebrePick={key:null,col:null};
@@ -1949,6 +1995,7 @@ function openLibrary(){
 }
 $('myMatches').onclick=openLibrary;
 $('libFixedBtn').onclick=openLibrary;
+if($('lobbyFamous')) $('lobbyFamous').onclick=function(){ openLibrary(); setTimeout(function(){ var sec=document.querySelector('.lib-section'); if(sec) sec.scrollIntoView({behavior:'smooth'}); },120); };
 $('matchesClose').onclick=function(){ $('matchesVeil').classList.remove('show'); };
 $('matchesExport').onclick=function(){
   var codes=indexList(); var all=[];
@@ -2251,9 +2298,9 @@ function status(){
   var cb=$('codesBar');
   if(cb){
     if(matchCode && mode!=='online'){
-      cb.innerHTML='<span class="lvl tablero-tag">'
-        +'Continuar como Azul (blancas): <b>'+sideCodeFor(matchCode,'w')+'</b>'
-        +' &nbsp;·&nbsp; Rojo (negras): <b>'+sideCodeFor(matchCode,'b')+'</b></span>';
+      cb.innerHTML='<b>Continuar esta jugada</b><br>'
+        +'Azul (blancas): <span class="code-val">'+sideCodeFor(matchCode,'w')+'</span>'
+        +' &nbsp;·&nbsp; Rojo (negras): <span class="code-val">'+sideCodeFor(matchCode,'b')+'</span>';
       cb.style.display='';
     } else { cb.innerHTML=''; cb.style.display='none'; }
   }
