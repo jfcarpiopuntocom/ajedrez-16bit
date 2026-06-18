@@ -609,6 +609,13 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .vbtn.ghost{ flex:1 1 100%; min-height:38px; font-size:13px; background:transparent; border-color:rgba(232,160,32,.45); color:#cdbf9c !important; -webkit-text-fill-color:#cdbf9c !important }
 @media (max-width:480px){ .victory-king{ height:146px } .victory-title{ font-size:27px } }
 
+/* ===== Replay bar ===== */
+.replay-bar{ display:flex; gap:4px; justify-content:center; padding:4px 0; margin-top:4px; border-top:1px solid rgba(232,160,32,.25) }
+.replay-btn{ font-size:13px; font-weight:800; padding:4px 8px; min-height:32px; min-width:32px; cursor:pointer;
+  border:1px solid var(--gold); border-radius:6px; background:#1c140d; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.replay-btn:hover{ background:#2a1a0c }
+.replay-btn:active{ transform:translateY(1px) }
+
 @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important } }
 @media (prefers-color-scheme:dark){
   html,body{ background:var(--bg); color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
@@ -822,7 +829,15 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <section class="cap blue"><h3><img src="assets/shield-blue.png" class="cap-icon"> Capturas Azul <span class="score" id="scoreW"></span></h3><div class="slots" id="capW"></div></section>
     <div class="left-rail">
       <div class="quote" id="quote"></div>
-      <aside class="history" id="history"><h4>Jugadas</h4><ol id="histlist"></ol></aside>
+      <aside class="history" id="history"><h4>Jugadas</h4><ol id="histlist"></ol>
+        <div class="replay-bar" id="replayBar" style="display:none">
+          <button class="replay-btn" id="repFirst" title="Inicio">|◀</button>
+          <button class="replay-btn" id="repPrev" title="Anterior">◀</button>
+          <button class="replay-btn" id="repNext" title="Siguiente">▶</button>
+          <button class="replay-btn" id="repLast" title="Último">▶|</button>
+          <button class="replay-btn" id="repExit" title="Salir de replay">✕</button>
+        </div>
+      </aside>
       <!-- End-of-game card: image speaks for itself. Subtitle echoes the alt text. -->
       <div class="peace-card" id="peaceCard" style="display:none">
         <img src="assets/splash-peace.png" alt="al final de la partida, los reyes hacen una mejor amistad" onerror="this.parentNode.style.display='none'">
@@ -2360,7 +2375,7 @@ window.addEventListener('pointerup',e=>{ if(drag) endDrag(e,false); });
 window.addEventListener('blur',()=>cleanupDrag());
 
 function tryMove(from,to){
-  if(spectating) return;
+  if(spectating||replayMode) return;
   const ms=game.moves({square:from,verbose:true}).filter(m=>m.to===to);
   if(!ms.length){ render(); return; }
   if(ms.some(m=>m.promotion)){ doMove({from,to,promotion:'q'}); return; }
@@ -2665,10 +2680,60 @@ function renderHistory(){
   }
   ol.parentElement.scrollTop=ol.parentElement.scrollHeight;
 }
+/* ══════ REPLAY MODE ══════
+   Step through game moves. Saves full history, replays to any position.
+   Available when game is over or has 2+ moves. */
+let replayMode=false, replayMoves=[], replayIdx=0, replayFen0=null;
+function enterReplay(){
+  if(replayMode) return;
+  var h=game.history();
+  if(h.length<2) return;
+  replayMode=true; replayMoves=h.slice(); replayIdx=h.length; replayFen0='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+  $('replayBar').style.display='flex';
+  renderReplayPos();
+}
+function exitReplay(){
+  if(!replayMode) return;
+  replayMode=false;
+  $('replayBar').style.display='none';
+  var g2=new Chess();
+  replayMoves.forEach(function(m){ g2.move(m); });
+  game.load(g2.fen());
+  render(); status(); renderHistory();
+}
+function renderReplayPos(){
+  var g2=new Chess();
+  for(var i=0;i<replayIdx;i++) g2.move(replayMoves[i]);
+  game.load(g2.fen());
+  lastMove=null;
+  if(replayIdx>0){
+    var g3=new Chess();
+    for(var j=0;j<replayIdx-1;j++) g3.move(replayMoves[j]);
+    var mv=g3.move(replayMoves[replayIdx-1]);
+    if(mv) lastMove={from:mv.from,to:mv.to};
+  }
+  render();
+  statusEl.innerHTML='<span class="chip azul">Replay: jugada '+replayIdx+'/'+replayMoves.length+'</span>';
+  var ol=$('histlist'); ol.innerHTML='';
+  for(var k=0;k<replayMoves.length;k+=2){
+    var li=document.createElement('li');
+    var w=replayMoves[k]||''; var b=replayMoves[k+1]||'';
+    var wc=(k<replayIdx)?'':'style="color:#666;-webkit-text-fill-color:#666"';
+    var bc=(k+1<replayIdx)?'':'style="color:#666;-webkit-text-fill-color:#666"';
+    li.innerHTML='<span '+wc+'>'+w+'</span><span class="r" '+bc+'>'+b+'</span>';
+    ol.appendChild(li);
+  }
+}
+$('repFirst').onclick=function(){ if(!replayMode) return; replayIdx=0; renderReplayPos(); };
+$('repPrev').onclick=function(){ if(!replayMode||replayIdx<=0) return; replayIdx--; renderReplayPos(); };
+$('repNext').onclick=function(){ if(!replayMode||replayIdx>=replayMoves.length) return; replayIdx++; renderReplayPos(); };
+$('repLast').onclick=function(){ if(!replayMode) return; replayIdx=replayMoves.length; renderReplayPos(); };
+$('repExit').onclick=exitReplay;
+
 function maybeShowRematch(){
   var over=game.game_over()||resigned;
   $('rematch').style.display=over?'':'none';
-  if(over) showEndButtons();
+  if(over){ showEndButtons(); if(!replayMode && game.history().length>=2) enterReplay(); }
 }
 
 let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(fitBoard,90); });
