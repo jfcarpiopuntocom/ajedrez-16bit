@@ -32,7 +32,7 @@ img{ -webkit-user-drag:none; user-select:none }
 h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
 .app{ height:100vh; height:100svh; max-width:1180px; margin:0 auto; padding:5px 6px;
-  display:flex; flex-direction:column; gap:3px; overflow:hidden }
+  display:flex; flex-direction:column; gap:4px; overflow:hidden }
 
 /* ---------- START SCREEN ---------- */
 /* Splash: title masthead on top (always centered), then below it art+rail in two columns on desktop.
@@ -173,27 +173,10 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   background:#241a10; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; cursor:pointer; white-space:nowrap }
 .mpublish:hover,.mpublish:active{ background:#34260f }
 .mpublish:disabled{ background:#1a3a2c; border-color:#28ECAA; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; cursor:default }
-.lobby-btn-row{ display:flex; gap:8px; width:100%; flex-wrap:wrap }
-.lobby-btn-row .lobby-share{ flex:1; min-width:120px; font-size:13px; padding:8px 10px; min-height:40px; border-radius:8px; border:1px solid var(--gold); background:#241a10; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; cursor:pointer; transition:all .2s ease }
-.lobby-btn-row .lobby-share:hover{ background:#34260f; border-color:#FFD060 }
-.lobby-btn-row .lobby-share:active{ transform:scale(.97) }
-.my-board-section{ background:linear-gradient(145deg,#2a1a0c,#1a100a); border:2px solid var(--gold); padding:14px; border-radius:10px; margin-bottom:14px; box-shadow:0 4px 12px rgba(245,184,0,.08) }
-.my-board-section h3{ margin:0 0 10px; font-size:14px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-weight:900; letter-spacing:.5px }
-.board-code{ font-family:Georgia,"Times New Roman",serif; font-size:17px; font-weight:900; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; letter-spacing:3px; margin:6px 0 4px; text-align:center; word-break:break-all }
-.board-status{ font-size:13px; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; margin:4px 0 8px; text-align:center; font-weight:600 }
-.my-board-section button{ width:100%; margin-bottom:8px; font-size:13px; padding:10px; min-height:40px }
-.my-board-section details{ width:100%; margin-top:8px }
-.my-board-section summary{ cursor:pointer; font-weight:700; font-size:13px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; user-select:none; padding:6px 0; outline:none }
-.my-board-section summary:hover{ color:#FFD060 !important; -webkit-text-fill-color:#FFD060 !important }
-.my-board-section .lobby-list{ margin:8px 0 0 }
-.my-board-section .lobby-list li{ font-size:12px; padding:6px 8px; border-left:3px solid var(--gold2) }
-.lobby-multi-list li{ cursor:pointer; padding:10px 12px; margin:4px 0; border-radius:8px; background:#1a1206; border:1px solid #2a2010; transition:all .15s ease; line-height:1.4; font-size:13px; word-break:break-word }
-.lobby-multi-list li:hover{ background:#2a1a0c; border-color:var(--gold); box-shadow:0 2px 8px rgba(245,184,0,.12) }
-.lobby-multi-list li:active{ transform:scale(.98) }
-.matches-empty{ font-size:13px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:16px 8px; font-weight:600; line-height:1.4 }
-#openBoardsList.lobby-list { margin-bottom:16px; }
-#openBoardsList.lobby-list li { background:linear-gradient(135deg,#1f1508,#1a1206); border:1px solid #3a2810; }
-#openBoardsList.lobby-list li:hover { background:linear-gradient(135deg,#2a1a0c,#251505); border-color:var(--gold); }
+.lobby-btn-row{ display:flex; gap:8px; width:100% }
+.lobby-btn-row .lobby-share{ flex:1; font-size:13px; padding:8px 10px; min-height:38px }
+.lobby-multi-list li{ cursor:pointer }
+.matches-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:18px 0; font-weight:600 }
 .lib-section{ margin:14px 0 2px; font-size:15px; font-weight:900; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:left; letter-spacing:.5px }
 .lib-section-sub{ margin:0 0 8px; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:left; line-height:1.4; font-weight:600 }
 .cel-item .cel-name{ letter-spacing:0; font-size:15px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-family:inherit }
@@ -306,7 +289,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .cap.rotcap{ transform:rotate(180deg) }
 
 /* ---------- Title (top, prominent) ---------- */
-.title-img{ flex:0 0 auto; display:block; margin:0 auto; width:auto; max-width:100%; max-height:8.5vh; max-height:8.5svh; pointer-events:none }
+.title-img{ flex:0 0 auto; display:block; margin:0 auto; width:auto; max-width:100%; max-height:9vh; max-height:9svh; pointer-events:none }
 /* Title splendor: melt the flat banner edges into the page + warm golden glow + gentle float */
 @keyframes titleFloat{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-3px) } }
 .banner, .title-img{
@@ -370,13 +353,13 @@ body.focusmode #chatPanel{ display:none !important }
 body.focusmode .app{ height:100vh !important; height:100svh !important }
 
 /* ---------- Turn / status ---------- */
-.status{ flex:0 0 auto; text-align:center; font-size:14px; font-weight:800; min-height:22px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.status{ flex:0 0 auto; text-align:center; font-size:15px; font-weight:800; min-height:24px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
 .status .chip{ display:inline-block; padding:3px 13px; border-radius:9px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-weight:800 }
 .status .chip.azul{ background:var(--navy) }
 .status .chip.rojo{ background:var(--crimson) }
 .status .warn{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .status .win{ color:var(--emerald) !important; -webkit-text-fill-color:var(--emerald) !important }
-.status .lvl{ font-size:12px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; margin-left:4px }
+.status .lvl{ font-size:13px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; margin-left:6px }
 .status .lvl.tablero-tag{ display:block; margin-left:0; margin-top:2px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:13px }
 .status .lvl.tablero-tag b{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; letter-spacing:1px }
 /* Tablero themes - background applied to .app */
@@ -400,7 +383,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .lobby-resume-msg.ok{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 
 /* ---------- Stage ---------- */
-.stage{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; align-items:center; gap:3px; width:100% }
+.stage{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; align-items:center; gap:5px; width:100% }
 .board-area{ flex:1 1 auto; min-height:0; width:100%; display:flex; align-items:center; justify-content:center }
 .board-frame{ display:grid; grid-template-columns:var(--g) auto var(--g); grid-template-rows:var(--g) auto var(--g) }
 .coord{ display:flex; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:13px; font-weight:800; line-height:1; align-items:center; justify-content:center }
@@ -468,11 +451,11 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .cap .slots img{ height:20px; width:auto }
 
 /* ---------- Buttons (bottom) ---------- */
-.hud{ flex:0 0 auto; display:flex; flex-wrap:wrap; gap:6px; justify-content:center; align-items:center; padding:3px 4px 3px; min-height:auto }
-.hud button{ font-size:13px; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
-  background:linear-gradient(#5a2a14,#3a1a0c); border:2px solid var(--gold); border-radius:9px; padding:7px 13px; min-height:38px; cursor:pointer; flex:0 0 auto }
+.hud{ flex:0 0 auto; display:flex; flex-wrap:wrap; gap:6px; justify-content:center; align-items:center; padding:0 4px 4px }
+.hud button{ font-size:13px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  background:linear-gradient(#5a2a14,#3a1a0c); border:2px solid var(--gold); border-radius:10px; padding:8px 10px; min-height:44px; cursor:pointer; flex:0 0 auto }
 .hud button.gold{ background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important }
-@media (min-width:600px){ .hud{ gap:9px } .hud button{ font-size:14px; padding:8px 15px; min-height:40px } }
+@media (min-width:600px){ .hud{ gap:10px } .hud button{ font-size:15px; padding:9px 18px } }
 /* In-game confirm modal (replaces window.confirm) */
 .modal-veil{ position:fixed; inset:0; z-index:200; background:rgba(8,4,2,.78); display:none; align-items:center; justify-content:center; padding:18px }
 .modal-veil.show{ display:flex }
@@ -524,11 +507,12 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif; word-wrap:break-word; overflow-wrap:break-word;
   display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden }
 .quote b{ font-style:normal; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; display:block; margin-top:4px }
-.quote-top{ margin:0 auto 2px; max-width:600px; font-size:12px; padding:4px 8px; min-height:auto }
-.codes-bar{ flex:0 0 auto; width:100%; text-align:center; font-size:13px; line-height:1.4; padding:5px 10px;
-  color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; min-height:auto }
-.codes-bar b{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-size:13px; font-weight:900 }
-.code-val{ font-family:Georgia,"Times New Roman",serif; font-weight:900; letter-spacing:2px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:16px }
+.quote-top{ margin:0 auto 4px; max-width:600px }
+.codes-bar{ flex:0 0 auto; width:100%; text-align:center; font-size:13px; line-height:1.4; padding:8px 10px;
+  color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important;
+  background:linear-gradient(160deg,#1f160d,#150e07); border:1px solid rgba(232,160,32,.3); border-radius:8px }
+.codes-bar b{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-size:14px }
+.code-val{ font-family:Georgia,"Times New Roman",serif; font-weight:900; letter-spacing:2px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:15px }
 
 /* ---------- Desktop / tablet ---------- */
 @media (min-width:900px){
@@ -594,7 +578,6 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 
     <h3>Próximamente</h3>
     <p><span class="accent">Los Dos Reinos</span> es el primero de varios tableros temáticos. Vienen en camino: <span class="accent">sci-fi</span>, <span class="accent">la selva</span> y <span class="accent">españoles vs. indios</span>. Cada uno con su propio fondo, atmósfera y reyes.</p>
-    <p>También: la posibilidad de <span class="accent">presenciar a un amigo jugando contra la IA</span> en vivo desde otro dispositivo. Tú ves su tablero y sus movimientos en tiempo real, sin tocar nada.</p>
 
     <p class="help-thanks help-thanks-top">Gracias por jugar.</p>
     <div class="help-footer">
@@ -633,7 +616,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
       <button id="celAzul" class="bigbtn"><img src="assets/shield-blue.png" class="shield-icon"> Azul (blancas)</button>
       <button id="celRojo" class="bigbtn ai"><img src="assets/shield-red.png" class="shield-icon"> Rojo (negras)</button>
     </div>
-    <p class="cel-q">Elige nivel de dificultad. Tú terminas esta jugada contra la IA desde el bando que elegiste arriba.</p>
+    <p class="cel-q">Dificultad de la IA rival. Juega el otro bando: tú la observas en acción.</p>
     <div class="cel-levels" id="celLevels"></div>
     <div style="display:flex;gap:8px;margin-top:10px;justify-content:center">
       <button class="no" id="celClose">Cerrar</button>
@@ -697,22 +680,6 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   <div class="lobby" id="lobby">
     <div class="lobby-tavern-wrap"><img class="lobby-tavern" src="assets/lobby-tavern.png" alt="La Taberna de los Reyes"></div>
     <div class="lobby-panel">
-      <!-- 🎯 MI BOARD PERSONAL -->
-      <div class="my-board-section">
-        <h3>🎯 Mi Board Personal</h3>
-        <p class="board-code" id="myBoardCode">------</p>
-        <p class="board-status" id="myBoardStatus">🟢 Esperando rival aquí</p>
-        <button id="copyBoardLink" class="lobby-share" style="width:100%;margin-bottom:8px;font-weight:700;background:linear-gradient(135deg,#3a2410,#2a1a0c);border:2px solid var(--gold2)">📋 Copiar link para invitar</button>
-        <details style="margin-bottom:12px;width:100%">
-          <summary style="cursor:pointer;font-weight:700;padding:6px 0;color:var(--gold2) !important;-webkit-text-fill-color:var(--gold2) !important">👑 Mis Partidas (<span id="myGameCount">0</span>)</summary>
-          <ul class="lobby-list" id="myGamesList" style="margin-top:8px;max-height:200px;overflow-y:auto"></ul>
-        </details>
-      </div>
-
-      <!-- 📖 TABLEROS ABIERTOS -->
-      <h3 class="lobby-h" style="margin-top:14px;margin-bottom:8px">📖 Rivales Disponibles</h3>
-      <ul class="lobby-list" id="openBoardsList" style="min-height:60px"></ul>
-
       <div class="lobby-tut" id="lobbyTut">
         <button class="lobby-tut-x" id="lobbyTutX" title="Ocultar guía">&#10005;</button>
         <p class="lobby-tut-h">Cómo funciona la Taberna</p>
@@ -777,6 +744,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     </div>
     <section class="cap blue"><h3><img src="assets/shield-blue.png" class="cap-icon"> Capturas Azul (blancas) <span class="score" id="scoreW"></span></h3><div class="slots" id="capW"></div></section>
     <div class="left-rail">
+      <div class="codes-bar" id="codesBar"></div>
       <aside class="history" id="history"><h4>Jugadas</h4><ol id="histlist"></ol></aside>
       <!-- End-of-game card: image speaks for itself. Subtitle echoes the alt text. -->
       <div class="peace-card" id="peaceCard" style="display:none">
@@ -785,8 +753,6 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
       </div>
     </div>
   </div>
-
-  <div class="codes-bar" id="codesBar"></div>
 
   <div class="hud">
     <button class="gold" id="newgame">Nueva Partida</button>
@@ -1155,52 +1121,12 @@ const HUB_ID_BASE='jfreino-lobby-hub';
 // here never collide on identity; the only shared resource is the room's single hub peer (see
 // ROSTER_CAP below for the fan-out safeguard).
 const PUBLIC_PLAZA='PLAZA1';
-const ROSTER_CAP=40;
-const BOARD_UPDATE_INTERVAL=6000; // broadcast openBoards every 6s
-let currentRoom=null;
-// MI BOARD PERSONAL (Opción B — Tableros Vivos)
-let myBoard={boardCode:null,ownerId:null,ownerName:null,status:'open',currentGame:null,gameHistory:[]};
-let boardBroadcastTimer=null;
-function loadMyBoard(){
-  try{
-    myBoard.ownerId=myPid; myBoard.ownerName=myPseudo;
-    var saved=JSON.parse(localStorage.getItem('board_'+myPid));
-    if(saved && typeof saved==='object'){ myBoard=Object.assign(myBoard,saved); }
-    if(!myBoard.boardCode || myBoard.boardCode.length<4) myBoard.boardCode=genCode();
-    if(!Array.isArray(myBoard.gameHistory)) myBoard.gameHistory=[];
-    saveMyBoard();
-  }catch(e){
-    console.error('loadMyBoard failed',e);
-    myBoard.boardCode=genCode();
-    saveMyBoard();
-  }
-}
-function saveMyBoard(){
-  try{
-    if(!myBoard || !myBoard.boardCode) return;
-    localStorage.setItem('board_'+myPid,JSON.stringify(myBoard));
-    idbPut('myboard',myBoard);
-  }catch(e){ console.error('saveMyBoard failed',e); }
-}
-function addGameToHistory(matchCode,opponent,result){
-  try{
-    if(!myBoard || !myBoard.gameHistory || !Array.isArray(myBoard.gameHistory)) myBoard.gameHistory=[];
-    myBoard.gameHistory.unshift({matchCode:matchCode,against:opponent,result:result,date:Date.now()});
-    if(myBoard.gameHistory.length>30) myBoard.gameHistory.pop();
-    saveMyBoard();
-  }catch(e){ console.error('addGameToHistory failed',e); }
-}
+const ROSTER_CAP=40; // soft cap on the hub's broadcast/connection fan-out in one room
+let currentRoom=null; // 6-char room id (or PUBLIC_PLAZA); set by entering online flow
 /* URL scheme: #multiverso= is the primary form. #partida= and #room= stay readable
    low-key so older links (incl. ones already shared on WhatsApp) never break. */
 function roomFromUrl(){
-  var h=(location.hash||'').substring(1);
-  // Check for myboard hash first (personal board invite)
-  if(h.startsWith('myboard=')){
-    var code=h.substring(8).toUpperCase();
-    if(code.length>=4){ setTimeout(()=>{ if(!net.active && !net.conn) enterBoard(code); },500); return code; }
-  }
-  // Otherwise check for game/room code
-  var m=h.match(/(?:multiverso|partida|room)=([A-Z0-9]{4,8})/i);
+  var m=(location.hash||'').match(/(?:multiverso|partida|room)=([A-Z0-9]{4,8})/i);
   return m?m[1].toUpperCase():null;
 }
 function setRoomInUrl(code){
@@ -1211,7 +1137,7 @@ function roomLink(code){ return 'https://jfcarpiopuntocom.github.io/ajedrez-16bi
 const PRESENCE_TTL=20000; // 20s (4x guest ping)
 const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'',
             hubPeer:null, hubConn:null, isHub:false, roster:[],
-            matchInfo:{live:false}, queue:[], openMulti:{}, openBoards:[], boardsLastUpdate:0 };
+            matchInfo:{live:false}, queue:[], openMulti:{} };
 const MULTI_CAP=12; // soft cap on how many published Multiverse gamestates a room keeps at once
 function netReset(){
   try{ if(net.conn) net.conn.close(); }catch(e){}
@@ -1231,12 +1157,6 @@ function wireConn(c){
   c.on('data',d=>{ if(!d||!d.t) return;
     if(d.t==='hello'){
       net.rivalName=d.name||'???';
-      // PEER JOIN DETECTED: AI takeover + status update
-      if(myBoard && myBoard.boardCode && currentRoom===myBoard.boardCode){
-        aiActive=false; mode='online';
-        myBoard.currentGame={matchCode:pendingResume&&pendingResume.code||genCode(),against:net.rivalName,mode:'online',started:Date.now()};
-        saveMyBoard();
-      }
       if(net.isHost){
         net.active=true; net.endReported=false; net.iResigned=false;
         // If the room code matches a saved local match (vs AI), open parallel universe:
@@ -1527,7 +1447,7 @@ function trysteroLeave(){
 function broadcastRoster(){
   if(!net.isHub) return;
   var publicList=net.roster.map(function(p){ return {id:p.id,name:p.name,pid:p.pid||''}; });
-  var payload={t:'lobby-roster',list:publicList,match:net.matchInfo,queue:net.queue,multi:Object.values(net.openMulti),boards:net.openBoards||[]};
+  var payload={t:'lobby-roster',list:publicList,match:net.matchInfo,queue:net.queue,multi:Object.values(net.openMulti)};
   net.roster.forEach(function(p){
     if(p.conn && p.conn.open){ try{ p.conn.send(payload); }catch(e){} }
   });
@@ -1595,18 +1515,20 @@ function tryClaimHub(){
     hp.on('connection',function(c){
       var entry=null;
       c.on('data',function(d){
-        if(!d||typeof d.t!=='string') return;
+        if(!d||!d.t) return;
         if(d.t==='lobby-join'){
           var jpid=String(d.pid||'').slice(0,40);
+          // Dedupe by pid too: same identity reclaims its slot (old ghost evicted) instead of stacking a twin.
           net.roster=net.roster.filter(function(p){ return p.id!==d.id && (!jpid || p.pid!==jpid); });
+          // Safeguard: cap one hub's fan-out (matters most for the shared Plaza Pública, which can
+          // attract many simultaneous strangers, unlike a private room shared by direct link).
           if(net.roster.length>=ROSTER_CAP){ try{ c.send({t:'plaza-full'}); }catch(e){} return; }
-          entry={id:d.id,name:String(d.name||'???').slice(0,30),pid:jpid,last:Date.now(),conn:c,boardCode:d.boardCode||null};
+          entry={id:d.id,name:String(d.name||'???').slice(0,30),pid:jpid,last:Date.now(),conn:c};
           net.roster.push(entry); broadcastRoster();
-        } else if(d.t==='lobby-ping' && entry){ entry.last=Date.now(); if(d.boardCode) entry.boardCode=d.boardCode; }
+        } else if(d.t==='lobby-ping' && entry){ entry.last=Date.now(); }
         else if(d.t==='match-status'){ hubSetMatch(d.info); }
         else if(d.t==='queue-join' && d.id){ if(net.queue.indexOf(d.id)<0){ net.queue.push(d.id); broadcastRoster(); } }
         else if(d.t==='multi-open' && d.entry && d.entry.code){ hubAddOpenMulti(d.entry); }
-        else if(d.t==='board-update' && d.boardCode && entry){ entry.boardCode=d.boardCode; }
       });
       c.on('close',function(){
         if(entry){
@@ -1624,17 +1546,10 @@ function tryClaimHub(){
       var ids=net.roster.map(function(p){ return p.id; });
       net.queue=net.queue.filter(function(id){ return ids.indexOf(id)>=0; });
       var changed=net.roster.length!==before;
+      // Clear a stale live match if its host vanished
       if(net.matchInfo && net.matchInfo.live && net.matchInfo.hostId && ids.indexOf(net.matchInfo.hostId)<0){
         net.matchInfo={live:false}; changed=true;
       }
-      // Build openBoards from roster + board codes
-      var newBoards=[];
-      net.roster.filter(function(p){ return p.boardCode && p.boardCode.length>0; }).forEach(function(p){
-        var existing=newBoards.filter(function(b){ return b.boardCode===p.boardCode; })[0];
-        if(existing){ existing.peers++; } else { newBoards.push({boardCode:p.boardCode,ownerId:p.id,ownerName:p.name,peers:1,status:'open'}); }
-      });
-      var boardsChanged=JSON.stringify(net.openBoards)!==JSON.stringify(newBoards);
-      if(boardsChanged){ net.openBoards=newBoards; changed=true; }
       if(changed) broadcastRoster();
     },3000);
     renderLobby();
@@ -1654,24 +1569,21 @@ function tryConnectHub(){
   var opened=false;
   hc.on('open',function(){
     opened=true;
-    try{ hc.send({t:'lobby-join',id:net.peer.id,name:myPseudo,pid:myPid,boardCode:myBoard&&myBoard.boardCode||null}); }catch(e){}
+    try{ hc.send({t:'lobby-join',id:net.peer.id,name:myPseudo,pid:myPid}); }catch(e){}
     if(hubHeartbeat){ clearInterval(hubHeartbeat); }
-    hubHeartbeat=setInterval(function(){
-      if(hc.open){
-        try{ hc.send({t:'lobby-ping',id:net.peer.id,boardCode:myBoard&&myBoard.boardCode||null}); }catch(e){}
-      }
-    },5000);
+    hubHeartbeat=setInterval(function(){ if(hc.open){ try{ hc.send({t:'lobby-ping',id:net.peer.id}); }catch(e){} } },5000);
   });
   hc.on('data',function(d){
-    if(!d||typeof d.t!=='string') return;
+    if(!d||!d.t) return;
     if(d.t==='lobby-roster'){
+      // pid must travel through (was being dropped here), or the ghost-twin dedupe in renderLobby
+      // only ever worked from the hub's own vantage point and never for any other participant.
       net.roster=(d.list||[]).map(function(p){ return {id:p.id,name:p.name,pid:p.pid||'',last:Date.now(),conn:null}; });
       if(d.match) net.matchInfo=d.match;
       if(d.queue) net.queue=d.queue;
       if(d.multi){
         var om={}; d.multi.forEach(function(e){ if(e&&e.code) om[e.code]=e; }); net.openMulti=om;
       }
-      if(Array.isArray(d.boards) && d.boards.length>0){ net.openBoards=d.boards; net.boardsLastUpdate=Date.now(); renderOpenBoards(); }
       renderLobby();
     }
     else if(d.t==='your-turn'){
@@ -1700,43 +1612,38 @@ function tryConnectHub(){
 
 function goOnline(){
   if(typeof Peer==='undefined'){ $('startH2').textContent='No se pudo cargar el modo online.'; return; }
-  try{
-    loadMyBoard();
-    $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
-    $('backBtn').style.display='block'; $('lobby').classList.add('show');
-    $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
-    $('start').classList.add('in-lobby');
-    $('startH2').textContent='La Taberna';
-    playTavernMelody(); refreshLobbyTut(); renderMyBoard(); renderOpenBoards();
-    if(!currentRoom){ currentRoom=roomFromUrl()||PUBLIC_PLAZA; }
-    setRoomInUrl(currentRoom);
-    var roomEl=$('roomCode'); if(roomEl){ roomEl.textContent=(currentRoom===PUBLIC_PLAZA)?'La Taberna':currentRoom; roomEl.classList.toggle('room-long',currentRoom===PUBLIC_PLAZA); }
-    var nameEl=$('myName'); if(nameEl) nameEl.value=myPseudo;
-    var pidPart=myPid.replace(/[^a-z0-9]/gi,'').toLowerCase().slice(0,12);
-    var peerId='jfreino-'+pidPart+'-'+currentRoom.toLowerCase().slice(0,4)+(net.idSalt?('x'+net.idSalt):'');
-    net.peer=new Peer(peerId);
-  }catch(e){
-    console.error('goOnline failed',e);
-    $('startH2').textContent='Error al entrar. Recarga la página.';
-    return;
-  }
+  $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
+  $('backBtn').style.display='block'; $('lobby').classList.add('show');
+  $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
+  $('start').classList.add('in-lobby');
+  $('startH2').textContent='La Taberna';
+  playTavernMelody(); refreshLobbyTut();
+  // No link in the URL? Default to the shared Plaza Pública (not a fresh random room) so strangers
+  // who just open the site actually land together and can see/challenge each other.
+  if(!currentRoom){ currentRoom=roomFromUrl()||PUBLIC_PLAZA; }
+  setRoomInUrl(currentRoom);
+  $('roomCode').textContent=(currentRoom===PUBLIC_PLAZA)?'La Taberna':currentRoom;
+  $('roomCode').classList.toggle('room-long',currentRoom===PUBLIC_PLAZA);
+  $('myName').value=myPseudo;
+  // Peer id derives from the PERMANENT pid (not the editable name), so a refresh reclaims the same
+  // slot instead of spawning a ghost twin. net.idSalt only bumps if the id is momentarily taken.
+  var pidPart=myPid.replace(/[^a-z0-9]/gi,'').toLowerCase().slice(0,12);
+  var peerId='jfreino-'+pidPart+'-'+currentRoom.toLowerCase().slice(0,4)+(net.idSalt?('x'+net.idSalt):'');
+  net.peer=new Peer(peerId);
   net.peer.on('open',function(){
-    try{
-      var statusEl=$('lobbyStatus'); if(statusEl) statusEl.innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
-      net.peer.on('connection',function(c){
-        try{
-          if(net.conn){ c.on('open',function(){ try{ c.send({t:'full'}); }catch(e){} }); return; }
-          net.conn=c; net.isHost=true; net.myColor='w'; wireConn(c);
-        }catch(e){ console.error('peer connection handler',e); }
-      });
-      renderLobby();
-      tryConnectHub();
-      initTrysteroLobby();
-    }catch(e){ console.error('peer.on(open)',e); }
+    $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
+    net.peer.on('connection',function(c){
+      if(net.conn){ c.on('open',function(){ try{ c.send({t:'full'}); }catch(e){} }); return; }
+      net.conn=c; net.isHost=true; net.myColor='w'; wireConn(c);
+    });
+    renderLobby(); // shows self immediately
+    tryConnectHub();
+    initTrysteroLobby();
   });
   net.peer.on('error',function(err){
     if(!err) return;
     if(err.type==='unavailable-id'){
+      // Old session still holds the id. Keep identity intact: just salt the connection and retry.
       try{ net.peer.destroy(); }catch(e){}
       net.idSalt=(net.idSalt||0)+1;
       setTimeout(goOnline,400); return;
@@ -1746,8 +1653,7 @@ function goOnline(){
       try{ if(net.peer && net.peer.disconnected && !net.peer.destroyed) net.peer.reconnect(); }catch(e){}
       return;
     }
-    var statusEl=$('lobbyStatus');
-    if(statusEl) statusEl.innerHTML='<span class="lobby-searching">Reconectando al lobby...</span>';
+    $('lobbyStatus').innerHTML='<span class="lobby-searching">Reconectando al lobby...</span>';
     setTimeout(function(){ netReset(); goOnline(); },2500);
   });
 }
@@ -1851,94 +1757,6 @@ function refreshLobbyTut(){
   var hidden=false; try{ hidden=localStorage.getItem('losdosreinos_tut_hidden')==='1'; }catch(e){}
   $('lobbyTut').classList.toggle('hidden',hidden);
 }
-function renderMyBoard(){
-  try{
-    if(!myBoard || !myBoard.boardCode) return;
-    var codeEl=$('myBoardCode'); if(codeEl) codeEl.textContent=myBoard.boardCode;
-    var statusEl=$('myBoardStatus'); if(statusEl){
-      if(!net.active){ statusEl.textContent='📡 Conectando...'; }
-      else if(myBoard.currentGame){ statusEl.innerHTML='🎮 <b>Partida en vivo</b> vs '+myBoard.currentGame.against; }
-      else { statusEl.textContent='🟢 Esperando rival aquí'; }
-    }
-    var hist=$('myGamesList'); if(!hist) return;
-    hist.innerHTML='';
-    var games=myBoard.gameHistory||[];
-    if(games.length===0){
-      hist.innerHTML='<li style="text-align:center;color:#999;font-size:12px;padding:8px">Aún sin partidas</li>';
-    } else {
-      games.slice(0,15).forEach(function(g){
-        try{
-          var li=document.createElement('li');
-          var badge=g.result==='win'?'✓':g.result==='loss'?'✗':'○';
-          li.innerHTML='<span style="font-size:12px"><b>'+g.matchCode+'</b> '+badge+' vs '+g.against+'</span>';
-          li.style.cursor='pointer';
-          li.onclick=function(){ resumeGame(g.matchCode); };
-          hist.appendChild(li);
-        }catch(e){}
-      });
-    }
-    var countEl=$('myGameCount'); if(countEl) countEl.textContent=games.length;
-  }catch(e){ console.error('renderMyBoard',e); }
-}
-function renderOpenBoards(){
-  try{
-    var list=$('openBoardsList'); if(!list) return;
-    list.innerHTML='';
-    if(!Array.isArray(net.openBoards) || net.openBoards.length===0){
-      list.innerHTML='<li style="text-align:center;color:#999;font-size:12px;padding:12px;font-weight:600">Esperando rivales…</li>';
-      return;
-    }
-    var available=net.openBoards.filter(function(b){
-      return b && b.boardCode && b.boardCode!==myBoard.boardCode && b.peers<2;
-    });
-    if(available.length===0){
-      list.innerHTML='<li style="text-align:center;color:#999;font-size:12px;padding:12px">Todos están jugando</li>';
-      return;
-    }
-    available.forEach(function(b){
-      try{
-        var li=document.createElement('li');
-        var badge=b.peers===1?'🎮':'🟢';
-        var status=b.peers===1?'Jugando':'Listo';
-        li.innerHTML='<span style="font-weight:700">'+b.ownerName+'</span> <span style="font-size:11px;color:#999">'+badge+' '+status+'</span>';
-        li.style.cursor='pointer';
-        li.onclick=function(){ enterBoard(b.boardCode,b.ownerName); };
-        list.appendChild(li);
-      }catch(e){}
-    });
-  }catch(e){ console.error('renderOpenBoards',e); }
-}
-function enterBoard(boardCode,ownerName){
-  if(!boardCode || !ownerName) return;
-  try{
-    if(net.conn && net.active){ status('Ya estás en una partida. Termina primero.'); return; }
-    myBoard.targetBoard=boardCode;
-    myBoard.targetOwner=ownerName;
-    status('Entrando al tablero de '+ownerName+'...');
-    currentRoom=boardCode;
-    setRoomInUrl(currentRoom);
-    if(!net.peer || net.peer.destroyed){ netInit(); }
-    setTimeout(function(){ netConnect(boardCode); },300);
-  }catch(e){ console.error('enterBoard failed',e); status('Error: no se pudo entrar'); }
-}
-$('copyBoardLink').onclick=function(){
-  try{
-    if(!myBoard || !myBoard.boardCode) return;
-    var url='https://jfcarpiopuntocom.github.io/ajedrez-16bit/#myboard='+myBoard.boardCode;
-    var b=$('copyBoardLink'); if(!b) return;
-    var orig=b.innerHTML;
-    var done=function(){ b.textContent='✓ Link copiado'; setTimeout(function(){ b.innerHTML=orig; },2000); };
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(url).then(done,fallback);
-    } else { fallback(); }
-    function fallback(){
-      try{
-        var ta=document.createElement('textarea'); ta.value=url; ta.style.position='fixed'; ta.style.opacity='0'; ta.style.pointerEvents='none';
-        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done();
-      }catch(e){ b.textContent='✗ Error'; setTimeout(function(){ b.innerHTML=orig; },1500); }
-    }
-  }catch(e){ console.error('copyBoardLink',e); }
-};
 $('lobbyTutX').onclick=function(){ try{ localStorage.setItem('losdosreinos_tut_hidden','1'); }catch(e){} $('lobbyTut').classList.add('hidden'); };
 $('lobbyShare').onclick=function(){
   var url=currentRoom?roomLink(currentRoom):'https://jfcarpiopuntocom.github.io/ajedrez-16bit/';
@@ -2467,27 +2285,11 @@ function doMove(mv,fromRemote){
 /* ===== Status ===== */
 function status(){
   let s='';
-  if(game.in_checkmate()){
-    s=game.turn()==='w'?'<span class="warn">¡Jaque mate! Vence el Rojo (negras). 🐉</span>':'<span class="win">¡Jaque mate! Vence el Azul (blancas). 🦁</span>';
-    if(matchCode && myBoard){
-      var winner=(game.turn()==='b'?'w':'b');
-      var result=(mode==='online'?(winner===net.myColor?'win':'loss'):(playerColor===game.turn()?'loss':'win'));
-      var opp=(mode==='online'?net.rivalName:'IA');
-      addGameToHistory(matchCode,opp,result);
-    }
-  } else if(game.in_stalemate()){
-    s='Tablas por ahogado.';
-    if(matchCode && myBoard) addGameToHistory(matchCode,mode==='online'?net.rivalName:'IA','draw');
-  } else if(game.in_threefold_repetition()){
-    s='Tablas por repetición.';
-    if(matchCode && myBoard) addGameToHistory(matchCode,mode==='online'?net.rivalName:'IA','draw');
-  } else if(game.insufficient_material()){
-    s='Tablas: material insuficiente.';
-    if(matchCode && myBoard) addGameToHistory(matchCode,mode==='online'?net.rivalName:'IA','draw');
-  } else if(game.in_draw()){
-    s='Tablas (50 movimientos).';
-    if(matchCode && myBoard) addGameToHistory(matchCode,mode==='online'?net.rivalName:'IA','draw');
-  }
+  if(game.in_checkmate()) s=game.turn()==='w'?'<span class="warn">¡Jaque mate! Vence el Rojo (negras). 🐉</span>':'<span class="win">¡Jaque mate! Vence el Azul (blancas). 🦁</span>';
+  else if(game.in_stalemate()) s='Tablas por ahogado.';
+  else if(game.in_threefold_repetition()) s='Tablas por repetición.';
+  else if(game.insufficient_material()) s='Tablas: material insuficiente.';
+  else if(game.in_draw()) s='Tablas (50 movimientos).';
   else if(game.in_check()) s='<span class="warn">¡Jaque!</span>';
   else if(mode==='online') s=(game.turn()===net.myColor?'<span class="chip '+(net.myColor==='w'?'azul':'rojo')+'">Tu turno</span>':'<span class="chip '+(net.myColor==='w'?'rojo':'azul')+'">Turno de '+(net.rivalName||'rival')+'…</span>');
   else if(mode==='2p') s=(game.turn()==='w'?'<span class="chip azul"><img src="assets/shield-blue.png" class="chip-icon"> Turno Azul (blancas)</span>':'<span class="chip rojo"><img src="assets/shield-red.png" class="chip-icon"> Turno Rojo (negras)</span>');
