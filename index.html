@@ -38,18 +38,18 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 /* Splash: title masthead on top (always centered), then below it art+rail in two columns on desktop.
    Below 720px art collapses above and the rail becomes a single vertical stack. */
 .start{ position:fixed; inset:0; z-index:100; background:radial-gradient(1100px 700px at 50% -6%, #3a2a1a 0%, #160f08 60%, #0a0604 100%);
-  display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:8px; padding:10px 14px; overflow:hidden }
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:4px; padding:8px 14px; overflow:hidden }
 .start.hidden{ display:none }
-.start img.banner{ flex:0 0 auto; width:100%; max-width:620px; height:auto; max-height:18vh; object-fit:contain }
+.start img.banner{ flex:0 0 auto; width:100%; max-width:620px; height:auto; max-height:14vh; object-fit:contain }
 .start-body{ flex:1 1 auto; display:flex; flex-direction:row; align-items:stretch; justify-content:center; gap:18px; width:100%; min-height:0 }
 .start-art{ flex:0 0 360px; max-width:42vw; align-self:center; border:2px solid var(--gold); border-radius:14px; overflow:hidden;
   box-shadow:0 6px 22px rgba(0,0,0,.55); background:#0a0604 }
 .start-art img{ width:100%; height:auto; display:block; max-height:72vh; object-fit:cover; image-rendering:pixelated; filter:contrast(1.06) saturate(.95) }
-.start-rail{ flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
-  min-width:0; max-width:430px; overflow-y:auto; max-height:100%; padding:4px 2px }
+.start-rail{ flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+  min-width:0; max-width:430px; overflow-y:auto; max-height:100%; padding:2px 2px }
 /* Theme-pack caption: Los Dos Reinos is the first of several board themes (sci-fi, jungle,
    conquistadors). Small and quiet — a label, not a second headline. */
-.theme-caption{ margin:6px 0 0; font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
+.theme-caption{ margin:2px 0 0; font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
   color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center }
 /* When the lobby is in front, hide the splash art/rail so the lobby (with its tavern image) owns the screen. */
 .start.in-lobby .start-body{ display:none }
@@ -64,15 +64,22 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
      lobby) float at a different height depending on how much content it had, leaving an inconsistent,
      sometimes large gap under the fixed back/help/crown buttons. Top-anchored + a fixed clearance
      padding keeps every step starting at the same, predictable spot right under those buttons. */
-  .start, .start.in-lobby{ justify-content:flex-start; padding:calc(max(10px,env(safe-area-inset-top)) + 54px) 12px 18px }
-  .start-body{ flex-direction:column; align-items:center; gap:6px; flex:0 1 auto }
+  .start, .start.in-lobby{ justify-content:flex-start; padding:calc(max(10px,env(safe-area-inset-top)) + 48px) 10px 10px }
+  .start-body{ flex-direction:column; align-items:center; gap:4px; flex:0 1 auto }
   .start-art{ display:none }
-  .start-rail{ max-height:none; overflow-y:visible; max-width:380px; justify-content:flex-start }
+  .start-rail{ max-height:none; overflow-y:visible; max-width:380px; justify-content:flex-start; gap:4px }
+  .start img.banner{ max-height:11vh }
+  .bigbtn{ font-size:16px; padding:10px 14px; min-height:44px }
+  .splashBoard{ margin:2px 0 }
+  .splash-side img{ height:38px }
+  .splash-mini-board{ width:64px; height:64px; background-size:16px 16px; background-position:0 0,8px 8px }
+  .universo-callout{ padding:5px 10px; margin:0 auto }
+  .theme-caption{ margin:0; font-size:12px }
 }
 .start h2{ margin:0; font-size:18px; font-weight:800; text-align:center; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
-.choices{ display:flex; flex-direction:column; gap:12px; width:100%; max-width:360px }
-.bigbtn{ font-size:18px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
-  border:3px solid var(--gold); border-radius:14px; padding:16px; cursor:pointer; min-height:60px; background:linear-gradient(#2c416f,#16223f) }
+.choices{ display:flex; flex-direction:column; gap:8px; width:100%; max-width:360px }
+.bigbtn{ font-size:17px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  border:3px solid var(--gold); border-radius:14px; padding:12px 16px; cursor:pointer; min-height:48px; background:linear-gradient(#2c416f,#16223f) }
 .bigbtn.ai{ background:linear-gradient(#5a2a14,#3a1a0c) }
 .bigbtn.online{ background:linear-gradient(#145a3a,#0c3a26) }
 .bigbtn:active{ transform:translateY(1px) }
@@ -85,12 +92,12 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .kingpick{ display:none; flex-direction:column; gap:7px; align-items:center; transition:opacity .25s }
 .kingpick.show-step{ display:flex }
 /* Splash mini-board with king + queen flanks */
-.splashBoard{ display:flex; align-items:center; justify-content:center; gap:14px; margin:6px 0 4px }
+.splashBoard{ display:flex; align-items:center; justify-content:center; gap:10px; margin:4px 0 2px }
 .splashBoard.hidden{ display:none }
 .lobby-resume.hidden,.lobby-resume-msg.hidden{ display:none }
 .splash-side{ display:flex; flex-direction:column; gap:4px; align-items:center }
-.splash-side img{ height:58px; width:auto; filter:drop-shadow(0 2px 4px rgba(0,0,0,.6)) }
-.splash-mini-board{ width:96px; height:96px; border:3px solid var(--gold); border-radius:6px;
+.splash-side img{ height:46px; width:auto; filter:drop-shadow(0 2px 4px rgba(0,0,0,.6)) }
+.splash-mini-board{ width:76px; height:76px; border:3px solid var(--gold); border-radius:6px;
   box-shadow:0 4px 14px rgba(0,0,0,.55), inset 0 0 0 1px #1a1006;
   background-color:#e8d3a8;
   background-image:linear-gradient(45deg,#3a1f10 25%,transparent 25%,transparent 75%,#3a1f10 75%,#3a1f10),
@@ -137,10 +144,10 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   background:#1c140d; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; font-family:inherit }
 .lobby-name-input:focus{ outline:none; border-color:#FFD060; box-shadow:0 0 8px var(--gold) }
 /* Splash Multiverse callout */
-.universo-callout{ width:100%; max-width:430px; margin:6px auto 2px; padding:10px 14px; border:2px solid #28ECAA; border-radius:12px;
+.universo-callout{ width:100%; max-width:430px; margin:2px auto 0; padding:7px 12px; border:2px solid #28ECAA; border-radius:10px;
   background:linear-gradient(160deg,#0a2a1f,#051a12); text-align:center }
-.universo-callout h3{ margin:0 0 4px; font-size:14px; font-weight:900; letter-spacing:1.5px; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; text-transform:uppercase }
-.universo-callout p{ margin:0; font-size:12px; line-height:1.4; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.universo-callout h3{ margin:0 0 2px; font-size:13px; font-weight:900; letter-spacing:1.5px; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; text-transform:uppercase }
+.universo-callout p{ margin:0; font-size:12px; line-height:1.3; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
 .universo-callout p .pop{ color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; font-weight:800 }
 .universo-callout.hidden{ display:none }
 /* Matches modal */
