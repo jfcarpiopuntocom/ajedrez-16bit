@@ -2994,27 +2994,12 @@ function playTavernMelody(){
     [[53,57,60],2],[[48,52,55],2],[[50,53,57],2],[[57,61,64],2],
     [[46,50,53],2],[[53,57,60],2],[[55,58,62],2],[[57,61,64],2]
   ];
-  // Section B: faster jig-feel chord walk (same key, brighter voicing) for variety on alternate loops
-  var progB=[
-    [[53,57,60],1],[[55,58,62],1],[[57,61,64],2],[[50,53,57],2],
-    [[48,52,55],1],[[50,53,57],1],[[53,57,60],2],[[55,58,62],2],
-    [[57,61,64],1],[[53,57,60],1],[[50,53,57],2],[[46,50,53],2],
-    [[48,52,55],1],[[53,57,60],1],[[57,61,64],2],[[50,53,57],2]
-  ];
   // Heroic lead melody, [midi,beats], 32 beats total
   var lead=[
     69,2, 65,1, 67,1, 69,2, 72,1, 69,1,
     74,2, 72,1, 69,1, 70,2, 69,1, 67,1,
     65,1, 69,1, 72,2, 71,1, 69,1, 67,2,
     74,2, 73,1, 72,1, 69,2, 74,2
-  ];
-  // Drunken fiddle jig: tight 8th-note ornamented run, replayed an octave up over chord roots.
-  // Built from prog's chord tones with passing notes so it always lands in-key.
-  var fiddle=[
-    74,1, 72,1, 74,1, 77,1, 81,1, 77,1, 74,1, 72,1,
-    69,1, 72,1, 74,1, 76,1, 79,1, 76,1, 74,1, 72,1,
-    74,1, 77,1, 79,1, 81,1, 84,1, 79,1, 76,1, 74,1,
-    72,1, 69,1, 67,1, 69,1, 72,1, 74,1, 76,1, 74,1
   ];
   function tone(midi,t,dur,vol,wave,detune,attack,rel){
     var osc=tavernCtx.createOscillator(), env=tavernCtx.createGain();
@@ -3028,27 +3013,7 @@ function playTavernMelody(){
     osc.connect(env); env.connect(tavernGain);
     osc.start(t); osc.stop(t+dur);
   }
-  // Drunken fiddle voice: two slightly-mistuned saw oscillators (wobbly unison) plus a wandering
-  // vibrato via a slow LFO on detune, so the pitch genuinely sways like a third round of ale.
-  function fiddleTone(midi,t,dur,vol){
-    var o1=tavernCtx.createOscillator(), o2=tavernCtx.createOscillator(), env=tavernCtx.createGain();
-    var lfo=tavernCtx.createOscillator(), lfoGain=tavernCtx.createGain();
-    o1.type='sawtooth'; o2.type='sawtooth';
-    o1.frequency.value=tavernNoteFreq(midi); o2.frequency.value=tavernNoteFreq(midi);
-    var wobble=8+Math.random()*10; // cents of drunken sway, randomized per note
-    o1.detune.value=-7-Math.random()*6; o2.detune.value=9+Math.random()*7;
-    lfo.type='sine'; lfo.frequency.value=4.2+Math.random()*2.6; // fast nervous vibrato
-    lfoGain.gain.value=wobble;
-    lfo.connect(lfoGain); lfoGain.connect(o1.detune); lfoGain.connect(o2.detune);
-    env.gain.setValueAtTime(0.0001,t);
-    env.gain.exponentialRampToValueAtTime(vol,t+0.015);
-    env.gain.exponentialRampToValueAtTime(vol*0.3,t+dur*0.75);
-    env.gain.linearRampToValueAtTime(0.0001,t+dur*0.98);
-    o1.connect(env); o2.connect(env); env.connect(tavernGain);
-    lfo.start(t); o1.start(t); o2.start(t);
-    lfo.stop(t+dur); o1.stop(t+dur); o2.stop(t+dur);
-  }
-  // Tavern crowd: short bandpassed noise burst = a single clap; longer low-passed wash = murmured chatter.
+  // Tavern crowd: short bandpassed noise burst = a single clap. Subtle, occasional.
   function clap(t,vol){
     var src=tavernCtx.createBufferSource(); src.buffer=tavernNoise(0.18);
     var bp=tavernCtx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1600+Math.random()*900; bp.Q.value=0.8;
@@ -3060,21 +3025,10 @@ function playTavernMelody(){
     src.connect(bp); bp.connect(env); env.connect(tavernGain);
     src.start(t); src.stop(t+0.18);
   }
-  function chatter(t,dur,vol){
-    var src=tavernCtx.createBufferSource(); src.buffer=tavernNoise(dur);
-    var bp=tavernCtx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=450+Math.random()*500; bp.Q.value=0.6;
-    var env=tavernCtx.createGain();
-    env.gain.setValueAtTime(0.0001,t);
-    env.gain.exponentialRampToValueAtTime(vol,t+dur*0.25);
-    env.gain.exponentialRampToValueAtTime(vol*0.4,t+dur*0.7);
-    env.gain.linearRampToValueAtTime(0.0001,t+dur);
-    src.connect(bp); bp.connect(env); env.connect(tavernGain);
-    src.start(t); src.stop(t+dur);
-  }
-  function scheduleSection(startT,useB){
-    var t=startT, progArr=useB?progB:prog;
-    for(var i=0;i<progArr.length;i++){
-      var chord=progArr[i][0], beats=progArr[i][1], cdur=beats*BEAT;
+  function scheduleSection(startT){
+    var t=startT;
+    for(var i=0;i<prog.length;i++){
+      var chord=prog[i][0], beats=prog[i][1], cdur=beats*BEAT;
       // battle brass: root+fifth+octave, sustained, sawtooth (warm, layered)
       tone(chord[0]-12,t,cdur,0.5,'sawtooth',0,0.06);
       tone(chord[0],t,cdur,0.32,'sawtooth',-6,0.06);
@@ -3102,10 +3056,8 @@ function playTavernMelody(){
       tone(95,t+cdur*0.5,0.05,0.05,'square',0,0.001,0.04);
       // recorder/woodwind: airy triangle an octave over the chord root, gentle
       tone(chord[0]+12,t+cdur*0.25,cdur*0.6,0.1,'triangle',3,0.06,0.5);
-      // crowd clap on strong downbeats: a fun, heroic-drunk "huzzah!" accent every 4th chord
-      if(i%4===0) clap(t+0.02,0.16);
-      // murmured chatter wash, sparse and random so it never becomes a steady hiss
-      if(Math.random()<0.22) chatter(t+Math.random()*cdur*0.5,cdur*0.6,0.025);
+      // tavern crowd: a soft clap once per loop section, not every chord — stays in the background
+      if(i===8) clap(t+0.02,0.1);
       t+=cdur;
     }
     // Heroic lead over the top, doubled with a soft sine (piano-ish) at low level
@@ -3119,23 +3071,12 @@ function playTavernMelody(){
       }
       lt+=ldur;
     }
-    // Drunken fiddle: only on the jig section (B), dancing fast 8ths over the chords, slightly behind the beat
-    if(useB){
-      var ft=startT, fStep=(32*BEAT)/fiddle.length*2;
-      for(var fk=0;fk<fiddle.length;fk+=2){
-        var fm=fiddle[fk], fdur=fiddle[fk+1]*fStep*0.92;
-        fiddleTone(fm,ft+0.01,fdur,0.22);
-        ft+=fiddle[fk+1]*fStep;
-      }
-    }
     return 32*BEAT; // section length in seconds
   }
-  var sectionToggle=false;
-  tavernScheduleSection=function(startT){ return scheduleSection(startT,sectionToggle); }; // expose so the mobile failsafe above can restart a stalled loop
+  tavernScheduleSection=scheduleSection; // expose so the mobile failsafe above can restart a stalled loop
   function loop(){
     if(!tavernPlaying) return;
-    var dur=scheduleSection(tavernCtx.currentTime+0.05,sectionToggle);
-    sectionToggle=!sectionToggle; // alternate heroic / jig sections each pass for variety
+    var dur=scheduleSection(tavernCtx.currentTime+0.05);
     tavernTimer=setTimeout(loop,(dur-0.15)*1000);
   }
   loop();
