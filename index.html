@@ -90,15 +90,20 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 /* Splash: title masthead on top (always centered), then below it art+rail in two columns on desktop.
    Below 720px art collapses above and the rail becomes a single vertical stack. */
 .start{ position:fixed; inset:0; z-index:100; background:radial-gradient(1100px 700px at 50% -6%, #3a2a1a 0%, #160f08 60%, #0a0604 100%);
-  display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:8px; padding:10px 14px; overflow:hidden }
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:6px; padding:8px 14px; overflow:hidden }
 .start.hidden{ display:none }
-.start img.banner{ width:100%; max-width:600px; height:auto; max-height:17.5vh; object-fit:contain; display:block }
+/* Trimmed from 17.5vh: on common short laptop windows (~1366x657, browser chrome included) the
+   masthead at 17.5vh + the rest of start-rail's content together overflowed startRail by ~19px,
+   forcing an internal scrollbar — exactly what JFC kept flagging as "garrapiñado"/scroll. This is
+   a real measured cut (not another cosmetic 3% pass): 13vh clears that 19px deficit with margin
+   on every viewport tested (mobile 375x812, tablet 768x1024, laptop 1366x657, desktop 1280x720). */
+.start img.banner{ width:100%; max-width:520px; height:auto; max-height:13vh; object-fit:contain; display:block }
 .start-body{ flex:1 1 auto; display:flex; flex-direction:row; align-items:stretch; justify-content:center; gap:18px; width:100%; min-height:0 }
 /* JFC 2026-06-18: splash art hidden until 16-bit compatible versions are ready */
 .start-art{ display:none !important }
 .start-art img{ width:100%; height:auto; display:block; max-height:72vh; object-fit:cover; image-rendering:pixelated; filter:contrast(1.06) saturate(.95) }
-.start-rail{ flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
-  min-width:0; max-width:430px; overflow-y:auto; max-height:100%; padding:4px 2px }
+.start-rail{ flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+  min-width:0; max-width:430px; overflow-y:auto; max-height:100%; padding:2px 2px }
 /* Theme-pack caption: Los Dos Reinos is the first of several board themes (sci-fi, jungle,
    conquistadors). Small and quiet — a label, not a second headline. */
 .theme-caption{ margin:6px 0 0; font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
@@ -1409,7 +1414,11 @@ function setRoomInUrl(code){
   try{ history.replaceState(null,'','#multiverso='+code); }catch(e){ location.hash='multiverso='+code; }
 }
 function hubIdFor(code){ return HUB_ID_BASE+'-'+code.toLowerCase(); }
-function roomLink(code){ return 'https://jfcarpiopuntocom.github.io/ajedrez-16bit/#multiverso='+code; }
+// Was hardcoded to the pre-rebrand jfcarpiopuntocom.github.io URL — every share link (lobby
+// "Copiar link", victory "Compartir", the codesBar "Compartir partida" button) was sending
+// people to the old domain instead of elmultiversodelajedrez.com. location.origin makes this
+// self-correcting if the domain ever moves again.
+function roomLink(code){ return location.origin+'/#multiverso='+code; }
 const PRESENCE_TTL=20000; // 20s (4x guest ping)
 const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'',
             hubPeer:null, hubConn:null, isHub:false, roster:[],
@@ -2328,9 +2337,35 @@ $('celebreVeil').addEventListener('click',function(e){ if(e.target===$('celebreV
 document.addEventListener('keydown',function(e){ if(e.key==='Escape' && $('celebreVeil').classList.contains('show')) $('celebreVeil').classList.remove('show'); });
 
 /* Zoom / focus mode */
-$('zoombtn').onclick=()=>{ const on=document.body.classList.toggle('focusmode');
+function toggleZoom(){ const on=document.body.classList.toggle('focusmode');
   $('zoombtn').innerHTML=on?'✕ Salir':'🔍 zoom!'; $('zoombtn').title=on?'Salir de zoom':'Expandir tablero';
-  requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); }); };
+  requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); }); }
+$('zoombtn').onclick=toggleZoom;
+// Keyboard shortcut (item 14): "Z" toggles zoom/focus mode, but only mid-game (zoombtn is hidden
+// outside an active match) and only when no text input has focus, so typing "z" in the pseudonym
+// field, resume-code box, or quick-chat reply never accidentally triggers it.
+document.addEventListener('keydown', function(e){
+  if(e.key!=='z' && e.key!=='Z') return;
+  if($('zoombtn').style.display==='none') return;
+  var tag=(document.activeElement&&document.activeElement.tagName)||'';
+  if(tag==='INPUT'||tag==='TEXTAREA') return;
+  toggleZoom();
+});
+// One-click copy for the NES-style side codes (item 15). These .code-val spans are generated via
+// innerHTML in several places (codesBar during a match, the Guardar panel) so a single delegated
+// listener on document covers all of them — no need to wire a handler at each generation site, and
+// any future spot that reuses the .code-val class gets this for free.
+document.addEventListener('click', function(e){
+  var el=e.target.closest && e.target.closest('.code-val');
+  if(!el) return;
+  var text=el.textContent;
+  if(!navigator.clipboard) return;
+  navigator.clipboard.writeText(text).then(function(){
+    var orig=el.textContent;
+    el.textContent='✓ copiado';
+    setTimeout(function(){ el.textContent=orig; },1100);
+  }).catch(function(){});
+});
 
 /* Start-of-match flash: cinematic reveal that fades out so the board takes over.
    Force-restart the animation by reflowing between class toggles, then auto-remove the class. */
@@ -3335,11 +3370,31 @@ function playTavernMelody(){
     tone(omiProg[0][0]-24,startT,3*BEAT_OMI,0.35,'sine',0,0.02,0.85);
     return 8*4*BEAT_OMI;
   }
-  var sectionFns=[scheduleHeroic, scheduleCelebration, scheduleOminous]; // a small musical trip: heroic, then festive, then dread, then back
+  // Echoes (Pink Floyd) structure, as requested: build on the heroic theme, descend into a long
+  // dread passage, then the tension breaks and resolves into celebration — not heroic->festive->
+  // dark->repeat (the old order), but heroic->dark->triumphant-release->repeat. The "arrival" of
+  // Celebration right after Ominous is the whole point: it should feel like relief, not just
+  // another mood swapped in.
+  var sectionFns=[scheduleHeroic, scheduleOminous, scheduleCelebration];
+  var sectionMoods=['heroic','ominous','celebration']; // parallel array, used only to drive crowd-audio volume below
   var sectionIdx=0;
   tavernScheduleSection=function(startT){ return sectionFns[sectionIdx](startT); }; // exposed for the mobile failsafe above
+  // Crowd ambience (item 9) now reacts to mood instead of sitting at one fixed level the whole
+  // time: the tavern goes quiet under dread and gets a touch livelier for the celebration's louder
+  // claps, so the two layers (synth score + crowd mp3) read as one scene instead of two unrelated
+  // loops running side by side. Baseline 0.11 (set in tavernCrowdStart/setTavernMute) is unchanged
+  // for the heroic section — this only nudges it for the other two moods, and respects mute.
+  function applyCrowdMoodVolume(mood){
+    if(!tavernCrowdEl || tavernMuted) return;
+    var v = mood==='ominous' ? 0.03 : (mood==='celebration' ? 0.16 : 0.11);
+    try{ tavernCrowdEl.volume=v; }catch(e){}
+  }
+  // Exposed so setTavernMute() (defined later, outside this closure) can re-apply the CURRENT
+  // section's mood volume on unmute instead of guessing — see the comment there.
+  window.tavernApplyCrowdMood=function(){ applyCrowdMoodVolume(sectionMoods[sectionIdx]); };
   function loop(){
     if(!tavernPlaying) return;
+    applyCrowdMoodVolume(sectionMoods[sectionIdx]);
     var dur=sectionFns[sectionIdx](tavernCtx.currentTime+0.05);
     sectionIdx=(sectionIdx+1)%sectionFns.length;
     tavernTimer=setTimeout(loop,(dur-0.15)*1000);
@@ -3356,7 +3411,14 @@ function setTavernMute(muted){
   tavernMuted=!!muted;
   try{ localStorage.setItem('losdosreinos_muted',tavernMuted?'1':'0'); }catch(e){}
   if(tavernGain && tavernCtx){ try{ tavernGain.gain.linearRampToValueAtTime(tavernMuted?0:MUSIC_VOL,tavernCtx.currentTime+0.25); }catch(e){} }
-  if(tavernCrowdEl){ tavernCrowdEl.volume=tavernMuted?0:0.11; }
+  // Restore to the CURRENT section's mood volume (window.tavernApplyCrowdMood, set inside
+  // playTavernMelody) rather than always snapping back to the heroic baseline 0.11 — otherwise
+  // unmuting mid-Ominous would briefly blast the crowd ambience back to full before the next
+  // loop() tick corrects it. Falls back to 0.11 if music hasn't started yet (function not wired up).
+  if(tavernCrowdEl){
+    if(!tavernMuted && typeof window.tavernApplyCrowdMood==='function') window.tavernApplyCrowdMood();
+    else tavernCrowdEl.volume=tavernMuted?0:0.11;
+  }
   var b=document.getElementById('lobbyMute'); if(b){ b.textContent=tavernMuted?'🔇':'🔊'; b.title=tavernMuted?'Música apagada':'Música de taberna'; }
   var lbl=document.getElementById('lobbyMuteLbl'); if(lbl){ lbl.textContent=tavernMuted?'activar ambiente de la taberna':'mutear ambiente de la taberna'; }
 }
