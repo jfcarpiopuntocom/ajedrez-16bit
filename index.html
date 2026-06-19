@@ -500,9 +500,16 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .tutorial-veil{ position:fixed; inset:0; z-index:700; display:none; align-items:flex-end; justify-content:center;
   background:rgba(5,5,10,.84) }
 .tutorial-veil.show{ display:flex }
-.tut-stage{ position:absolute; top:0; left:0; right:0; bottom:150px; display:flex; align-items:center; justify-content:center }
+.tut-stage{ position:absolute; top:0; left:0; right:0; bottom:150px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px }
+.tut-status{ font-size:14px; font-weight:800; padding:4px 14px; border-radius:9px; min-height:24px;
+  color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.tut-status.azul{ background:var(--navy) }
+.tut-status.rojo{ background:var(--crimson) }
+.tut-status.warn{ background:transparent; color:#ff5050 !important; -webkit-text-fill-color:#ff5050 !important; font-size:17px }
 .tut-board{ position:relative; width:200px; height:200px; display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(4,1fr);
-  border:3px solid var(--gold); border-radius:6px; overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,.6) }
+  border:3px solid var(--gold); border-radius:6px; overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,.6); transition:border-color .2s }
+@keyframes tutCheckPulse{ 0%,100%{ box-shadow:0 8px 30px rgba(0,0,0,.6),0 0 0 0 rgba(255,60,50,0) } 50%{ box-shadow:0 8px 30px rgba(0,0,0,.6),0 0 30px 8px rgba(255,60,50,.85) } }
+.tut-board.tut-check{ border-color:#ff5050; animation:tutCheckPulse .55s ease-in-out 3 }
 .tut-sq-a{ background:#2a2018 }
 .tut-sq-b{ background:#1a130d }
 .tut-piece{ position:absolute; width:42px; height:42px; object-fit:contain; transition:left .6s cubic-bezier(.4,0,.2,1),top .6s cubic-bezier(.4,0,.2,1);
@@ -512,15 +519,15 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   box-shadow:0 0 0 2px var(--gold), 0 10px 30px rgba(0,0,0,.6); cursor:pointer }
 .tut-text{ margin:0; font-size:16px; line-height:1.5; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
   font-family:"Trebuchet MS",system-ui,sans-serif; min-height:48px }
-.tut-footer{ display:flex; align-items:center; justify-content:space-between; margin-top:10px }
+.tut-footer{ display:flex; align-items:center; justify-content:space-between; margin-top:10px; gap:10px; flex-wrap:wrap }
 .tut-dots{ display:flex; gap:6px }
 .tut-dots span{ width:7px; height:7px; border-radius:50%; background:#445566; transition:background .2s }
 .tut-dots span.active{ background:var(--gold) }
-.tut-skip{ font-size:13px; font-weight:700; padding:5px 12px; border-radius:7px; border:1px solid rgba(255,255,255,.4);
+.tut-btns{ display:flex; gap:8px; margin-left:auto }
+.tut-skip{ font-size:13px; font-weight:700; padding:6px 12px; border-radius:7px; border:1px solid rgba(255,255,255,.4);
   background:transparent; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; cursor:pointer }
-@keyframes tutArrowBounce{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(4px) } }
-.tut-arrow{ position:absolute; right:18px; bottom:8px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important;
-  font-size:14px; animation:tutArrowBounce 1s ease-in-out infinite }
+.tut-next{ font-size:13px; font-weight:800; padding:6px 16px; border-radius:7px; border:2px solid var(--gold);
+  background:linear-gradient(var(--gold2),var(--gold)); color:#1a1006 !important; -webkit-text-fill-color:#1a1006 !important; cursor:pointer }
 @media (max-width:480px){ .tut-board{ width:160px; height:160px } .tut-piece{ width:34px; height:34px } .tut-text{ font-size:14px } }
 .modal-card{ background:linear-gradient(160deg,#241a10,#140d07); border:3px solid var(--gold); border-radius:14px;
   box-shadow:0 8px 30px rgba(0,0,0,.7); padding:22px 22px 18px; max-width:380px; width:100%; text-align:center;
@@ -686,14 +693,19 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <body>
 
 <div class="tutorial-veil" id="tutorialVeil" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="tut-stage"><div class="tut-board" id="tutBoard"></div></div>
+  <div class="tut-stage">
+    <div class="tut-status" id="tutStatus"></div>
+    <div class="tut-board" id="tutBoard"></div>
+  </div>
   <div class="tut-box" id="tutBox">
     <p class="tut-text" id="tutText"></p>
     <div class="tut-footer">
       <span class="tut-dots" id="tutDots"></span>
-      <button class="tut-skip" id="tutSkip">Saltar &#9197;</button>
+      <div class="tut-btns">
+        <button class="tut-skip" id="tutSkip">Saltarse Tutorial</button>
+        <button class="tut-next" id="tutNext">Siguiente &#9654;</button>
+      </div>
     </div>
-    <span class="tut-arrow">&#9660;</span>
   </div>
 </div>
 <button class="help-btn" id="helpBtn" title="Ayuda" aria-label="Ayuda">?</button>
@@ -2965,12 +2977,16 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
   // ---------- FF-style intro tutorial: light, skippable, JRPG textbox + tiny demo board ----------
   (function(){
     var steps=[
-      {text:'Arrastra una pieza hasta su destino. Las casillas legales se iluminan al levantarla.', move:function(){ moveN(1,1); }},
-      {text:'Cada pieza se mueve distinto. El caballo salta en L, ignora lo que esté en medio.', move:function(){ moveN(-1,2); }},
-      {text:'¡Jaque! Cuando tu rey está amenazado, el aviso aparece en rojo arriba del tablero.', move:function(){ flashKing(); }},
-      {text:'Cada partida guarda un código NES de seis caracteres. Cualquiera, en cualquier dispositivo, puede continuarla. Eso es el Multiverse.', move:function(){}}
+      {text:'Arrastra una pieza hasta su destino. Las casillas legales se iluminan al levantarla.',
+       status:{text:'Turno Azules (blancas)',cls:'azul'}, check:false, move:function(){ moveN(1,1); }},
+      {text:'Cada pieza se mueve distinto. El caballo salta en L, ignora lo que esté en medio.',
+       status:{text:'Turno Rojas (negras)',cls:'rojo'}, check:false, move:function(){ moveN(-1,2); }},
+      {text:'¡Jaque! Cuando tu rey está amenazado, el tablero se ilumina en rojo y el aviso aparece arriba — exactamente como en la partida real.',
+       status:{text:'¡Jaque!',cls:'warn'}, check:true, move:function(){ flashKing(); }},
+      {text:'Cada partida guarda un código NES de seis caracteres. Cualquiera, en cualquier dispositivo, puede continuarla. Eso es el Multiverse.',
+       status:{text:'Turno Azules (blancas)',cls:'azul'}, check:false, move:function(){}}
     ];
-    var idx=0, board, pieceN, pieceK, textEl, dotsEl, veil, advTimer=null, built=false;
+    var idx=0, board, pieceN, pieceK, textEl, dotsEl, statusEl, nextEl, veil, built=false;
     var SQ=50;
     function buildBoard(){
       if(built) return; built=true;
@@ -2994,32 +3010,36 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
       setTimeout(function(){ if(pieceK) pieceK.style.filter='drop-shadow(0 2px 4px rgba(0,0,0,.6))'; },900);
     }
     function renderStep(){
-      textEl.textContent=steps[idx].text;
+      var s=steps[idx];
+      textEl.textContent=s.text;
       var dots=dotsEl.children;
       for(var i=0;i<dots.length;i++) dots[i].classList.toggle('active',i===idx);
-      steps[idx].move();
+      statusEl.textContent=s.status.text;
+      statusEl.className='tut-status '+s.status.cls;
+      board.classList.toggle('tut-check',!!s.check);
+      nextEl.textContent=(idx===steps.length-1)?'Empezar a jugar ▶':'Siguiente ▶';
+      s.move();
     }
     function next(){
       idx++;
       if(idx>=steps.length){ closeTutorial(); return; }
-      renderStep(); scheduleAdvance();
+      renderStep();
     }
-    function scheduleAdvance(){ if(advTimer) clearTimeout(advTimer); advTimer=setTimeout(next,3400); }
     function openTutorial(){
       veil=document.getElementById('tutorialVeil'); textEl=document.getElementById('tutText'); dotsEl=document.getElementById('tutDots');
+      statusEl=document.getElementById('tutStatus'); nextEl=document.getElementById('tutNext');
       if(!dotsEl.children.length){ steps.forEach(function(){ var d=document.createElement('span'); dotsEl.appendChild(d); }); }
       buildBoard();
       idx=0; veil.classList.add('show'); veil.setAttribute('aria-hidden','false');
-      renderStep(); scheduleAdvance();
+      renderStep();
     }
     function closeTutorial(){
-      if(advTimer) clearTimeout(advTimer);
       veil.classList.remove('show'); veil.setAttribute('aria-hidden','true');
+      if(board) board.classList.remove('tut-check');
     }
-    document.getElementById('tutorialVeil').addEventListener('click', function(e){
-      if(e.target.id==='tutSkip'){ closeTutorial(); return; }
-      next(); // tap anywhere advances immediately, FF-style
-    });
+    document.getElementById('tutSkip').addEventListener('click', closeTutorial);
+    document.getElementById('tutNext').addEventListener('click', next);
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape' && veil && veil.classList.contains('show')) closeTutorial(); });
     window.openTutorial=openTutorial; // exposed so the (?) help modal can offer a replay
     // First-ever visit on this browser/device: the light FF-style tutorial plays once, then never
     // again (separate flag from identity so clearing it never touches the pseudonym/pid).
@@ -3126,16 +3146,6 @@ function playTavernMelody(){
     65,1, 69,1, 72,2, 71,1, 69,1, 67,2,
     74,2, 73,1, 72,1, 69,2, 74,2
   ];
-  // Three full passages instead of one: B and C are the same in-key chord/note pool as A,
-  // reordered by rotation and melodic retrograde. This guarantees every note stays harmonically
-  // valid (it's literally A's material, just re-sequenced) while the heard passage is genuinely
-  // different each time — no audible repeat across a full ~55s cycle (3x the old ~18.4s loop).
-  function rotateArr(arr,n){ n=((n%arr.length)+arr.length)%arr.length; return arr.slice(n).concat(arr.slice(0,n)); }
-  function leadToPairs(flat){ var p=[]; for(var i=0;i<flat.length;i+=2) p.push([flat[i],flat[i+1]]); return p; }
-  function leadFromPairs(pairs){ var f=[]; pairs.forEach(function(p){ f.push(p[0],p[1]); }); return f; }
-  var progSections=[prog, rotateArr(prog,6), rotateArr(prog,11)];
-  var leadPairs=leadToPairs(lead);
-  var leadSections=[lead, leadFromPairs(leadPairs.slice().reverse()), leadFromPairs(rotateArr(leadPairs,Math.floor(leadPairs.length/3)))];
   function tone(midi,t,dur,vol,wave,detune,attack,rel){
     var osc=tavernCtx.createOscillator(), env=tavernCtx.createGain();
     osc.type=wave; osc.frequency.value=tavernNoteFreq(midi);
@@ -3160,8 +3170,7 @@ function playTavernMelody(){
     src.connect(bp); bp.connect(env); env.connect(tavernGain);
     src.start(t); src.stop(t+0.18);
   }
-  function scheduleSection(startT,sectionIdx){
-    var prog=progSections[sectionIdx||0], lead=leadSections[sectionIdx||0];
+  function scheduleHeroic(startT){
     var t=startT;
     for(var i=0;i<prog.length;i++){
       var chord=prog[i][0], beats=prog[i][1], cdur=beats*BEAT;
@@ -3209,12 +3218,85 @@ function playTavernMelody(){
     }
     return 32*BEAT; // section length in seconds
   }
+  // ---------- CELEBRATION: bright, fast, festive — the tavern erupts ----------
+  var BEAT_CEL=0.46;
+  var celebProg=[
+    [[53,57,60],2],[[57,61,64],2],[[60,64,67],2],[[55,58,62],2],
+    [[57,61,64],2],[[53,57,60],2],[[58,62,65],2],[[60,64,67],2],
+    [[55,58,62],2],[[57,61,64],2],[[53,57,60],2],[[60,64,67],2],
+    [[58,62,65],2],[[55,58,62],2],[[57,61,64],2],[[53,57,60],2]
+  ];
+  var celebLead=[
+    77,1,76,1,74,1,72,1, 74,1,77,1,79,1,77,1,
+    76,1,74,1,72,1,70,1, 72,1,76,1,79,1,76,1,
+    74,1,72,1,70,1,69,1, 72,1,74,1,77,1,79,1,
+    81,2, 79,1,77,1, 76,2, 74,2
+  ];
+  function scheduleCelebration(startT){
+    var t=startT;
+    for(var i=0;i<celebProg.length;i++){
+      var chord=celebProg[i][0], beats=celebProg[i][1], cdur=beats*BEAT_CEL;
+      tone(chord[0]-12,t,cdur,0.42,'sawtooth',0,0.03);
+      tone(chord[0],t,cdur,0.3,'sawtooth',-5,0.03);
+      tone(chord[2],t,cdur,0.24,'sawtooth',5,0.03);
+      // bright bell every chord (not just every other) — festive shimmer throughout
+      tone(chord[0]+24,t,cdur*0.95,0.16,'sine',0,0.002,0.7);
+      // quick harp run, brighter/faster than the heroic section
+      var notes=chord.concat([chord[0]+12,chord[1]+12,chord[2]+12]);
+      var seq=notes.concat(notes.slice().reverse());
+      var step=cdur/seq.length;
+      for(var h=0;h<seq.length;h++) tone(seq[h]+12,t+h*step,step*1.5,0.4,'triangle',0,0.003);
+      // light bouncy pluck instead of the heroic section's heavy timpani thud — keeps it festive, not martial
+      tone(chord[0],t,0.12,0.3,'triangle',0,0.002,0.05);
+      // tambourine on every half-beat, denser than heroic
+      tone(95,t+cdur*0.5,0.05,0.07,'square',0,0.001,0.04);
+      // crowd claps every 2 chords — the room is cheering
+      if(i%2===0) clap(t+0.02,0.18);
+      t+=cdur;
+    }
+    var lt=startT;
+    for(var k=0;k<celebLead.length;k+=2){
+      var m=celebLead[k], ldur=celebLead[k+1]*BEAT_CEL;
+      tone(m,lt,ldur*0.9,0.55,'triangle',0,0.015);
+      tone(m,lt,ldur*0.9,0.18,'square',10,0.015);
+      lt+=ldur;
+    }
+    return 32*BEAT_CEL;
+  }
+  // ---------- OMINOUS: slow, sparse, dreadful — Eye of the Beholder dungeon-deep ----------
+  var BEAT_OMI=1.0;
+  var omiProg=[
+    [41,44,48],[38,44,50],[41,47,50],[39,45,48],
+    [41,44,48],[36,43,48],[38,44,50],[41,44,48]
+  ];
+  function scheduleOminous(startT){
+    var t=startT;
+    for(var i=0;i<omiProg.length;i++){
+      var chord=omiProg[i], cdur=4*BEAT_OMI;
+      // deep drone: slow swelling sustain, the floor of the dread
+      tone(chord[0]-12,t,cdur,0.42,'sine',0,0.5,0.9);
+      // a second voice a tense interval above — unease, not harmony
+      tone(chord[1],t,cdur,0.18,'triangle',-8,0.6,0.9);
+      // faint static-detune shimmer: two near-identical sines beating slowly against each other
+      tone(chord[2]+12,t,cdur*0.9,0.05,'sine',3,0.3,0.6);
+      tone(chord[2]+12,t,cdur*0.9,0.05,'sine',-3,0.3,0.6);
+      // sparse high stinger — a distant warning, not every chord
+      if(i%2===1) tone(chord[0]+28,t+cdur*0.55,0.3,0.1,'sawtooth',0,0.002,0.05);
+      t+=cdur;
+    }
+    // one slow lonely high note, isolated, near the section's end — like a far-off cry in the dark
+    tone(74,startT+22*BEAT_OMI,3*BEAT_OMI,0.07,'sine',0,0.4,0.8);
+    // a single deep doom hit to open the section
+    tone(omiProg[0][0]-24,startT,3*BEAT_OMI,0.35,'sine',0,0.02,0.85);
+    return 8*4*BEAT_OMI;
+  }
+  var sectionFns=[scheduleHeroic, scheduleCelebration, scheduleOminous]; // a small musical trip: heroic, then festive, then dread, then back
   var sectionIdx=0;
-  tavernScheduleSection=function(startT){ return scheduleSection(startT,sectionIdx); }; // exposed for the mobile failsafe above
+  tavernScheduleSection=function(startT){ return sectionFns[sectionIdx](startT); }; // exposed for the mobile failsafe above
   function loop(){
     if(!tavernPlaying) return;
-    var dur=scheduleSection(tavernCtx.currentTime+0.05,sectionIdx);
-    sectionIdx=(sectionIdx+1)%progSections.length; // cycle A→B→C→A so a full pass never repeats a passage
+    var dur=sectionFns[sectionIdx](tavernCtx.currentTime+0.05);
+    sectionIdx=(sectionIdx+1)%sectionFns.length;
     tavernTimer=setTimeout(loop,(dur-0.15)*1000);
   }
   loop();
