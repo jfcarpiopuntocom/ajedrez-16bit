@@ -355,7 +355,8 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 @media (prefers-reduced-motion:reduce){ .start-overlay.show{ animation-duration:.6s } }
 /* Quick-chat: always-on mini feed (last 5) + expandable reply panel. Online 1v1 only. */
 #chatPanel{ position:fixed; bottom:8px; right:8px; z-index:301; width:248px; max-width:84vw;
-  background:#1c140d; border:2px solid var(--gold); border-radius:12px; box-shadow:0 6px 22px rgba(0,0,0,.6); overflow:hidden }
+  background:#1c140d; border:2px solid var(--gold); border-radius:12px; box-shadow:0 6px 22px rgba(0,0,0,.6); overflow:hidden; display:none }
+body.mode-online #chatPanel{ display:flex }
 .chat-head{ display:flex; align-items:center; justify-content:space-between; padding:6px 8px 6px 10px; font-size:13px; font-weight:800;
   color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; background:#241a10 }
 .chat-head button{ background:none; border:1px solid var(--gold); border-radius:6px; cursor:pointer; font-size:14px;
@@ -2295,6 +2296,8 @@ function startGame(m){
   if(typeof hideVictory==='function') hideVictory();
   stopTavernMusic();
   mode=m; started=true; resigned=false;
+  if(m==='online') document.body.classList.add('mode-online');
+  else document.body.classList.remove('mode-online');
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; flipped=false; redoStack.length=0;
   if(pendingResume && pendingResume.data){
     var d=pendingResume.data;
