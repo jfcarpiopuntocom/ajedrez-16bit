@@ -2988,6 +2988,15 @@ function tavernNoise(dur){
   tavernNoiseBufs[key]=buf;
   return buf;
 }
+var tavernCrowdEl=null;
+function tavernCrowdStart(){
+  if(!tavernCrowdEl){
+    tavernCrowdEl=new Audio('assets/audio/tavern-crowd.mp3');
+    tavernCrowdEl.loop=true; tavernCrowdEl.volume=tavernMuted?0:0.05;
+  }
+  tavernCrowdEl.play().catch(function(){});
+}
+function tavernCrowdStop(){ if(tavernCrowdEl){ tavernCrowdEl.pause(); } }
 function playTavernMelody(){
   if(tavernPlaying) return;
   if(!tavernCtx) tavernCtx=new (window.AudioContext||window.webkitAudioContext)();
@@ -2995,6 +3004,7 @@ function playTavernMelody(){
   tavernGain=tavernCtx.createGain(); tavernGain.gain.value=tavernMuted?0:MUSIC_VOL;
   tavernGain.connect(tavernCtx.destination);
   tavernPlaying=true;
+  tavernCrowdStart();
   var BEAT=0.575; // ~15% slower tempo than prior 0.5
   // Heroic minor-key progression (D minor / F major), 16 chords x 2 beats = 32 beats
   var prog=[
@@ -3094,11 +3104,13 @@ function stopTavernMusic(){
   tavernPlaying=false;
   if(tavernTimer){ clearTimeout(tavernTimer); tavernTimer=null; }
   if(tavernGain){ try{ tavernGain.gain.linearRampToValueAtTime(0,tavernCtx.currentTime+0.5); }catch(e){} }
+  tavernCrowdStop();
 }
 function setTavernMute(muted){
   tavernMuted=!!muted;
   try{ localStorage.setItem('losdosreinos_muted',tavernMuted?'1':'0'); }catch(e){}
   if(tavernGain && tavernCtx){ try{ tavernGain.gain.linearRampToValueAtTime(tavernMuted?0:MUSIC_VOL,tavernCtx.currentTime+0.25); }catch(e){} }
+  if(tavernCrowdEl){ tavernCrowdEl.volume=tavernMuted?0:0.05; }
   var b=document.getElementById('lobbyMute'); if(b){ b.textContent=tavernMuted?'🔇':'🔊'; b.title=tavernMuted?'Música apagada':'Música de taberna'; }
   var lbl=document.getElementById('lobbyMuteLbl'); if(lbl){ lbl.textContent=tavernMuted?'activar ambiente de la taberna':'mutear ambiente de la taberna'; }
 }
