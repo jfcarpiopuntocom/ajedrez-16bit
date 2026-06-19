@@ -886,6 +886,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   <div class="note" id="note"></div>
   <div id="codesBar" style="display:none"></div>
 </div>
+<script src="firebase-config.js"></script>
+<script src="firebase-init.js"></script>
 <!-- Save panel: codes + PGN + local save -->
 <div id="savePanel" style="display:none">
   <div class="save-card">
@@ -1121,23 +1123,28 @@ let matchLineage=[]; // [{at:moveCount, opp:'IA Casual' | 'DragonAzul' | '2P'}]
 function saveMatch(){
   if(!matchCode||!started||resigned) return;
   var data={fen:game.fen(),tab:currentTablero.key,m:mode,col:playerColor,bk:blueKing,rk:redKing,
-            lvl:level?level.key:null,creator:myPseudo,
+            lvl:level?level.key:null,creator:myPseudo,creatorPid:myPid,
             caps:{w:capW.slice(),b:capB.slice()},
-            moves:game.history(),       // SAN move sequence (full played history)
-            lineage:matchLineage.slice(), // who was the opponent at each move boundary
-            over:game.game_over(),
-            ts:Date.now(),v:1};
-  // Tier 1: localStorage (synchronous, instant)
+            moves:game.history(),lineage:matchLineage.slice(),over:game.game_over(),ts:Date.now(),v:1};
   try{ localStorage.setItem(MATCH_KEY+matchCode,JSON.stringify(data)); indexAdd(matchCode); }catch(e){}
-  // Tier 2: IndexedDB (async, redundant backup)
   idbPut(matchCode,data);
+  if(window.fbSave) window.fbSave(matchCode,data);
 }
 function loadMatch(code){
   try{
     var raw=localStorage.getItem(MATCH_KEY+code.toUpperCase().trim());
-    if(!raw) return null;
-    return JSON.parse(raw);
-  }catch(e){ return null; }
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return null;
+}
+async function loadMatchFromCloud(code){
+  if(!window.fbLoad) return null;
+  var remote=await window.fbLoad(code);
+  if(remote){
+    try{ localStorage.setItem(MATCH_KEY+code.toUpperCase(),JSON.stringify(remote)); }catch(e){}
+    return remote;
+  }
+  return null;
 }
 
 /* ===== Identity =====
@@ -1940,7 +1947,17 @@ function tryResumeCode(raw,msgEl,fromLobby){
   var p=parseResumeInput(raw);
   if(p.code.length!==6) return false;
   var d=loadMatch(p.code);
-  if(!d){ if(msgEl){ msgEl.textContent='Código no encontrado en este dispositivo'; msgEl.classList.remove('ok'); } return false; }
+  if(!d){
+    if(window.fbLoad&&msgEl){ msgEl.textContent='Buscando en la nube...'; msgEl.classList.add('ok');
+      loadMatchFromCloud(p.code).then(function(rd){
+        if(!rd){ msgEl.textContent='Código no encontrado'; msgEl.classList.remove('ok'); return; }
+        tryResumeCode(raw,msgEl,fromLobby);
+      });
+      return true;
+    }
+    if(msgEl){ msgEl.textContent='Código no encontrado'; msgEl.classList.remove('ok'); }
+    return false;
+  }
   var side=p.side||d.col; // 7-char code pins the bando; 6-char keeps the saved color
   d=Object.assign({},d,{col:side});
   var sideName=side==='w'?'Azul':'Rojo';
@@ -2565,6 +2582,8 @@ function status(){
     } else { cb.innerHTML=''; cb.style.display='none'; }
   }
 }
+
+/* Firebase: loaded from firebase-init.js after config */
 
 /* ===== Stockfish ===== */
 let engine=null, ready=false, fallback=false;
