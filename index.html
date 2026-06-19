@@ -529,6 +529,26 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .help-modal .help-thanks{ margin:10px 0 0; font-size:13px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; font-weight:800; letter-spacing:.5px }
 .help-modal .help-thanks-top{ margin:14px 0 6px; font-size:16px; font-style:italic }
 .note{ flex:0 0 auto; text-align:center; font-size:13px; min-height:15px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+#codesBar{ text-align:center; font-size:13px; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  background:linear-gradient(160deg,#1a1208,#120c04); border:1px solid rgba(232,160,32,.4); border-radius:8px;
+  padding:6px 12px; margin:2px auto 0; max-width:420px; line-height:1.5 }
+#codesBar b{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:13px }
+#codesBar .code-val{ font-family:'Courier New',monospace; font-size:15px; letter-spacing:2px; color:#28ECAA !important;
+  -webkit-text-fill-color:#28ECAA !important; background:rgba(0,0,0,.4); padding:2px 8px; border-radius:4px; user-select:all; cursor:pointer }
+#savePanel{ position:fixed; inset:0; z-index:600; display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.8); backdrop-filter:blur(4px) }
+.save-card{ background:linear-gradient(160deg,#1f160d,#0e0a05); border:2px solid var(--gold); border-radius:14px;
+  padding:20px 24px; max-width:380px; width:90%; text-align:center; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.save-card h3{ margin:0 0 12px; font-size:18px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+#saveCodes{ font-size:14px; line-height:1.8; margin-bottom:14px }
+#saveCodes .code-val{ font-family:'Courier New',monospace; font-size:16px; letter-spacing:2px; color:#28ECAA !important;
+  -webkit-text-fill-color:#28ECAA !important; background:rgba(0,0,0,.5); padding:3px 10px; border-radius:4px; user-select:all; cursor:pointer }
+.save-actions{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:10px }
+.save-actions button{ font-size:14px; font-weight:800; padding:10px 16px; border-radius:10px; border:2px solid var(--gold);
+  background:linear-gradient(#2c416f,#16223f); color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; cursor:pointer; min-height:44px }
+.save-actions button:active{ transform:translateY(1px) }
+.save-close{ font-size:14px; font-weight:700; background:none; border:1px solid rgba(232,160,32,.4); color:#CCCCCC !important;
+  -webkit-text-fill-color:#CCCCCC !important; padding:8px 20px; border-radius:8px; cursor:pointer }
 /* Quote: own gentle frame so it never visually bleeds into the move history below.
    Truncates to 3 lines with ellipsis to keep the layout stable when an aphorism is long. */
 .quote{ flex:0 0 auto; width:100%; max-width:430px; text-align:center; font-style:italic; font-size:13px; line-height:1.35;
@@ -859,10 +879,23 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <button id="rematch" style="display:none">Revancha</button>
     <button id="backLobbyBtn" style="display:none">&larr; Taberna</button>
     <button id="mutebtn" title="Sonido">🔊</button>
-    <button id="exportPgn" title="Exportar PGN (compatible con chess.com y lichess)">📋 PGN</button>
-    <button id="themeBtn" title="Cambiar tema del tablero">🎨</button>
+    <button id="saveBtn" title="Guardar partida: códigos + PGN + local">💾 Guardar</button>
+    <button id="themeBtn" title="Cambiar tema del tablero">Tema</button>
   </div>
   <div class="note" id="note"></div>
+  <div id="codesBar" style="display:none"></div>
+</div>
+<!-- Save panel: codes + PGN + local save -->
+<div id="savePanel" style="display:none">
+  <div class="save-card">
+    <h3>💾 Partida Guardada</h3>
+    <div id="saveCodes"></div>
+    <div class="save-actions">
+      <button id="savePgn">📋 Copiar PGN</button>
+      <button id="saveLocal">✓ Guardado local</button>
+    </div>
+    <button id="saveClose" class="save-close">Cerrar</button>
+  </div>
 </div>
 
 <button id="zoombtn" title="Expandir tablero" style="display:none">🔍 ZOOM!</button>
@@ -2629,17 +2662,39 @@ $('themeBtn').onclick=function(){
   setTimeout(function(){ if(note.textContent.indexOf('Tema:')===0) note.textContent=''; },2000);
 };
 (function(){ try{ var tk=localStorage.getItem('losdosreinos_theme'); if(tk){ var t=tableroFromKey(tk); if(t) currentTablero=t; } }catch(e){} })();
-$('exportPgn').onclick=function(){
+function buildPgn(){
   var headers='[Event "Los Dos Reinos"]\n[Site "jfcarpiopuntocom.github.io/ajedrez-16bit"]\n'
     +'[Date "'+new Date().toISOString().slice(0,10).replace(/-/g,'.')+'\"]\n'
     +'[White "Azul'+(mode==='ai'&&playerColor==='w'?' ('+myPseudo+')':'')+'"]\n'
     +'[Black "Rojo'+(mode==='ai'&&playerColor==='b'?' ('+myPseudo+')':'')+'"]\n'
     +'[Result "'+(game.in_checkmate()?(game.turn()==='w'?'0-1':'1-0'):(game.game_over()?'1/2-1/2':'*'))+'\"]\n\n';
-  var pgn=headers+game.history().join(' ');
+  return headers+game.history().join(' ');
+}
+$('saveBtn').onclick=function(){
+  if(!started) return;
+  saveMatch();
+  var panel=$('savePanel'), codes=$('saveCodes');
+  var html='';
+  if(matchCode){
+    html+='<b>Códigos para continuar:</b><br>'
+      +'🦁 Azul: <span class="code-val">'+sideCodeFor(matchCode,'w')+'</span><br>'
+      +'🐉 Rojo: <span class="code-val">'+sideCodeFor(matchCode,'b')+'</span><br><br>';
+  }
+  html+='<span style="color:#CCCCCC">Guardado local: ✓ automático</span>';
+  codes.innerHTML=html;
+  panel.style.display='flex';
+};
+$('savePgn').onclick=function(){
+  var pgn=buildPgn();
   if(navigator.clipboard){ navigator.clipboard.writeText(pgn).then(function(){
-    var b=$('exportPgn'); var o=b.textContent; b.textContent='Copiado!'; setTimeout(function(){ b.textContent=o; },1500);
+    var b=$('savePgn'); b.textContent='✓ PGN Copiado!'; setTimeout(function(){ b.textContent='📋 Copiar PGN'; },2000);
   }).catch(function(){}); }
 };
+$('saveLocal').onclick=function(){
+  saveMatch();
+  var b=$('saveLocal'); b.textContent='✓ Guardado!'; setTimeout(function(){ b.textContent='✓ Guardado local'; },2000);
+};
+$('saveClose').onclick=function(){ $('savePanel').style.display='none'; };
 
 /* ===== Resign / Draw ===== */
 // Host reports the finished duel to the hub; the winner keeps the seat, next challenger is summoned.
