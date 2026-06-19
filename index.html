@@ -2381,7 +2381,11 @@ function openLibrary(){
       var meta=document.createElement('span'); meta.className='mmeta';
       var modeLbl=d.m==='ai'?('vs IA '+(d.lvl||'?')):d.m;
       var tabLbl=d.ts?(' &middot; '+new Date(d.ts).toLocaleDateString()):'';
-      meta.innerHTML=modeLbl+tabLbl;
+      // Micro-improvement #4: picking a code used to be blind text (mode + date only) — no sense of
+      // whether it's a fresh game or deep mid-game. moves[] is already saved per match, free to show.
+      var mvCount=(d.moves&&d.moves.length)||0;
+      var mvLbl=' &middot; '+mvCount+(mvCount===1?' jugada':' jugadas');
+      meta.innerHTML=modeLbl+tabLbl+mvLbl;
       left.appendChild(c); left.appendChild(meta);
       var right=document.createElement('div'); right.className='mright';
       var age=d.ts?Math.floor((Date.now()-d.ts)/60000):0;
