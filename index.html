@@ -2114,7 +2114,15 @@ function tryResumeCode(raw,msgEl,fromLobby){
   var side=p.side||d.col; // 7-char code pins the bando; 6-char keeps the saved color
   d=Object.assign({},d,{col:side});
   var sideName=side==='w'?'Azul':'Rojo';
-  if(msgEl){ msgEl.textContent='Cargando partida '+p.code+' como '+sideName+'...'; msgEl.classList.add('ok'); }
+  // Micro-improvement #5: own match reload stays a plain loading message, but landing in
+  // someone ELSE's saved game (the actual Multiverso moment) gets a welcome line instead of
+  // generic "Cargando..." text — the magic of the feature should be felt right when it happens.
+  if(msgEl){
+    msgEl.textContent=(d.creator && d.creator!==myPseudo)
+      ? ('🌀 Entrando al multiverso de '+d.creator+'... tomas el bando '+sideName)
+      : ('Cargando partida '+p.code+' como '+sideName+'...');
+    msgEl.classList.add('ok');
+  }
   if(fromLobby){ stopTavernMusic(); netReset(); }
   pendingResume={data:d,code:p.code};
   if(d.lvl){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].key===d.lvl){ level=LEVELS[i]; break; } }
