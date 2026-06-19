@@ -1,0 +1,13 @@
+{
+  "name": "ElMultiVersoDelAjedrez",
+  "short_name": "Multiverso Ajedrez",
+  "description": "Ajedrez 16-bit con multiverse: cada partida es un código que cualquiera, en cualquier dispositivo, puede continuar.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#120c08",
+  "theme_color": "#120c08",
+  "icons": [
+    { "src": "assets/shield-blue.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/shield-blue.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

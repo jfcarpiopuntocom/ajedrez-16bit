@@ -37,13 +37,34 @@
 <meta name="supported-color-schemes" content="light">
 <meta name="theme-color" content="#120c08">
 <title>ElMultiVersoDelAjedrez</title>
+<!-- SEO: meta description was missing entirely (Lighthouse SEO audit flagged it). Keep this in
+     sync with og:description below if either changes — they serve different consumers (search
+     snippet vs social-share card) but should tell the same story. -->
+<meta name="description" content="Ajedrez 16-bit con un sistema único: cada partida es un código que cualquiera, en cualquier dispositivo, puede continuar. Multiverse de ajedrez: bifurca, retoma, comparte.">
 <meta property="og:title" content="ElMultiVersoDelAjedrez: Multiverse Chess 16-bit">
 <meta property="og:description" content="¿Quién ganará la batalla por su control? Ajedrez 16-bit: juega con un amigo o contra la IA (7 niveles, hasta Bobby Fischer Bot).">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://jfcarpiopuntocom.github.io/ajedrez-16bit/">
-<meta property="og:image" content="https://jfcarpiopuntocom.github.io/ajedrez-16bit/assets/og.png?v=22">
+<!-- og:url / og:image were still pointing at the pre-rebrand jfcarpiopuntocom.github.io domain.
+     Now that elmultiversodelajedrez.com is live (Cloudflare DNS -> GitHub Pages, CNAME file in
+     repo root), social shares should canonicalize to the real domain. If the domain ever changes
+     again, these three lines are the only place that needs updating for share-card correctness. -->
+<meta property="og:url" content="https://elmultiversodelajedrez.com/">
+<meta property="og:image" content="https://elmultiversodelajedrez.com/assets/og.png?v=22">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<!-- Favicon: reuses the existing blue-shield asset (no new image to source/license/maintain).
+     PNG favicons are supported by every browser GitHub Pages/Cloudflare need to serve to in 2026;
+     no .ico conversion step needed. -->
+<link rel="icon" type="image/png" href="assets/shield-blue.png">
+<link rel="apple-touch-icon" href="assets/shield-blue.png">
+<link rel="manifest" href="manifest.json">
+<!-- Tutorial preload (item 8): the FF-style intro tutorial builds its mini-board lazily on first
+     open (buildBoard() in the tutorial IIFE below), so on a cold load + slow connection the knight/
+     king sprites could pop in a beat late, an empty board flashing first. Preloading just these two
+     — not the full piece set, which the real game board loads on its own schedule — keeps this
+     surgical: only the tutorial's exact two sprites, nothing else competes for bandwidth at boot. -->
+<link rel="preload" as="image" href="assets/pieces/wN.png">
+<link rel="preload" as="image" href="assets/pieces/bK.png">
 <style>
 :root{
   color-scheme:light only; forced-color-adjust:none;
@@ -798,7 +819,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <!-- ===== START SCREEN ===== -->
 <div class="start" id="start">
   <canvas id="dustCanvas" aria-hidden="true"></canvas>
-  <div class="title-wrap"><img class="banner" src="assets/title.png" alt="Los Dos Reinos: ¡ajedrez fantástico!"></div>
+  <div class="title-wrap"><img class="banner" src="assets/title.png" alt="ElMultiVersoDelAjedrez: ajedrez fantástico de 16-bit"></div>
   <div class="start-body">
   <div class="start-art" id="startArt"><img src="assets/splash-duel.png" alt="Los reyes en batalla" onerror="this.parentNode.style.display='none'"></div>
   <div class="start-rail" id="startRail">
@@ -897,7 +918,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 
 <!-- ===== GAME ===== -->
 <div class="app" id="app" style="display:none">
-  <div class="title-wrap"><img class="title-img" src="assets/title.png" alt="Los Dos Reinos: ¡ajedrez fantástico!"></div>
+  <div class="title-wrap"><img class="title-img" src="assets/title.png" alt="ElMultiVersoDelAjedrez: ajedrez fantástico de 16-bit"></div>
   <div class="status" id="status"></div>
 
   <div class="stage">
@@ -1179,6 +1200,10 @@ function indexList(){
   try{ var raw=localStorage.getItem(IDX_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; }
 }
 let matchLineage=[]; // [{at:moveCount, opp:'IA Casual' | 'DragonAzul' | '2P'}]
+// Returns the Firebase-save promise (true/false/undefined-if-offline) so callers that care about
+// cloud-sync confirmation (the "Guardar" panel's ☁️ indicator) can await it. Nothing else in the
+// codebase awaits this return value — local save (localStorage+IDB) stays fully synchronous above,
+// completely unaffected by whether the cloud write succeeds, fails, or never starts.
 function saveMatch(){
   if(!matchCode||!started||resigned) return;
   var data={fen:game.fen(),tab:currentTablero.key,m:mode,col:playerColor,bk:blueKing,rk:redKing,
@@ -1187,7 +1212,7 @@ function saveMatch(){
             moves:game.history(),lineage:matchLineage.slice(),over:game.game_over(),ts:Date.now(),v:1};
   try{ localStorage.setItem(MATCH_KEY+matchCode,JSON.stringify(data)); indexAdd(matchCode); }catch(e){}
   idbPut(matchCode,data);
-  if(window.fbSave) window.fbSave(matchCode,data);
+  return window.fbSave ? window.fbSave(matchCode,data) : null;
 }
 function loadMatch(code){
   try{
@@ -2228,6 +2253,12 @@ function openLibrary(){
     li.onclick=function(){ openCelebre(g.key); };
     cl.appendChild(li);
   });
+  // "Mis partidas guardadas" is intentionally local-only (indexList() reads localStorage, never
+  // Firebase). This was double-checked, not an oversight: Firebase only stores games by matchCode
+  // key (games/{code}), with no per-device or per-player reverse index — there's no "give me every
+  // game user X created" query possible without adding auth + a users/{pid}/games index, which is
+  // out of scope for a no-login game. Firebase exists so a TYPED CODE resumes on any device; this
+  // list exists so THIS device remembers what it's played, which is a different, simpler job.
   var ul=$('matchesList'); ul.innerHTML='';
   var codes=indexList();
   if(codes.length===0){
@@ -2756,7 +2787,7 @@ function buildPgn(){
 }
 $('saveBtn').onclick=function(){
   if(!started) return;
-  saveMatch();
+  var fbPromise=saveMatch();
   var panel=$('savePanel'), codes=$('saveCodes');
   var html='';
   if(matchCode){
@@ -2764,9 +2795,23 @@ $('saveBtn').onclick=function(){
       +'🦁 Azules (blancas): <span class="code-val">'+sideCodeFor(matchCode,'w')+'</span><br>'
       +'🐉 Rojas (negras): <span class="code-val">'+sideCodeFor(matchCode,'b')+'</span><br><br>';
   }
-  html+='<span style="color:#CCCCCC">Guardado local: ✓ automático</span>';
+  html+='<span style="color:#CCCCCC">Guardado local: ✓ automático</span><br>'
+       +'<span id="saveCloudStatus" style="color:#CCCCCC">&#9729; Sincronizando con la nube&hellip;</span>';
   codes.innerHTML=html;
   panel.style.display='flex';
+  // Cloud-save indicator (item 6): saveMatch() now returns the fbSave promise (true/false/null-if-
+  // offline). We just await it to flip the placeholder line above into a real confirmation — local
+  // save already completed synchronously inside saveMatch() regardless of what this resolves to.
+  if(fbPromise && typeof fbPromise.then==='function'){
+    fbPromise.then(function(ok){
+      var el=document.getElementById('saveCloudStatus'); if(!el) return; // panel may have closed already
+      el.innerHTML=ok
+        ? '<span style="color:#28ECAA">&#9729; Guardado en la nube: &#10003; listo para otro dispositivo</span>'
+        : '<span style="color:#E8A020">&#9729; Solo local por ahora (sin conexión a la nube)</span>';
+    });
+  } else {
+    var el=document.getElementById('saveCloudStatus'); if(el) el.innerHTML='<span style="color:#999999">&#9729; Sincronización en la nube no disponible</span>';
+  }
 };
 $('savePgn').onclick=function(){
   var pgn=buildPgn();
