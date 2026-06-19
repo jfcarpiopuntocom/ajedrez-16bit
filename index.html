@@ -71,7 +71,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .start{ position:fixed; inset:0; z-index:100; background:radial-gradient(1100px 700px at 50% -6%, #3a2a1a 0%, #160f08 60%, #0a0604 100%);
   display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:8px; padding:10px 14px; overflow:hidden }
 .start.hidden{ display:none }
-.start img.banner{ flex:0 0 auto; width:100%; max-width:620px; height:auto; max-height:18vh; object-fit:contain }
+.start img.banner{ width:100%; max-width:600px; height:auto; max-height:17.5vh; object-fit:contain; display:block }
 .start-body{ flex:1 1 auto; display:flex; flex-direction:row; align-items:stretch; justify-content:center; gap:18px; width:100%; min-height:0 }
 /* JFC 2026-06-18: splash art hidden until 16-bit compatible versions are ready */
 .start-art{ display:none !important }
@@ -311,9 +311,17 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .cap.rotcap{ transform:rotate(180deg) }
 
 /* ---------- Title (top, prominent) ---------- */
-.title-img{ flex:0 0 auto; display:block; margin:0 auto; width:auto; max-width:100%; max-height:9vh; max-height:9svh; pointer-events:none }
-/* Title splendor: melt the flat banner edges into the page + warm golden glow + gentle float */
-@keyframes titleFloat{ 0%,100%{ transform:translateY(0) translateZ(0) } 50%{ transform:translateY(-3px) translateZ(0) } }
+.title-img{ display:block; width:auto; max-width:100%; max-height:8.7vh; max-height:8.7svh; pointer-events:none }
+/* Title splendor: melt the flat banner edges into the page + warm golden glow + gentle float.
+   The float animation lives on .title-wrap (a plain div with NO mask/filter of its own), while
+   the mask-image + drop-shadow filter stay fully static on the inner img. Earlier attempts kept
+   mask+filter+animation on the SAME element and tried to fix the flicker with translateZ(0) —
+   that didn't work, because the browser still has to recompute the masked+filtered pixel output
+   every animation frame regardless of compositor-layer promotion. Splitting them onto parent
+   (animates) vs child (masked/filtered, static) means the filter+mask pass runs once, gets
+   cached as a layer, and the wrapper just repositions that cached layer — zero flicker. */
+.title-wrap{ display:block; width:fit-content; margin:0 auto; animation:titleFloat 5s ease-in-out infinite }
+@keyframes titleFloat{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-3px) } }
 .banner, .title-img{
   -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
           mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
@@ -323,13 +331,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
     drop-shadow(0 0 0.6px var(--gold))
     drop-shadow(0 0 1px rgba(232,160,32,.85))
     drop-shadow(0 6px 16px rgba(0,0,0,.55))
-    drop-shadow(0 0 22px rgba(232,160,32,.32));
-  animation:titleFloat 5s ease-in-out infinite;
-  /* GPU-layer isolation: without this, the mask-image gradient recomputes every animation
-     frame alongside the transform, causing a visible flicker at the masked edges (Chrome/Firefox
-     mask+transform interaction). translateZ(0) pins it to its own compositor layer so the mask
-     renders once and only the transform updates, like the static gold-button borders elsewhere. */
-  transform:translateZ(0); backface-visibility:hidden; }
+    drop-shadow(0 0 22px rgba(232,160,32,.32)); }
 /* Footer: fixed bottom bar, always visible over both screens */
 .site-credit{ position:fixed; left:0; right:0; bottom:0; z-index:200; height:28px;
   display:flex; align-items:center; justify-content:center;
@@ -784,7 +786,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <!-- ===== START SCREEN ===== -->
 <div class="start" id="start">
   <canvas id="dustCanvas" aria-hidden="true"></canvas>
-  <img class="banner" src="assets/title.png" alt="Los Dos Reinos: ¡ajedrez fantástico!">
+  <div class="title-wrap"><img class="banner" src="assets/title.png" alt="Los Dos Reinos: ¡ajedrez fantástico!"></div>
   <div class="start-body">
   <div class="start-art" id="startArt"><img src="assets/splash-duel.png" alt="Los reyes en batalla" onerror="this.parentNode.style.display='none'"></div>
   <div class="start-rail" id="startRail">
@@ -883,7 +885,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 
 <!-- ===== GAME ===== -->
 <div class="app" id="app" style="display:none">
-  <img class="title-img" src="assets/title.png" alt="Los Dos Reinos: ¡ajedrez fantástico!">
+  <div class="title-wrap"><img class="title-img" src="assets/title.png" alt="Los Dos Reinos: ¡ajedrez fantástico!"></div>
   <div class="status" id="status"></div>
 
   <div class="stage">
