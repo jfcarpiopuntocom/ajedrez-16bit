@@ -130,6 +130,10 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .choices{ display:flex; flex-direction:column; gap:10px; width:100%; max-width:360px }
 .bigbtn{ font-size:18px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
   border:3px solid var(--gold); border-radius:14px; padding:14px; cursor:pointer; min-height:56px; background:linear-gradient(#2c416f,#16223f) }
+/* Sub-label for traditional b/n chess players who don't know Azul=white, Rojo=black on sight.
+   13px floor respected (CLAUDE.md). Used on color-pick + celebre-pick buttons only (king-picker
+   and capture-tray labels handle the clarification inline in their own text instead). */
+.bigbtn-sub{ display:block; font-size:13px; font-weight:700; margin-top:2px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
 .bigbtn.ai{ background:linear-gradient(#5a2a14,#3a1a0c) }
 .bigbtn.online{ background:linear-gradient(#145a3a,#0c3a26) }
 .bigbtn:active{ transform:translateY(1px) }
@@ -243,7 +247,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .cel-blurb{ margin:0 0 14px; font-size:14px; line-height:1.5; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; text-align:left }
 .cel-q{ margin:10px 0 6px; font-size:14px; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
 .cel-colors{ display:flex; gap:10px; justify-content:center }
-.cel-colors .bigbtn{ flex:1; font-size:16px; padding:12px; min-height:50px }
+.cel-colors .bigbtn{ flex:1; font-size:16px; padding:12px; min-height:64px }
 .cel-colors .cel-sel{ border-color:#FFD060; box-shadow:0 0 12px var(--gold) }
 .cel-levels{ display:grid; grid-template-columns:1fr 1fr; gap:6px }
 .cel-lv{ display:flex; flex-direction:column; align-items:center; gap:1px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
@@ -825,8 +829,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <p class="cel-blurb" id="celBlurb">&mdash;</p>
     <p class="cel-q">¿Qué bando tomas a cargo?</p>
     <div class="cel-colors">
-      <button id="celAzul" class="bigbtn"><img src="assets/shield-blue.png" class="shield-icon"> Azul</button>
-      <button id="celRojo" class="bigbtn ai"><img src="assets/shield-red.png" class="shield-icon"> Rojo</button>
+      <button id="celAzul" class="bigbtn"><img src="assets/shield-blue.png" class="shield-icon"> Azul<span class="bigbtn-sub">(blancas)</span></button>
+      <button id="celRojo" class="bigbtn ai"><img src="assets/shield-red.png" class="shield-icon"> Rojo<span class="bigbtn-sub">(negras)</span></button>
     </div>
     <p class="cel-q">Dificultad de la IA rival. Juega el otro bando: tú la observas en acción.</p>
     <div class="cel-levels" id="celLevels"></div>
@@ -871,18 +875,18 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   <p class="lobby-resume-msg" id="resumeMsg"></p>
   <div class="levels" id="levels"></div>
   <div class="colorpick" id="colorpick">
-    <button class="bigbtn" id="pickBlue"><img src="assets/shield-blue.png" class="shield-icon"> Azul</button>
-    <button class="bigbtn ai" id="pickRed"><img src="assets/shield-red.png" class="shield-icon"> Rojo</button>
+    <button class="bigbtn" id="pickBlue"><img src="assets/shield-blue.png" class="shield-icon"> Azul<span class="bigbtn-sub">(blancas)</span></button>
+    <button class="bigbtn ai" id="pickRed"><img src="assets/shield-red.png" class="shield-icon"> Rojo<span class="bigbtn-sub">(negras)</span></button>
   </div>
   <div class="kingpick" id="kingpick">
     <div class="kingrow" data-side="w">
-      <span class="lbl">Elegir Rey Azul:</span>
+      <span class="lbl">Elegir Rey Azul (blancas):</span>
       <button data-k="k_bkA" class="active"><img src="assets/pieces/k_bkA_hi.png?v=22" alt="Rey azul 1"></button>
       <button data-k="k_bkB"><img src="assets/pieces/k_bkB_hi.png?v=22" alt="Rey azul 2"></button>
       <button data-k="k_bkC"><img src="assets/pieces/k_bkC_hi.png?v=22" alt="Rey azul 3"></button>
     </div>
     <div class="kingrow" data-side="b">
-      <span class="lbl">Elegir Rey Rojo:</span>
+      <span class="lbl">Elegir Rey Rojo (negras):</span>
       <button data-k="k_rkA" class="active"><img src="assets/pieces/k_rkA_hi.png?v=22" alt="Rey rojo 1"></button>
       <button data-k="k_rkB"><img src="assets/pieces/k_rkB_hi.png?v=22" alt="Rey rojo 2"></button>
       <button data-k="k_rkC"><img src="assets/pieces/k_rkC_hi.png?v=22" alt="Rey rojo 3"></button>
@@ -2219,22 +2223,22 @@ $('savePseudo').onclick=commitPseudo;
    Regla: ningún proveedor externo debe volverse dependencia dura. El estado autocontenido en el código
    es la fuente de verdad; cualquier capa remota es bonus y debe poder apagarse sin romper nada. */
 const FAMOUS=[
-  {key:'opera',name:'La Partida de la Ópera',players:'Morphy vs Duque de Brunswick y Conde Isouard',year:1858,take:'w',
+  {key:'opera',name:'La Partida de la Ópera',players:'Morphy (azul/blancas) vs Duque de Brunswick y Conde Isouard (rojo/negras)',year:1858,take:'w',
    fen:'4kb1r/p2n1ppp/4q3/4p1B1/4P3/1Q6/PPP2PPP/2KR4 w k - 0 16',
    blurb:'París, 1858. En un palco de la ópera, mientras sonaba El barbero de Sevilla, Paul Morphy jugaba contra dos aristócratas aliados sin apenas mirar el tablero. Con piezas de menos pero todas apuntando al rey, entregó torre y dama en cadena para rematar con una sola torre. Tomas el bando azul en el instante previo al sacrificio de dama. ¿Encuentras el mate que deslumbró al mundo?'},
-  {key:'immortal',name:'La Inmortal',players:'Anderssen vs Kieseritzky',year:1851,take:'w',
+  {key:'immortal',name:'La Inmortal',players:'Anderssen (azul/blancas) vs Kieseritzky (rojo/negras)',year:1851,take:'w',
    fen:'rnb1k1nr/p2p1ppp/8/1pbN1N1P/4PBP1/3P1Q2/PqP5/R4KR1 w kq - 0 18',
    blurb:'Londres, 1851, una partida amistosa entre rondas del primer torneo internacional. Anderssen regaló un alfil, las dos torres y la dama, quedándose con mínimo material, y aun así dio mate con tres piezas menores. La llamaron La Inmortal y se estudia hace más de 170 años. Tomas las azules justo antes del golpe silencioso que lo cambia todo. El acero importa menos que la iniciativa.'},
-  {key:'evergreen',name:'La Siempreviva',players:'Anderssen vs Dufresne',year:1852,take:'w',
+  {key:'evergreen',name:'La Siempreviva',players:'Anderssen (azul/blancas) vs Dufresne (rojo/negras)',year:1852,take:'w',
    fen:'1r2k1r1/pbppnp1p/1bn2P2/7q/Q7/B1PB1N2/P4PPP/R3R1K1 w - - 1 19',
    blurb:'Berlín, 1852. Wilhelm Steinitz la bautizó La Siempreviva por su belleza imperecedera. Anderssen teje una combinación final donde cada pieza cumple un papel exacto, culminando en un sacrificio de dama y un mate de alfiles. Tomas las azules en el momento en que una jugada tranquila de torre prepara la tormenta. La red ya está tendida: encuéntrala.'},
-  {key:'century',name:'La Partida del Siglo',players:'Donald Byrne vs Bobby Fischer (13 años)',year:1956,take:'b',
+  {key:'century',name:'La Partida del Siglo',players:'Donald Byrne (azul/blancas) vs Bobby Fischer, 13 años (rojo/negras)',year:1956,take:'b',
    fen:'r3r1k1/pp3pbp/1qp3p1/2B5/2BP2b1/Q1n2N2/P4PPP/3R1K1R b - - 3 17',
    blurb:'Nueva York, 1956. Un niño de trece años llamado Bobby Fischer enfrenta a un maestro consagrado. Con un alfil clavado y la dama en el aire, Fischer juega Ae6, ofreciendo su dama por una combinación que nadie había visto venir. La revista Chess Review la llamó La Partida del Siglo. Tomas el bando rojo en ese instante exacto. Atrévete al sacrificio que hizo historia.'},
-  {key:'deepblue',name:'La máquina vence al campeón',players:'Deep Blue vs Kasparov, Partida 6',year:1997,take:'w',
+  {key:'deepblue',name:'La máquina vence al campeón',players:'Deep Blue (azul/blancas) vs Kasparov (rojo/negras), Partida 6',year:1997,take:'w',
    fen:'r1bqkb1r/pp1n1pp1/2p1pn1p/6N1/3P4/3B1N2/PPP2PPP/R1BQK2R w KQkq - 0 8',
    blurb:'Nueva York, 1997. Por primera vez una máquina vence a un campeón mundial en un match. En la sexta y decisiva partida, Deep Blue sacrifica un caballo en e6 contra la Caro-Kann de Kasparov y destroza su posición en apenas diecinueve jugadas. El campeón se levantó furioso de la mesa. Tomas el lado de la máquina, justo antes del sacrificio. ¿Lo ejecutas igual de frío?'},
-  {key:'legal',name:'El Mate de Légal',players:'Légal de Kermeur vs Saint-Brie',year:1750,take:'w',
+  {key:'legal',name:'El Mate de Légal',players:'Légal de Kermeur (azul/blancas) vs Saint-Brie (rojo/negras)',year:1750,take:'w',
    fen:'rn1qkbnr/ppp2p1p/3p2p1/4p3/2B1P1b1/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 0 5',
    blurb:'Café de la Régence, París, mediados del siglo XVIII. El Sire de Légal, el mejor jugador de Francia, deja su dama en aparente jaque para tender una trampa mortal con caballo y alfil. Es el mate que lleva su nombre y la lección eterna sobre no codiciar la dama enemiga. Tomas las azules antes del sacrificio. El cebo está servido: que el rival lo muerda.'},
   {key:'fools',name:'El Mate del Loco',players:'El mate más rápido posible',year:0,take:'b',
@@ -2243,16 +2247,16 @@ const FAMOUS=[
   {key:'scholars',name:'El Mate del Pastor',players:'La celada clásica de principiante',year:0,take:'w',
    fen:'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4',
    blurb:'El Mate del Pastor, la primera celada que aprende todo ajedrecista del mundo. La dama y el alfil apuntan juntos al peón de f7, el punto más débil del enroque antes de mover. Cuatro jugadas y se termina la partida. Conocerlo es poder defenderse de él para siempre. Tomas las azules en el instante del golpe a f7. Remata la lección que todos recuerdan.'},
-  {key:'reti',name:'Miniatura de Réti',players:'Réti vs Tartakower',year:1910,take:'w',
+  {key:'reti',name:'Miniatura de Réti',players:'Réti (azul/blancas) vs Tartakower (rojo/negras)',year:1910,take:'w',
    fen:'rnb1kb1r/pp3ppp/2p5/4q3/4n3/3Q4/PPPB1PPP/2KR1BNR w kq - 0 9',
    blurb:'Viena, 1910. Una miniatura perfecta. Richard Réti enfrenta una Caro-Kann y, tras enrocar largo, entrega la dama con jaque en d8. El rey negro es arrastrado a campo abierto y un alfil sella el mate. Veinte jugadas de pura precisión que todo aficionado debería conocer. Tomas las azules antes del sacrificio de dama. La cacería comienza ahora.'},
-  {key:'lasker',name:'La caminata del rey',players:'Edward Lasker vs George Thomas',year:1912,take:'w',
+  {key:'lasker',name:'La caminata del rey',players:'Edward Lasker (azul/blancas) vs George Thomas (rojo/negras)',year:1912,take:'w',
    fen:'rn3rk1/pbppq1pp/1p2pb2/4N2Q/3PN3/3B4/PPP2PPP/R3K2R w KQ - 6 11',
    blurb:'Londres, 1912. Edward Lasker sacrifica la dama en h7 y obliga al rey negro a caminar desde su propia casa hasta la última fila contraria, escoltado a la fuerza por las piezas blancas hasta el mate. Es una de las cacerías de rey más famosas de toda la historia. Tomas las azules justo antes del sacrificio. Empuja al monarca enemigo hacia su destino.'},
-  {key:'peruvian',name:'La Inmortal Peruana',players:'Esteban Canal vs aficionado',year:1934,take:'w',
+  {key:'peruvian',name:'La Inmortal Peruana',players:'Esteban Canal (azul/blancas) vs aficionado (rojo/negras)',year:1934,take:'w',
    fen:'2kr2nr/pp1n1ppp/2p1p3/8/1P1P1B2/2N2Q1P/1PPKBPP1/7q w - - 0 13',
    blurb:'Budapest, 1934. Esteban Canal, el gran maestro peruano, en una exhibición de simultáneas regala torre, dama y ambas torres a un aficionado, y aun así da mate con un alfil y un caballo. La bautizaron La Inmortal Peruana y es la joya del ajedrez latinoamericano. Tomas las azules en el momento del sacrificio de dama en c6. La codicia del rival será su tumba.'},
-  {key:'paulsen',name:'El sacrificio de dama de Morphy',players:'Paulsen vs Morphy',year:1857,take:'b',
+  {key:'paulsen',name:'El sacrificio de dama de Morphy',players:'Paulsen (azul/blancas) vs Morphy (rojo/negras)',year:1857,take:'b',
    fen:'4r1k1/p1pb1ppp/Qbp1r3/8/1P6/2Pq1B2/R2P1PPP/2B2RK1 b - - 4 17',
    blurb:'Primer Congreso Americano, Nueva York, 1857. Frente a Louis Paulsen, Paul Morphy entrega su dama con Dxf3, abriendo el enroque blanco a un ataque imparable de torres y alfiles. Fue la partida que lo coronó como el mejor jugador del mundo y selló su leyenda. Tomas el bando rojo en ese instante. La dama vale menos que el ataque que viene detrás.'}
 ];
