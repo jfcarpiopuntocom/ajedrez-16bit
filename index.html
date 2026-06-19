@@ -1498,7 +1498,7 @@ function renderMultiBlock(){
   list.forEach(function(e){
     var li=document.createElement('li');
     var left=document.createElement('div'); left.className='mleft';
-    var nm=document.createElement('span'); nm.className='mcode'; nm.textContent=tableroFromKey(e.tab).name;
+    var nm=document.createElement('span'); nm.className='mcode'; nm.textContent=e.code;
     var meta=document.createElement('span'); meta.className='mmeta'; meta.textContent='de '+(e.creator||'alguien')+(e.lvl?(' · vs IA '+e.lvl):'');
     left.appendChild(nm); left.appendChild(meta);
     var right=document.createElement('div'); right.className='mright'; right.textContent='Tomar 🌀';
@@ -1942,7 +1942,7 @@ function tryResumeCode(raw,msgEl,fromLobby){
   var side=p.side||d.col; // 7-char code pins the bando; 6-char keeps the saved color
   d=Object.assign({},d,{col:side});
   var sideName=side==='w'?'Azul':'Rojo';
-  if(msgEl){ msgEl.textContent='Cargando Tablero '+(tableroFromKey(d.tab).name)+' como '+sideName+'...'; msgEl.classList.add('ok'); }
+  if(msgEl){ msgEl.textContent='Cargando partida '+p.code+' como '+sideName+'...'; msgEl.classList.add('ok'); }
   if(fromLobby){ stopTavernMusic(); netReset(); }
   pendingResume={data:d,code:p.code};
   if(d.lvl){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].key===d.lvl){ level=LEVELS[i]; break; } }
@@ -1999,12 +1999,17 @@ $('lobbyTutX').onclick=function(){ try{ localStorage.setItem('losdosreinos_tut_h
 $('lobbyShare').onclick=function(){
   var url=currentRoom?roomLink(currentRoom):'https://jfcarpiopuntocom.github.io/ajedrez-16bit/';
   var b=$('lobbyShare'); var orig=b.innerHTML;
-  var done=function(){ b.classList.add('copied'); b.textContent='✓ Link copiado!'; setTimeout(function(){ b.classList.remove('copied'); b.innerHTML=orig; },1800); };
+  var done=function(){ b.classList.add('copied'); b.textContent='✓ Copiado!'; setTimeout(function(){ b.classList.remove('copied'); b.innerHTML=orig; },1800); };
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(url).then(done,function(){
+    navigator.clipboard.writeText(url).then(function(){
+      done();
+      if(navigator.share) navigator.share({title:'Ajedrez Multiverse',text:'Entra a la partida:',url:url}).catch(function(){});
+    },function(){
       var ta=document.createElement('textarea'); ta.value=url; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
       ta.select(); try{ document.execCommand('copy'); done(); }catch(e){} document.body.removeChild(ta);
     });
+  } else if(navigator.share){
+    navigator.share({title:'Ajedrez Multiverse',text:'Entra a la partida:',url:url}).catch(function(){});
   } else {
     var ta=document.createElement('textarea'); ta.value=url; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
     ta.select(); try{ document.execCommand('copy'); done(); }catch(e){} document.body.removeChild(ta);
@@ -2159,7 +2164,7 @@ function openLibrary(){
       var c=document.createElement('span'); c.className='mcode'; c.textContent=code;
       var meta=document.createElement('span'); meta.className='mmeta';
       var modeLbl=d.m==='ai'?('vs IA '+(d.lvl||'?')):d.m;
-      var tabLbl=d.tab?(' &middot; Tablero '+tableroFromKey(d.tab).name):'';
+      var tabLbl=d.ts?(' &middot; '+new Date(d.ts).toLocaleDateString()):'';
       meta.innerHTML=modeLbl+tabLbl;
       left.appendChild(c); left.appendChild(meta);
       var right=document.createElement('div'); right.className='mright';
@@ -2653,7 +2658,7 @@ $('rematch').onclick=()=>{
 $('mutebtn').onclick=()=>{ muted=!muted; $('mutebtn').textContent=muted?'🔇':'🔊'; actxInit(); };
 (function(){ try{ var tk=localStorage.getItem('losdosreinos_theme'); if(tk){ var t=tableroFromKey(tk); if(t) currentTablero=t; } }catch(e){} })();
 function buildPgn(){
-  var headers='[Event "Los Dos Reinos"]\n[Site "jfcarpiopuntocom.github.io/ajedrez-16bit"]\n'
+  var headers='[Event "ElMultiVersoDelAjedrez"]\n[Site "elmultiversodelajedrez.com"]\n'
     +'[Date "'+new Date().toISOString().slice(0,10).replace(/-/g,'.')+'\"]\n'
     +'[White "Azul'+(mode==='ai'&&playerColor==='w'?' ('+myPseudo+')':'')+'"]\n'
     +'[Black "Rojo'+(mode==='ai'&&playerColor==='b'?' ('+myPseudo+')':'')+'"]\n'
@@ -3042,7 +3047,7 @@ function setTavernMute(muted){
     <div class="victory-code" id="victoryCodeWrap" style="display:none">Código de la partida<span id="victoryCode"></span></div>
     <div class="victory-actions">
       <button class="vbtn primary" id="victoryRematch">Nueva partida</button>
-      <button class="vbtn" id="victoryShare">Compartir</button>
+      <button class="vbtn" id="victoryShare">📤 Compartir</button>
       <button class="vbtn ghost" id="victoryClose">Ver el tablero</button>
     </div>
   </div>
@@ -3153,9 +3158,13 @@ function setTavernMute(muted){
   var vc=document.getElementById('victoryClose'); if(vc) vc.onclick=hideVictory;
   var vr=document.getElementById('victoryRematch'); if(vr) vr.onclick=function(){ hideVictory(); if(!clickIfReal('rematch')) clickIfReal('newgame'); };
   var vs=document.getElementById('victoryShare'); if(vs) vs.onclick=function(){
-    var url=location.href;
-    if(navigator.share){ navigator.share({title:'Los Dos Reinos',text:'Juega Los Dos Reinos!',url:url}).catch(function(){}); }
-    else { try{ navigator.clipboard.writeText(url); var o=vs.textContent; vs.textContent='Link copiado!'; setTimeout(function(){ vs.textContent=o; },1500); }catch(e){} } };
+    var url=matchCode?roomLink(matchCode):location.href;
+    var copied=function(){ var o=vs.textContent; vs.textContent='✓ Copiado!'; setTimeout(function(){ vs.textContent=o; },1500); };
+    if(navigator.clipboard) navigator.clipboard.writeText(url).then(function(){
+      copied();
+      if(navigator.share) navigator.share({title:'Ajedrez Multiverse',text:'Retoma esta partida desde la posición exacta:',url:url}).catch(function(){});
+    }).catch(function(){});
+    else if(navigator.share) navigator.share({title:'Ajedrez Multiverse',text:'Retoma esta partida:',url:url}).catch(function(){}); };
 
   /* ---------- SFX hooks: haptics + visual sparks ---------- */
   function wrap(name,after){ try{ if(typeof SFX==='undefined'||!SFX[name]) return; }catch(e){ return; }
