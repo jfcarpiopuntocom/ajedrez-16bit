@@ -493,6 +493,33 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 /* In-game confirm modal (replaces window.confirm) */
 .modal-veil{ position:fixed; inset:0; z-index:200; background:rgba(8,4,2,.78); display:none; align-items:center; justify-content:center; padding:18px }
 .modal-veil.show{ display:flex }
+/* FF-style intro tutorial: light, skippable, JRPG textbox over a tiny demo board. Shown once on
+   first-ever visit per browser/device, replacing the old full-text help-modal auto-open. */
+.tutorial-veil{ position:fixed; inset:0; z-index:700; display:none; align-items:flex-end; justify-content:center;
+  background:rgba(5,5,10,.84) }
+.tutorial-veil.show{ display:flex }
+.tut-stage{ position:absolute; top:0; left:0; right:0; bottom:150px; display:flex; align-items:center; justify-content:center }
+.tut-board{ position:relative; width:200px; height:200px; display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(4,1fr);
+  border:3px solid var(--gold); border-radius:6px; overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,.6) }
+.tut-sq-a{ background:#2a2018 }
+.tut-sq-b{ background:#1a130d }
+.tut-piece{ position:absolute; width:42px; height:42px; object-fit:contain; transition:left .6s cubic-bezier(.4,0,.2,1),top .6s cubic-bezier(.4,0,.2,1);
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.6)) }
+.tut-box{ position:relative; width:100%; max-width:520px; margin:0 12px 18px; padding:16px 20px 14px;
+  background:linear-gradient(180deg,#0e1830,#060c1a); border:3px solid #FFFFFF; border-radius:4px;
+  box-shadow:0 0 0 2px var(--gold), 0 10px 30px rgba(0,0,0,.6); cursor:pointer }
+.tut-text{ margin:0; font-size:16px; line-height:1.5; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  font-family:"Trebuchet MS",system-ui,sans-serif; min-height:48px }
+.tut-footer{ display:flex; align-items:center; justify-content:space-between; margin-top:10px }
+.tut-dots{ display:flex; gap:6px }
+.tut-dots span{ width:7px; height:7px; border-radius:50%; background:#445566; transition:background .2s }
+.tut-dots span.active{ background:var(--gold) }
+.tut-skip{ font-size:13px; font-weight:700; padding:5px 12px; border-radius:7px; border:1px solid rgba(255,255,255,.4);
+  background:transparent; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; cursor:pointer }
+@keyframes tutArrowBounce{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(4px) } }
+.tut-arrow{ position:absolute; right:18px; bottom:8px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important;
+  font-size:14px; animation:tutArrowBounce 1s ease-in-out infinite }
+@media (max-width:480px){ .tut-board{ width:160px; height:160px } .tut-piece{ width:34px; height:34px } .tut-text{ font-size:14px } }
 .modal-card{ background:linear-gradient(160deg,#241a10,#140d07); border:3px solid var(--gold); border-radius:14px;
   box-shadow:0 8px 30px rgba(0,0,0,.7); padding:22px 22px 18px; max-width:380px; width:100%; text-align:center;
   display:flex; flex-direction:column; gap:14px; animation:modalIn .2s ease-out }
@@ -656,6 +683,17 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 </head>
 <body>
 
+<div class="tutorial-veil" id="tutorialVeil" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="tut-stage"><div class="tut-board" id="tutBoard"></div></div>
+  <div class="tut-box" id="tutBox">
+    <p class="tut-text" id="tutText"></p>
+    <div class="tut-footer">
+      <span class="tut-dots" id="tutDots"></span>
+      <button class="tut-skip" id="tutSkip">Saltar &#9197;</button>
+    </div>
+    <span class="tut-arrow">&#9660;</span>
+  </div>
+</div>
 <button class="help-btn" id="helpBtn" title="Ayuda" aria-label="Ayuda">?</button>
 <button class="help-btn lib-fixed-btn" id="libFixedBtn" title="Tus partidas y las partidas famosas de la historia" aria-label="Librería Real">&#128081; <span class="lib-fixed-lbl">Librería Real</span></button>
 <div class="modal-veil" id="helpVeil" role="dialog" aria-modal="true">
@@ -697,6 +735,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <h3>Próximamente</h3>
     <p><span class="accent">Los Dos Reinos</span> es el primero de varios tableros temáticos. Vienen en camino: <span class="accent">sci-fi</span>, <span class="accent">la selva</span> y <span class="accent">españoles vs. indios</span>. Cada uno con su propio fondo, atmósfera y reyes.</p>
 
+    <p class="help-thanks help-thanks-top"><a href="#" id="helpReplayTutorial" style="color:var(--gold2)">&#9654; Ver el tutorial otra vez</a></p>
     <p class="help-thanks help-thanks-top">Gracias por jugar.</p>
     <div class="help-footer">
       <p>hecho por <strong>J. F. Carpio</strong> en Cuenca, Ecuador</p>
@@ -2918,16 +2957,77 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
   function openHelp(){ helpVeil.classList.add('show'); var hs=$('helpStats'); if(hs) hs.textContent=getStatsText(); }
   document.getElementById('helpBtn').addEventListener('click', openHelp);
   document.getElementById('helpClose').addEventListener('click', function(){ helpVeil.classList.remove('show'); });
+  document.getElementById('helpReplayTutorial').addEventListener('click', function(e){ e.preventDefault(); helpVeil.classList.remove('show'); if(window.openTutorial) window.openTutorial(); });
   helpVeil.addEventListener('click', function(e){ if(e.target===helpVeil) helpVeil.classList.remove('show'); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && helpVeil.classList.contains('show')) helpVeil.classList.remove('show'); });
-  // First-ever visit on this browser/device: open the guide once automatically, then never again
-  // (separate flag from identity so clearing just the "welcomed" key never re-rolls the pseudonym).
-  try{
-    if(!localStorage.getItem('losdosreinos_welcomed')){
-      localStorage.setItem('losdosreinos_welcomed','1');
-      setTimeout(openHelp,500);
+  // ---------- FF-style intro tutorial: light, skippable, JRPG textbox + tiny demo board ----------
+  (function(){
+    var steps=[
+      {text:'Arrastra una pieza hasta su destino. Las casillas legales se iluminan al levantarla.', move:function(){ moveN(1,1); }},
+      {text:'Cada pieza se mueve distinto. El caballo salta en L, ignora lo que esté en medio.', move:function(){ moveN(-1,2); }},
+      {text:'¡Jaque! Cuando tu rey está amenazado, el aviso aparece en rojo arriba del tablero.', move:function(){ flashKing(); }},
+      {text:'Cada partida guarda un código NES de seis caracteres. Cualquiera, en cualquier dispositivo, puede continuarla. Eso es el Multiverse.', move:function(){}}
+    ];
+    var idx=0, board, pieceN, pieceK, textEl, dotsEl, veil, advTimer=null, built=false;
+    var SQ=50;
+    function buildBoard(){
+      if(built) return; built=true;
+      board=document.getElementById('tutBoard');
+      for(var r=0;r<4;r++) for(var c=0;c<4;c++){
+        var sq=document.createElement('div'); sq.className='tut-sq '+(((r+c)%2===0)?'tut-sq-a':'tut-sq-b');
+        board.appendChild(sq);
+      }
+      pieceN=document.createElement('img'); pieceN.className='tut-piece'; pieceN.alt=''; pieceN.src='assets/pieces/wN.png';
+      pieceN.style.left='10px'; pieceN.style.top='110px';
+      pieceK=document.createElement('img'); pieceK.className='tut-piece'; pieceK.alt=''; pieceK.src='assets/pieces/bK.png';
+      pieceK.style.left='150px'; pieceK.style.top='10px';
+      board.appendChild(pieceN); board.appendChild(pieceK);
     }
-  }catch(e){}
+    function moveN(dc,dr){
+      var left=parseInt(pieceN.style.left,10), top=parseInt(pieceN.style.top,10);
+      pieceN.style.left=(left+dc*SQ)+'px'; pieceN.style.top=(top+dr*SQ)+'px';
+    }
+    function flashKing(){
+      pieceK.style.filter='drop-shadow(0 0 10px #ff5050) drop-shadow(0 2px 4px rgba(0,0,0,.6))';
+      setTimeout(function(){ if(pieceK) pieceK.style.filter='drop-shadow(0 2px 4px rgba(0,0,0,.6))'; },900);
+    }
+    function renderStep(){
+      textEl.textContent=steps[idx].text;
+      var dots=dotsEl.children;
+      for(var i=0;i<dots.length;i++) dots[i].classList.toggle('active',i===idx);
+      steps[idx].move();
+    }
+    function next(){
+      idx++;
+      if(idx>=steps.length){ closeTutorial(); return; }
+      renderStep(); scheduleAdvance();
+    }
+    function scheduleAdvance(){ if(advTimer) clearTimeout(advTimer); advTimer=setTimeout(next,3400); }
+    function openTutorial(){
+      veil=document.getElementById('tutorialVeil'); textEl=document.getElementById('tutText'); dotsEl=document.getElementById('tutDots');
+      if(!dotsEl.children.length){ steps.forEach(function(){ var d=document.createElement('span'); dotsEl.appendChild(d); }); }
+      buildBoard();
+      idx=0; veil.classList.add('show'); veil.setAttribute('aria-hidden','false');
+      renderStep(); scheduleAdvance();
+    }
+    function closeTutorial(){
+      if(advTimer) clearTimeout(advTimer);
+      veil.classList.remove('show'); veil.setAttribute('aria-hidden','true');
+    }
+    document.getElementById('tutorialVeil').addEventListener('click', function(e){
+      if(e.target.id==='tutSkip'){ closeTutorial(); return; }
+      next(); // tap anywhere advances immediately, FF-style
+    });
+    window.openTutorial=openTutorial; // exposed so the (?) help modal can offer a replay
+    // First-ever visit on this browser/device: the light FF-style tutorial plays once, then never
+    // again (separate flag from identity so clearing it never touches the pseudonym/pid).
+    try{
+      if(!localStorage.getItem('losdosreinos_welcomed')){
+        localStorage.setItem('losdosreinos_welcomed','1');
+        setTimeout(openTutorial,500);
+      }
+    }catch(e){}
+  })();
   document.getElementById('helpSupport').addEventListener('click', function(e){
     e.preventDefault();
     var subj=encodeURIComponent('Apoyar Los Dos Reinos');
