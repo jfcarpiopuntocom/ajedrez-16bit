@@ -235,9 +235,20 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   background:#241a10; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; cursor:pointer; white-space:nowrap }
 /* Micro-improvement #3 badge. 13px floor respected (CLAUDE.md), solid green accent, no opacity. */
 .mtakeover{ font-size:13px; font-weight:800; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; margin-top:2px }
+/* Micro-improvement #2: which color is actually up for grabs in the open-Multiverse lobby list. */
+.multi-color{ font-size:13px; font-weight:800; padding:2px 8px; border-radius:7px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.multi-color.azul{ background:var(--navy) }
+.multi-color.rojo{ background:var(--crimson) }
 .mpublish:hover,.mpublish:active{ background:#34260f }
 .mpublish:disabled{ background:#1a3a2c; border-color:#28ECAA; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; cursor:default }
 .lobby-multi-list li{ cursor:pointer }
+/* Micro-improvement #2: mleft/mright/mcode/mmeta classes are shared with .matches-list but had no
+   scoped layout here, so the color badge would've fallen back to plain inline flow. Same visual
+   pattern as .matches-list (left column grows, right column stacks and right-aligns). */
+.lobby-multi-list .mleft{ flex:1; display:flex; flex-direction:column; gap:1px }
+.lobby-multi-list .mcode{ font-size:16px; font-weight:900; letter-spacing:1px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.lobby-multi-list .mmeta{ font-size:13px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+.lobby-multi-list .mright{ display:flex; flex-direction:column; align-items:flex-end; gap:4px; font-size:13px; font-weight:800 }
 .matches-empty{ font-size:14px; color:#999999 !important; -webkit-text-fill-color:#999999 !important; text-align:center; padding:18px 0; font-weight:600 }
 .lib-section{ margin:14px 0 2px; font-size:15px; font-weight:900; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:left; letter-spacing:.5px }
 .lib-section-sub{ margin:0 0 8px; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:left; line-height:1.4; font-weight:600 }
@@ -1673,9 +1684,16 @@ function renderMultiBlock(){
     var li=document.createElement('li');
     var left=document.createElement('div'); left.className='mleft';
     var nm=document.createElement('span'); nm.className='mcode'; nm.textContent=e.code;
-    var meta=document.createElement('span'); meta.className='mmeta'; meta.textContent='de '+(e.creator||'alguien')+(e.lvl?(' · vs IA '+e.lvl):'');
+    // Micro-improvement #2: previously this only showed creator+level, so taking a code was a
+    // blind click. forkColor mirrors the exact same FEN-side-to-move logic forkMultiverse() uses
+    // (same field, no protocol change needed) so the color shown here is guaranteed to match what
+    // you'd actually get a click later. Move count comes from the moves[] already published.
+    var forkColor=(e.fen && e.fen.indexOf(' w ')>0)?'w':'b';
+    var moveCount=(e.moves&&e.moves.length)||0;
+    var meta=document.createElement('span'); meta.className='mmeta'; meta.textContent='de '+(e.creator||'alguien')+(e.lvl?(' · vs IA '+e.lvl):'')+' · '+moveCount+(moveCount===1?' jugada':' jugadas');
     left.appendChild(nm); left.appendChild(meta);
-    var right=document.createElement('div'); right.className='mright'; right.textContent='Tomar 🌀';
+    var right=document.createElement('div'); right.className='mright';
+    right.innerHTML='<span class="multi-color '+(forkColor==='w'?'azul':'rojo')+'">'+(forkColor==='w'?'Azul':'Rojo')+'</span><span>Tomar 🌀</span>';
     li.appendChild(left); li.appendChild(right);
     li.onclick=function(){ forkMultiverse(e); };
     ul.appendChild(li);
