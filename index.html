@@ -239,6 +239,9 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 .multi-color{ font-size:13px; font-weight:800; padding:2px 8px; border-radius:7px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
 .multi-color.azul{ background:var(--navy) }
 .multi-color.rojo{ background:var(--crimson) }
+/* Micro-improvement #1: genealogy line in the Guardar panel. 13px floor, solid colors. */
+.lineage-label{ font-size:13px; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.lineage-text{ font-size:13px; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; line-height:1.5 }
 .mpublish:hover,.mpublish:active{ background:#34260f }
 .mpublish:disabled{ background:#1a3a2c; border-color:#28ECAA; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; cursor:default }
 .lobby-multi-list li{ cursor:pointer }
@@ -2935,6 +2938,17 @@ $('saveBtn').onclick=function(){
   }
   html+='<span style="color:#CCCCCC">Guardado local: ✓ automático</span><br>'
        +'<span id="saveCloudStatus" style="color:#CCCCCC">&#9729; Sincronizando con la nube&hellip;</span>';
+  // Micro-improvement #1: matchLineage has tracked every fork/takeover/celebre-start since the
+  // Multiverse system shipped (saveMatch, forkMultiverse, the AI->online takeover in wireConn),
+  // but the genealogy it builds was never actually shown anywhere — the help modal brags about
+  // "reconstruyes la genealogía completa" while the UI stayed silent. Only surfaced when the match
+  // actually crossed more than one chapter (length>1); a plain single-origin game doesn't need it.
+  if(matchLineage && matchLineage.length>1){
+    var chapters=matchLineage.map(function(e,i){
+      return (i===0?'Empezó vs ':'luego ')+(e.opp||'?')+(i>0?(' (jugada '+e.at+')'):'');
+    });
+    html+='<br><span class="lineage-label">&#127744; Genealogía:</span><br><span class="lineage-text">'+chapters.join(' &rarr; ')+'</span>';
+  }
   codes.innerHTML=html;
   panel.style.display='flex';
   // Cloud-save indicator (item 6): saveMatch() now returns the fbSave promise (true/false/null-if-
