@@ -196,11 +196,13 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 /* Splash Multiverse callout */
 .universo-callout{ width:100%; max-width:430px; margin:6px auto 2px; padding:10px 14px; border:2px solid #28ECAA; border-radius:12px;
   background:linear-gradient(160deg,#0a2a1f,#051a12); text-align:center }
-/* Eyebrow tag: a small uppercase caps label above the Multiverso heading, used both here (start
-   screen callout) and in the help modal (.help-eyebrow). Elegant per JFC's request — solid gold,
+/* Eyebrow tag: a small uppercase caps label, used ONLY in the help modal (.help-eyebrow) above the
+   Multiverso heading — JFC was explicit (2026-06-19) the splash/start-screen callout itself must
+   stay plain "Función Multiverso" with no "único en el mundo" framing; that elevated language only
+   belongs in the help modal, where someone has already opted in to read more. Elegant: solid gold,
    13px floor respected (CLAUDE.md: nothing under .82rem, ever), no opacity/glow tricks, just a
    quiet, confident label that earns its emphasis from contrast and letter-spacing, not size. */
-.uni-eyebrow,.help-eyebrow{ margin:0 0 2px; font-size:13px; font-weight:900; letter-spacing:2px;
+.help-eyebrow{ margin:14px 0 2px; font-size:13px; font-weight:900; letter-spacing:2px;
   color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center }
 .universo-callout h3{ margin:0 0 4px; font-size:14px; font-weight:900; letter-spacing:1.5px; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; text-transform:uppercase }
 .universo-callout p{ margin:0; font-size:12px; line-height:1.4; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
@@ -589,7 +591,6 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .help-modal h2{ margin:0 0 4px; font-size:22px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; letter-spacing:.5px; font-family:Georgia,"Times New Roman",serif }
 .help-modal .help-sub{ margin:0 0 14px; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:center; font-style:italic; font-weight:600 }
 .help-modal h3{ margin:14px 0 4px; font-size:14px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-transform:uppercase; letter-spacing:1px }
-.help-eyebrow{ margin-top:14px }
 .help-modal p{ margin:0 0 8px; font-size:14px; line-height:1.5; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-weight:600; text-align:left }
 .help-modal p .accent{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-weight:800 }
 .help-modal ul{ margin:0 0 6px; padding-left:18px }
@@ -767,7 +768,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <p>Cada partida guarda un <span class="accent">código de seis caracteres tipo NES</span>. Cada jugada se respalda en localStorage e IndexedDB del dispositivo. Anótalo, sal, vuelve después y entra el código en la pantalla inicial. Cargas la posición exacta con su tablero, nivel, capturas y todo.</p>
 
     <p class="help-eyebrow">&#9733; ÚNICO EN EL MUNDO</p>
-    <h3>Multiverso (un feature único en el mundo)</h3>
+    <h3>Función Multiverso</h3>
     <p><span class="accent">Empieza la partida contra la IA. Termínala con un amigo o amiga que llegue a continuarla.</span> O al revés. El código captura todo el estado, así cualquiera con el código puede entrar, tomar el lugar de quien jugaba y seguir desde la posición exacta. La línea original sigue viva en paralelo. Endless multiverse fun.</p>
     <p>Coleccionas posiciones célebres, retas desde cualquier nodo, y reconstruyes la genealogía completa de una partida que pasó por tres IAs y dos humanos. Cada gamestate tiene su propio ID: la partida ya no pertenece a dos jugadores, pertenece a la posición misma, y cualquiera puede tomarla. Ningún otro sitio de ajedrez ofrece esto.</p>
 
@@ -860,8 +861,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     </div>
   </div>
   <div class="universo-callout" id="uniCallout">
-    <p class="uni-eyebrow">&#9733; ÚNICO EN EL MUNDO</p>
-    <h3>Multiverso</h3>
+    <h3>Función Multiverso</h3>
     <p><span class="pop">Empieza vs la IA, termina con un amigo</span> (o al revés). Más en el <span class="pop">(?)</span>.</p>
   </div>
   <div class="lobby-resume" id="resumeRow">
