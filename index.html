@@ -786,7 +786,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
       <button data-k="k_rkC"><img src="assets/pieces/k_rkC_hi.png?v=22" alt="Rey rojo 3"></button>
     </div>
   </div>
-  <p class="theme-caption">Los Dos Reinos</p>
+  <p class="theme-caption">ElMultiVersoDelAjedrez.com</p>
   </div><!-- /.start-rail -->
   </div><!-- /.start-body -->
   <div class="lobby" id="lobby">
@@ -880,7 +880,6 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <button id="backLobbyBtn" style="display:none">&larr; Taberna</button>
     <button id="mutebtn" title="Sonido">🔊</button>
     <button id="saveBtn" title="Guardar partida: códigos + PGN + local">💾 Guardar</button>
-    <button id="themeBtn" title="Cambiar tema del tablero">Tema</button>
   </div>
   <div class="note" id="note"></div>
   <div id="codesBar" style="display:none"></div>
@@ -898,7 +897,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   </div>
 </div>
 
-<button id="zoombtn" title="Expandir tablero" style="display:none">🔍 ZOOM!</button>
+<button id="zoombtn" title="Expandir tablero" style="display:none">🔍 zoom!</button>
 <!-- Start-of-match flash: dramatic reveal that fades out fast so the board owns the screen. -->
 <div class="start-overlay" id="startOverlay" aria-hidden="true"><img src="assets/splash-start.png" alt="" onerror="this.parentNode.classList.add('noimg')"></div>
 <!-- Quick-chat (online 1v1 only): preset phrases, no free text, so jamás hay insultos ni flag wars.
@@ -2216,7 +2215,7 @@ document.addEventListener('keydown',function(e){ if(e.key==='Escape' && $('celeb
 
 /* Zoom / focus mode */
 $('zoombtn').onclick=()=>{ const on=document.body.classList.toggle('focusmode');
-  $('zoombtn').innerHTML=on?'✕ Salir':'🔍 ZOOM!'; $('zoombtn').title=on?'Salir de zoom':'Expandir tablero';
+  $('zoombtn').innerHTML=on?'✕ Salir':'🔍 zoom!'; $('zoombtn').title=on?'Salir de zoom':'Expandir tablero';
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); }); };
 
 /* Start-of-match flash: cinematic reveal that fades out so the board takes over.
@@ -2335,7 +2334,7 @@ function startGame(m){
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); });
 }
 function backToStart(){
-  started=false; resigned=false; netReset(); document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='🔍 ZOOM!'; showChatUI(false);
+  started=false; resigned=false; netReset(); document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='🔍 zoom!'; showChatUI(false);
   $('app').style.display='none'; $('start').classList.remove('hidden');
   $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
   $('colorpick').classList.remove('show'); playerColor='w';
@@ -2652,15 +2651,6 @@ $('rematch').onclick=()=>{
   if(mode==='ai') boot();
 };
 $('mutebtn').onclick=()=>{ muted=!muted; $('mutebtn').textContent=muted?'🔇':'🔊'; actxInit(); };
-$('themeBtn').onclick=function(){
-  var idx=TABLEROS.indexOf(currentTablero);
-  idx=(idx+1)%TABLEROS.length;
-  currentTablero=TABLEROS[idx];
-  applyTablero(currentTablero);
-  try{ localStorage.setItem('losdosreinos_theme',currentTablero.key); }catch(e){}
-  note.textContent='Tema: '+currentTablero.name;
-  setTimeout(function(){ if(note.textContent.indexOf('Tema:')===0) note.textContent=''; },2000);
-};
 (function(){ try{ var tk=localStorage.getItem('losdosreinos_theme'); if(tk){ var t=tableroFromKey(tk); if(t) currentTablero=t; } }catch(e){} })();
 function buildPgn(){
   var headers='[Event "Los Dos Reinos"]\n[Site "jfcarpiopuntocom.github.io/ajedrez-16bit"]\n'
@@ -2726,7 +2716,7 @@ function backToLobby(){
   net.conn=null; net.active=false; net.isHost=false; net.myColor='w'; net.rivalName='';
   resigned=false; started=false;
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0;
-  document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='🔍 ZOOM!'; showChatUI(false);
+  document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='🔍 zoom!'; showChatUI(false);
   $('app').style.display='none'; $('start').classList.remove('hidden');
   $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
   $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
