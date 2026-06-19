@@ -2968,6 +2968,10 @@ function tavernEnsureRunning(){
       tavernTimer=setTimeout(loop,(dur-0.15)*1000);
     })();
   }
+  // Crowd <audio> has its own autoplay gate, separate from the WebAudio context above: a browser
+  // can allow the synth music to resume while still silently blocking audio.play() on this element.
+  // Re-attempt on every interaction so a blocked crowd track recovers without the user noticing.
+  if(tavernPlaying && tavernCrowdEl && tavernCrowdEl.paused){ tavernCrowdEl.play().catch(function(){}); }
 }
 ['touchstart','pointerdown','click'].forEach(function(ev){
   document.addEventListener(ev,function(){
@@ -2991,8 +2995,8 @@ function tavernNoise(dur){
 var tavernCrowdEl=null;
 function tavernCrowdStart(){
   if(!tavernCrowdEl){
-    tavernCrowdEl=new Audio('assets/audio/tavern-crowd.mp3');
-    tavernCrowdEl.loop=true; tavernCrowdEl.volume=tavernMuted?0:0.05;
+    tavernCrowdEl=new Audio('assets/audio/tavern-crowd.mp3?v=2');
+    tavernCrowdEl.loop=true; tavernCrowdEl.volume=tavernMuted?0:0.11;
   }
   tavernCrowdEl.play().catch(function(){});
 }
@@ -3020,6 +3024,16 @@ function playTavernMelody(){
     65,1, 69,1, 72,2, 71,1, 69,1, 67,2,
     74,2, 73,1, 72,1, 69,2, 74,2
   ];
+  // Three full passages instead of one: B and C are the same in-key chord/note pool as A,
+  // reordered by rotation and melodic retrograde. This guarantees every note stays harmonically
+  // valid (it's literally A's material, just re-sequenced) while the heard passage is genuinely
+  // different each time — no audible repeat across a full ~55s cycle (3x the old ~18.4s loop).
+  function rotateArr(arr,n){ n=((n%arr.length)+arr.length)%arr.length; return arr.slice(n).concat(arr.slice(0,n)); }
+  function leadToPairs(flat){ var p=[]; for(var i=0;i<flat.length;i+=2) p.push([flat[i],flat[i+1]]); return p; }
+  function leadFromPairs(pairs){ var f=[]; pairs.forEach(function(p){ f.push(p[0],p[1]); }); return f; }
+  var progSections=[prog, rotateArr(prog,6), rotateArr(prog,11)];
+  var leadPairs=leadToPairs(lead);
+  var leadSections=[lead, leadFromPairs(leadPairs.slice().reverse()), leadFromPairs(rotateArr(leadPairs,Math.floor(leadPairs.length/3)))];
   function tone(midi,t,dur,vol,wave,detune,attack,rel){
     var osc=tavernCtx.createOscillator(), env=tavernCtx.createGain();
     osc.type=wave; osc.frequency.value=tavernNoteFreq(midi);
@@ -3044,7 +3058,8 @@ function playTavernMelody(){
     src.connect(bp); bp.connect(env); env.connect(tavernGain);
     src.start(t); src.stop(t+0.18);
   }
-  function scheduleSection(startT){
+  function scheduleSection(startT,sectionIdx){
+    var prog=progSections[sectionIdx||0], lead=leadSections[sectionIdx||0];
     var t=startT;
     for(var i=0;i<prog.length;i++){
       var chord=prog[i][0], beats=prog[i][1], cdur=beats*BEAT;
@@ -3092,10 +3107,12 @@ function playTavernMelody(){
     }
     return 32*BEAT; // section length in seconds
   }
-  tavernScheduleSection=scheduleSection; // expose so the mobile failsafe above can restart a stalled loop
+  var sectionIdx=0;
+  tavernScheduleSection=function(startT){ return scheduleSection(startT,sectionIdx); }; // exposed for the mobile failsafe above
   function loop(){
     if(!tavernPlaying) return;
-    var dur=scheduleSection(tavernCtx.currentTime+0.05);
+    var dur=scheduleSection(tavernCtx.currentTime+0.05,sectionIdx);
+    sectionIdx=(sectionIdx+1)%progSections.length; // cycle A→B→C→A so a full pass never repeats a passage
     tavernTimer=setTimeout(loop,(dur-0.15)*1000);
   }
   loop();
@@ -3110,7 +3127,7 @@ function setTavernMute(muted){
   tavernMuted=!!muted;
   try{ localStorage.setItem('losdosreinos_muted',tavernMuted?'1':'0'); }catch(e){}
   if(tavernGain && tavernCtx){ try{ tavernGain.gain.linearRampToValueAtTime(tavernMuted?0:MUSIC_VOL,tavernCtx.currentTime+0.25); }catch(e){} }
-  if(tavernCrowdEl){ tavernCrowdEl.volume=tavernMuted?0:0.05; }
+  if(tavernCrowdEl){ tavernCrowdEl.volume=tavernMuted?0:0.11; }
   var b=document.getElementById('lobbyMute'); if(b){ b.textContent=tavernMuted?'🔇':'🔊'; b.title=tavernMuted?'Música apagada':'Música de taberna'; }
   var lbl=document.getElementById('lobbyMuteLbl'); if(lbl){ lbl.textContent=tavernMuted?'activar ambiente de la taberna':'mutear ambiente de la taberna'; }
 }
