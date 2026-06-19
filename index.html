@@ -500,8 +500,10 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-weight:700 }
 .history{ flex:0 0 auto; width:100%; max-width:430px; max-height:80px; overflow-y:auto; margin-top:4px;
   background:linear-gradient(160deg,#241a10,#140d07); border:2px solid var(--gold); border-radius:8px; padding:4px 8px;
-  font-size:12px; line-height:1.4; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
-.history h4{ margin:0 0 3px; font-size:11px; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; letter-spacing:.5px }
+  font-size:13px; line-height:1.4; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+/* 13px floor enforced here per CLAUDE.md (was 12px/11px) — at 11px the "Jugadas" title was so
+   small it read as missing entirely on real laptop screens, which is exactly what JFC flagged. */
+.history h4{ margin:0 0 3px; font-size:13px; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; letter-spacing:.5px }
 .history ol{ margin:0; padding-left:22px; columns:2; column-gap:12px } .history li{ margin:0; break-inside:avoid }
 .history li span{ display:inline-block; min-width:42px }
 .history li span.r{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
@@ -648,7 +650,11 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   .left-rail{ order:-1; display:flex; flex-direction:column; gap:10px; flex:0 0 210px; width:210px; max-width:210px; align-self:stretch }
   .quote{ flex:0 1 auto; width:100%; max-width:100%; display:block; text-align:center;
     font-size:14px; line-height:1.45; padding:12px; min-height:0; border:2px solid var(--gold); border-radius:12px; background:linear-gradient(160deg,#241a10,#140d07) }
-  .history{ flex:1 1 auto; width:100%; max-width:100%; max-height:none }
+  /* margin-bottom added: without it, history's flex:1 1 auto could grow to within 4px of the HUD
+     button row below the whole .stage (JFC: "Nueva Partida casi choca con las jugadas"). This is a
+     real, deliberate breathing-room reservation, not cosmetic — verified at 1366x657 (a common
+     laptop window height) the gap was previously 4px end-to-end. */
+  .history{ flex:1 1 auto; width:100%; max-width:100%; max-height:none; margin-bottom:12px }
   .history ol{ columns:1 }
   .title-img{ max-height:12vh }
 }
