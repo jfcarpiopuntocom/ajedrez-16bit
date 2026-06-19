@@ -233,6 +233,8 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   display:flex; flex-direction:column; align-items:flex-end; gap:4px }
 .mpublish{ font-size:11px; font-weight:800; padding:4px 8px; min-height:26px; border-radius:8px; border:1px solid var(--gold);
   background:#241a10; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; cursor:pointer; white-space:nowrap }
+/* Micro-improvement #3 badge. 13px floor respected (CLAUDE.md), solid green accent, no opacity. */
+.mtakeover{ font-size:13px; font-weight:800; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; margin-top:2px }
 .mpublish:hover,.mpublish:active{ background:#34260f }
 .mpublish:disabled{ background:#1a3a2c; border-color:#28ECAA; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; cursor:default }
 .lobby-multi-list li{ cursor:pointer }
@@ -1515,6 +1517,16 @@ function wireConn(c){
           net.myColor=hostColor;
           c.send({t:'start',name:myPseudo,takeover:{fen:snap.fen,tab:snap.tab,bk:snap.bk,rk:snap.rk,guestColor:guestColor,creator:snap.creator||myPseudo,fromCode:currentRoom,newCode:newCode,moves:snap.moves||[],lineage:snap.lineage||[]}});
           pendingResume={data:{fen:snap.fen,tab:snap.tab,m:'online',col:hostColor,bk:snap.bk,rk:snap.rk,caps:snap.caps,moves:snap.moves,lineage:snap.lineage},code:newCode};
+          // Micro-improvement #3: the fork into 'online' keeps the original AI-universe snapshot
+          // untouched in localStorage (by design, see comment above) but until now the takeover was
+          // totally silent on the creator's side — they'd never know their match got picked up unless
+          // they happened to be staring at the screen. Stamp the original record so "Mis partidas"
+          // can surface it next time this device opens the library.
+          try{
+            var orig=loadMatch(currentRoom);
+            if(orig){ orig.takenOverBy=net.rivalName||'alguien'; orig.takenOverAt=Date.now(); orig.takenOverCode=newCode;
+              localStorage.setItem(MATCH_KEY+currentRoom,JSON.stringify(orig)); idbPut(currentRoom,orig); }
+          }catch(e){}
           startGame('online');
         } else {
           c.send({t:'start',name:myPseudo});
@@ -2357,6 +2369,14 @@ function openLibrary(){
       var age=d.ts?Math.floor((Date.now()-d.ts)/60000):0;
       right.textContent=age<1?'recién':(age<60?(age+' min'):(Math.floor(age/60)+' h'));
       li.appendChild(left); li.appendChild(right);
+      // Micro-improvement #3: surface the silent takeover stamped above. Shown once per visit to
+      // this list (not cleared on click — JFC can revisit without losing the badge; it only ever
+      // disappears if the saved record itself is gone, e.g. cleared storage).
+      if(d.takenOverBy){
+        var badge=document.createElement('div'); badge.className='mtakeover';
+        badge.textContent='🌀 Tomada por '+d.takenOverBy;
+        left.appendChild(badge);
+      }
       // Only AI-mode games can be handed off to a rival (online matches already have a live opponent).
       // Tag them as Multiverse-ready and, while connected to the Taberna, offer a one-tap publish.
       if(d.m==='ai'){
