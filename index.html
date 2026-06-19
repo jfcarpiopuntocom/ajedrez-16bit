@@ -101,9 +101,9 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   .start-rail{ max-height:none; overflow-y:visible; max-width:380px; justify-content:flex-start }
 }
 .start h2{ margin:0; font-size:18px; font-weight:800; text-align:center; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
-.choices{ display:flex; flex-direction:column; gap:12px; width:100%; max-width:360px }
+.choices{ display:flex; flex-direction:column; gap:10px; width:100%; max-width:360px }
 .bigbtn{ font-size:18px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
-  border:3px solid var(--gold); border-radius:14px; padding:16px; cursor:pointer; min-height:60px; background:linear-gradient(#2c416f,#16223f) }
+  border:3px solid var(--gold); border-radius:14px; padding:14px; cursor:pointer; min-height:56px; background:linear-gradient(#2c416f,#16223f) }
 .bigbtn.ai{ background:linear-gradient(#5a2a14,#3a1a0c) }
 .bigbtn.online{ background:linear-gradient(#145a3a,#0c3a26) }
 .bigbtn:active{ transform:translateY(1px) }
@@ -373,9 +373,10 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
   background:#241a10; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; cursor:pointer; text-align:left; line-height:1.15 }
 .chat-quick button:hover,.chat-quick button:active{ background:#34260f; border-color:#FFD060 }
 .chat-quick button:disabled{ color:#999999 !important; -webkit-text-fill-color:#999999 !important; cursor:wait }
-body.focusmode .title-img, body.focusmode .status, body.focusmode .left-rail,
+body.focusmode .title-img, body.focusmode .left-rail,
 body.focusmode .note, body.focusmode .hud, body.focusmode .site-credit,
 body.focusmode #chatPanel{ display:none !important }
+body.focusmode .status{ position:fixed; top:6px; right:6px; z-index:301; background:rgba(0,0,0,.85); padding:4px 14px; border-radius:10px; border:1px solid var(--gold); font-size:14px; min-height:auto }
 body.focusmode .app{ height:100vh !important; height:100svh !important }
 
 /* ---------- Turn / status ---------- */
@@ -531,7 +532,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 /* Quote: own gentle frame so it never visually bleeds into the move history below.
    Truncates to 3 lines with ellipsis to keep the layout stable when an aphorism is long. */
 .quote{ flex:0 0 auto; width:100%; max-width:430px; text-align:center; font-style:italic; font-size:13px; line-height:1.35;
-  color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; padding:6px 10px; min-height:17px; transition:opacity .35s;
+  color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; padding:4px 10px; min-height:17px; transition:opacity .35s;
   background:linear-gradient(160deg,#1f160d,#150e07); border:1px solid rgba(232,160,32,.3); border-radius:8px; margin-bottom:2px;
   font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif; word-wrap:break-word; overflow-wrap:break-word;
   display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden }
@@ -864,7 +865,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   <div class="note" id="note"></div>
 </div>
 
-<button id="zoombtn" title="Expandir tablero" style="display:none"><span class="zi">⛶</span> Zoom</button>
+<button id="zoombtn" title="Expandir tablero" style="display:none">🔍 ZOOM!</button>
 <!-- Start-of-match flash: dramatic reveal that fades out fast so the board owns the screen. -->
 <div class="start-overlay" id="startOverlay" aria-hidden="true"><img src="assets/splash-start.png" alt="" onerror="this.parentNode.classList.add('noimg')"></div>
 <!-- Quick-chat (online 1v1 only): preset phrases, no free text, so jamás hay insultos ni flag wars.
@@ -994,6 +995,21 @@ const APHORISMS=[
   {t:'Gengis Kan conquistó en 25 años más tierra que Roma en cuatro siglos.', a:'Gengis Kan'},
   {t:'Leónidas eligió el terreno, no el número: por eso unos pocos frenaron a un imperio.', a:'Principio: el terreno'},
   {t:'En Maratón, los atenienses corrieron contra los persas para anular sus arqueros.', a:'Maratón, 490 a.C.'},
+  {t:'Reshevsky daba exhibiciones simultáneas a los 8 años vestido de marinero, en 1920.', a:'Samuel Reshevsky'},
+  {t:'Petrosian era tan difícil de vencer que lo apodaban La Roca de Hierro.', a:'Tigran Petrosian'},
+  {t:'Korchnói jugó un match por el título mundial a los 47 años contra un rival 24 años menor.', a:'Korchnói vs Karpov, 1978'},
+  {t:'Pillsbury jugó 16 partidas simultáneas a ciegas mientras jugaba damas y cartas al mismo tiempo.', a:'Harry Pillsbury, 1900'},
+  {t:'Sultan Khan, un sirviente analfabeto de la India, venció a Capablanca en 1930.', a:'Sultan Khan'},
+  {t:'Vera Menchik, primera campeona mundial femenina, venció a muchos grandes maestros de los años 30.', a:'Vera Menchik'},
+  {t:'En Wijk aan Zee 1999, Kasparov jugó la misma línea Siciliana en todas sus partidas con negras y ganó el torneo.', a:'Kasparov, 1999'},
+  {t:'Akiba Rubinstein tenía una fobia social tan severa que jugaba mirando a la pared, nunca al rival.', a:'Akiba Rubinstein'},
+  {t:'La primera jugada 1.a3 se llama Apertura Anderssen, pero él nunca la jugó en torneo.', a:'Curiosidad de aperturas'},
+  {t:'En el torneo de Nueva York 1924, Lasker se ausentó varias rondas para pasear por Central Park.', a:'Emanuel Lasker'},
+  {t:'Bronstein empató el match por el título en 1951 y siempre dijo que lo dejó empatar a propósito.', a:'David Bronstein'},
+  {t:'Nimzowitsch se subió a la mesa gritando cuando perdió: inventó la hipermodernidad pero no la calma.', a:'Aron Nimzowitsch'},
+  {t:'Alekhine ganó el título mundial estando borracho y perdió el rematch estando sobrio.', a:'Alekhine vs Euwe, 1935-37'},
+  {t:'Ulf Andersson abandonó el ajedrez de élite para dedicarse a pintar acuarelas de gatos.', a:'Ulf Andersson'},
+  {t:'Bent Larsen insistió en jugar primer tablero por encima de Fischer en 1970 y perdió su partida.', a:'Match URSS vs Resto del Mundo'},
 ];
 /* ===== Pseudonyms for online lobby ===== */
 const _NN=['Dragon','Caballo','Torre','Alfil','Peon','Leon','Aguila','Tigre','Oso','Lobo','Gato','Buho','Fenix','Grifo','Halcon','Cuervo','Toro','Zorro','Ogro','Mago','Vikingo','Pirata','Ninja','Samurai','Gladiador','Centauro','Minotauro','Kraken'];
@@ -1114,6 +1130,33 @@ function saveIdentity(){
   try{ document.cookie=PID_COOKIE+'='+encodeURIComponent(myPid)+';max-age=63072000;path=/;SameSite=Lax'; }catch(e){} // 2-year cookie
 }
 saveIdentity();
+
+/* ══════ MI TABLERO (Personal Board) ══════
+   Each player has a persistent boardCode (permanent, unique) with gameHistory.
+   boardCode = permanent personal board identity; matchCode = specific game state. */
+let myBoard={boardCode:null,ownerId:null,ownerName:null,status:'open',currentGame:null,gameHistory:[]};
+function loadMyBoard(){
+  try{
+    myBoard.ownerId=myPid; myBoard.ownerName=myPseudo;
+    var saved=JSON.parse(localStorage.getItem('board_'+myPid));
+    if(saved && typeof saved==='object'){ myBoard=Object.assign(myBoard,saved); }
+    if(!myBoard.boardCode || myBoard.boardCode.length<4) myBoard.boardCode=genCode();
+    if(!Array.isArray(myBoard.gameHistory)) myBoard.gameHistory=[];
+    saveMyBoard();
+  }catch(e){ console.error('loadMyBoard failed',e); myBoard.boardCode=genCode(); saveMyBoard(); }
+}
+function saveMyBoard(){
+  try{ localStorage.setItem('board_'+myPid,JSON.stringify(myBoard)); }catch(e){}
+}
+function addGameToHistory(matchCode,opponent,result){
+  try{
+    if(!myBoard || !myBoard.gameHistory || !Array.isArray(myBoard.gameHistory)) myBoard.gameHistory=[];
+    myBoard.gameHistory.unshift({matchCode:matchCode,against:opponent,result:result,date:Date.now()});
+    if(myBoard.gameHistory.length>30) myBoard.gameHistory.pop();
+    saveMyBoard();
+  }catch(e){ console.error('addGameToHistory failed',e); }
+}
+loadMyBoard();
 
 let qi=-1, qTimer=null;
 function rotateQuote(){ const el=document.getElementById('quote'); if(!el) return;
@@ -2140,7 +2183,7 @@ document.addEventListener('keydown',function(e){ if(e.key==='Escape' && $('celeb
 
 /* Zoom / focus mode */
 $('zoombtn').onclick=()=>{ const on=document.body.classList.toggle('focusmode');
-  $('zoombtn').innerHTML=on?'<span class="zi">✕</span> Salir':'<span class="zi">⛶</span> Zoom'; $('zoombtn').title=on?'Salir de zoom':'Expandir tablero';
+  $('zoombtn').innerHTML=on?'✕ Salir':'🔍 ZOOM!'; $('zoombtn').title=on?'Salir de zoom':'Expandir tablero';
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); }); };
 
 /* Start-of-match flash: cinematic reveal that fades out so the board takes over.
@@ -2259,7 +2302,7 @@ function startGame(m){
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); });
 }
 function backToStart(){
-  started=false; resigned=false; netReset(); document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='<span class="zi">⛶</span> Zoom'; showChatUI(false);
+  started=false; resigned=false; netReset(); document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='🔍 ZOOM!'; showChatUI(false);
   $('app').style.display='none'; $('start').classList.remove('hidden');
   $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
   $('colorpick').classList.remove('show'); playerColor='w';
@@ -2435,13 +2478,11 @@ function status(){
   let s='';
   if(game.in_checkmate()){
     s=game.turn()==='w'?'<span class="warn">¡Jaque mate! Vence el Rojo (negras). 🐉</span>':'<span class="win">¡Jaque mate! Vence el Azul (blancas). 🦁</span>';
-    if(matchCode && myBoard){
-      var winner=(game.turn()==='b'?'w':'b');
-      var result=(mode==='online'?(winner===net.myColor?'win':'loss'):(playerColor===game.turn()?'loss':'win'));
-      var opp=(mode==='online'?net.rivalName:'IA');
-      addGameToHistory(matchCode,opp,result);
-      trackGame(result==='win'?'wins':result==='loss'?'losses':'draws',opp,game.history().length);
-    }
+    var winner=(game.turn()==='b'?'w':'b');
+    var result=(mode==='online'?(winner===net.myColor?'win':'loss'):(playerColor===game.turn()?'loss':'win'));
+    var opp=(mode==='online'?net.rivalName:(mode==='2p'?'2P':'IA'));
+    if(matchCode && myBoard) addGameToHistory(matchCode,opp,result);
+    trackGame(result==='win'?'wins':result==='loss'?'losses':'draws',opp,game.history().length);
     var winner=(game.turn()==='w'?'b':'w');
     if(typeof showVictory==='function') setTimeout(function(){ showVictory(winner); },600);
   } else if(game.in_stalemate()){
@@ -2458,7 +2499,7 @@ function status(){
     if(matchCode && myBoard) addGameToHistory(matchCode,mode==='online'?net.rivalName:'IA','draw');
   }
   if(game.in_stalemate()||game.in_threefold_repetition()||game.insufficient_material()||game.in_draw()){
-    trackGame('draws',mode==='online'?net.rivalName:'IA',game.history().length);
+    trackGame('draws',mode==='online'?net.rivalName:(mode==='2p'?'2P':'IA'),game.history().length);
     SFX.draw();
     if(typeof showDraw==='function') setTimeout(function(){ showDraw(); },600);
   }
@@ -2630,7 +2671,7 @@ function backToLobby(){
   net.conn=null; net.active=false; net.isHost=false; net.myColor='w'; net.rivalName='';
   resigned=false; started=false;
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0;
-  document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='<span class="zi">⛶</span> Zoom'; showChatUI(false);
+  document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='🔍 ZOOM!'; showChatUI(false);
   $('app').style.display='none'; $('start').classList.remove('hidden');
   $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
   $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
