@@ -196,6 +196,12 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 /* Splash Multiverse callout */
 .universo-callout{ width:100%; max-width:430px; margin:6px auto 2px; padding:10px 14px; border:2px solid #28ECAA; border-radius:12px;
   background:linear-gradient(160deg,#0a2a1f,#051a12); text-align:center }
+/* Eyebrow tag: a small uppercase caps label above the Multiverso heading, used both here (start
+   screen callout) and in the help modal (.help-eyebrow). Elegant per JFC's request — solid gold,
+   13px floor respected (CLAUDE.md: nothing under .82rem, ever), no opacity/glow tricks, just a
+   quiet, confident label that earns its emphasis from contrast and letter-spacing, not size. */
+.uni-eyebrow,.help-eyebrow{ margin:0 0 2px; font-size:13px; font-weight:900; letter-spacing:2px;
+  color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center }
 .universo-callout h3{ margin:0 0 4px; font-size:14px; font-weight:900; letter-spacing:1.5px; color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; text-transform:uppercase }
 .universo-callout p{ margin:0; font-size:12px; line-height:1.4; font-weight:700; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
 .universo-callout p .pop{ color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; font-weight:800 }
@@ -581,6 +587,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .help-modal h2{ margin:0 0 4px; font-size:22px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-align:center; letter-spacing:.5px; font-family:Georgia,"Times New Roman",serif }
 .help-modal .help-sub{ margin:0 0 14px; font-size:13px; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; text-align:center; font-style:italic; font-weight:600 }
 .help-modal h3{ margin:14px 0 4px; font-size:14px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; text-transform:uppercase; letter-spacing:1px }
+.help-eyebrow{ margin-top:14px }
 .help-modal p{ margin:0 0 8px; font-size:14px; line-height:1.5; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-weight:600; text-align:left }
 .help-modal p .accent{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-weight:800 }
 .help-modal ul{ margin:0 0 6px; padding-left:18px }
@@ -739,7 +746,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 <div class="modal-veil" id="helpVeil" role="dialog" aria-modal="true">
   <div class="modal-card help-modal">
     <h2>Bienvenido a Los Dos Reinos</h2>
-    <p class="help-sub">Ajedrez fantástico de 16-bits</p>
+    <p class="help-sub">Ajedrez fantástico de 16-bits &mdash; el primer tablero de <span class="accent">El Multiverso del Ajedrez</span></p>
 
     <h3>Tres modos de juego</h3>
     <ul>
@@ -753,9 +760,10 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <p>El botón <span class="accent">⛶</span> maximiza el tablero para concentración total. Deshacer y Rehacer reescriben jugadas hasta el mate.</p>
     <p>Cada partida guarda un <span class="accent">código de seis caracteres tipo NES</span>. Cada jugada se respalda en localStorage e IndexedDB del dispositivo. Anótalo, sal, vuelve después y entra el código en la pantalla inicial. Cargas la posición exacta con su tablero, nivel, capturas y todo.</p>
 
-    <h3>Función Multiverse</h3>
+    <p class="help-eyebrow">&#9733; ÚNICO EN EL MUNDO</p>
+    <h3>Multiverso (un feature único en el mundo)</h3>
     <p><span class="accent">Empieza la partida contra la IA. Termínala con un amigo o amiga que llegue a continuarla.</span> O al revés. El código captura todo el estado, así cualquiera con el código puede entrar, tomar el lugar de quien jugaba y seguir desde la posición exacta. La línea original sigue viva en paralelo. Endless multiverse fun.</p>
-    <p>Coleccionas posiciones célebres, retas desde cualquier nodo, y reconstruyes la genealogía completa de una partida que pasó por tres IAs y dos humanos. Cada gamestate tiene su propio ID: la partida ya no pertenece a dos jugadores, pertenece a la posición misma, y cualquiera puede tomarla.</p>
+    <p>Coleccionas posiciones célebres, retas desde cualquier nodo, y reconstruyes la genealogía completa de una partida que pasó por tres IAs y dos humanos. Cada gamestate tiene su propio ID: la partida ya no pertenece a dos jugadores, pertenece a la posición misma, y cualquiera puede tomarla. Ningún otro sitio de ajedrez ofrece esto.</p>
 
     <h3>La Taberna</h3>
     <p>Tu seudónimo es editable, persistente y solo tuyo. Vive en este navegador. Quien gana se queda en la Taberna y elige al siguiente: estilo king of the hill. Cada sala tiene un link compartible.</p>
@@ -772,8 +780,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <h3>Tus estadísticas</h3>
     <p id="helpStats" class="help-stats"></p>
 
-    <h3>Próximamente</h3>
-    <p><span class="accent">Los Dos Reinos</span> es el primero de varios tableros temáticos. Vienen en camino: <span class="accent">sci-fi</span>, <span class="accent">la selva</span> y <span class="accent">españoles vs. indios</span>. Cada uno con su propio fondo, atmósfera y reyes.</p>
+    <h3>Próximamente en El Multiverso del Ajedrez</h3>
+    <p><span class="accent">Los Dos Reinos</span> es el primer tablero, no el único. Vienen en camino: <span class="accent">sci-fi</span>, <span class="accent">la selva</span> y <span class="accent">españoles vs. indios</span> &mdash; cada uno con su propio fondo, atmósfera, piezas y reyes. Un splash de selección de tablero está en camino para elegir entre todos ellos.</p>
 
     <p class="help-thanks help-thanks-top"><a href="#" id="helpReplayTutorial" style="color:var(--gold2)">&#9654; Ver el tutorial otra vez</a></p>
     <p class="help-thanks help-thanks-top">Gracias por jugar.</p>
@@ -846,7 +854,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     </div>
   </div>
   <div class="universo-callout" id="uniCallout">
-    <h3>Función Multiverse</h3>
+    <p class="uni-eyebrow">&#9733; ÚNICO EN EL MUNDO</p>
+    <h3>Multiverso</h3>
     <p><span class="pop">Empieza vs la IA, termina con un amigo</span> (o al revés). Más en el <span class="pop">(?)</span>.</p>
   </div>
   <div class="lobby-resume" id="resumeRow">
@@ -1141,6 +1150,42 @@ function genPseudo(){ return _NN[Math.floor(Math.random()*_NN.length)]+_AJ[Math.
    matchCode: 6-char unique game identifier. boardCode: permanent personal board.
    Side codes: matchCode+'A' (Azul/white) or matchCode+'R' (Rojo/black).
    Storage: localStorage (instant) + IndexedDB (backup) + cookie (identity). */
+/* ══════ DEV NOTE — future "board worlds" selection splash (not built yet, 2026-06-19) ══════
+   JFC's plan: "Los Dos Reinos" (the current medieval-fantasy board) becomes the FIRST of several
+   fully distinct board worlds inside El Multiverso del Ajedrez — sci-fi, la selva, españoles vs.
+   indios are already named as next in the help modal's "Próximamente" section. Each world gets its
+   own background, atmosphere, AND its own piece/king sprite set (not just a recolor).
+
+   DO NOT confuse this with TABLEROS right below this comment. TABLEROS is a much smaller, already-
+   shipped feature: 8 named COLOR PALETTES (Capablanca, Fischer, Tal...) that only change the .app
+   background gradient via .t-<key> CSS classes (see applyTablero()/themeBtn handler near the bottom
+   of the script). Same pieces, same king art, just a different background tint. The "board worlds"
+   feature described here is a different, bigger concept: swapping the entire piece/king sprite set
+   and atmosphere, selected via a NEW splash screen before "¿Cómo quieres jugar?" — not yet built.
+
+   When this gets built, here's the shape it should probably take, so whoever picks this up (me in
+   a future session, or JFC) doesn't have to rediscover the constraints:
+   - A new array, name it BOARD_WORLDS (NOT "tableros" or "TABLEROS" — that name is taken and means
+     something else; reusing it would silently break the existing theme-cycling feature or confuse
+     future edits). Each entry needs at minimum: {key, name, splashImg, pieceSet, kingOptions}.
+   - pieceSet likely means a new assets/pieces/<world-key>/ subfolder mirroring the current flat
+     assets/pieces/ naming (wP.png, wN.png... bK.png) so renderBoard()'s piece-image lookup can stay
+     a simple path swap (assets/pieces/ -> assets/pieces/<world-key>/) rather than a rewrite.
+   - The king-choice system already exists per-color (k_bkA/B/C, k_rkA/B/C — see the .kingpick UI
+     around line ~870ish and blueKing/redKing globals) and would need to become per-world: each
+     world brings its own 3 king options per side, not a shared pool.
+   - Selecting a world is a NEW choice, logically BEFORE "¿Cómo quieres jugar?", not instead of it.
+     It should default to "Los Dos Reinos" with zero extra taps for anyone who never touches it,
+     since that's the only complete world today — an empty/half-built world picker would be worse
+     than no picker at all.
+   - matchCode/saveMatch() already stores `tab` (the TABLEROS color-palette key) per game — a world
+     selection would need its own field (e.g. `world`) alongside it, both independent, so a saved
+     game remembers BOTH which color palette AND which board world it was played in.
+   - Keep it OUT of the existing TABLEROS/themeBtn cycling button entirely. That button is a quick
+     "change the background tint" toggle for the CURRENT world; mixing world-selection into it would
+     make both features confusing. World selection is a deliberate, infrequent choice (made once per
+     game, probably at the splash), not a quick cycle-through-8-options button.
+   ══════════════════════════════════════════════════════════════════════════════════════════════ */
 /* ===== Tableros (named board themes) + match continue codes ===== */
 const TABLEROS=[
   {key:'capablanca',name:'Capablanca'},
