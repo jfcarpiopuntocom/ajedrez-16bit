@@ -768,7 +768,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   </div>
   <div class="universo-callout" id="uniCallout">
     <h3>Función Multiverse</h3>
-    <p><span class="pop">Empieza vs la IA. Termina con un amigo</span> (o al revés). El código abre el estado exacto para cualquiera que llegue a seguirla. La línea original queda viva en paralelo. Endless multiverse fun.</p>
+    <p><span class="pop">Empieza vs la IA, termina con un amigo</span> (o al revés). Más en el <span class="pop">(?)</span>.</p>
   </div>
   <div class="lobby-resume" id="resumeRow">
     <input type="text" id="resumeCode" placeholder="Código de partida? Continúa aquí" maxlength="7" autocomplete="off" spellcheck="false">
@@ -2915,10 +2915,19 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
   });
   // Help modal handlers
   var helpVeil=document.getElementById('helpVeil');
-  document.getElementById('helpBtn').addEventListener('click', function(){ helpVeil.classList.add('show'); var hs=$('helpStats'); if(hs) hs.textContent=getStatsText(); });
+  function openHelp(){ helpVeil.classList.add('show'); var hs=$('helpStats'); if(hs) hs.textContent=getStatsText(); }
+  document.getElementById('helpBtn').addEventListener('click', openHelp);
   document.getElementById('helpClose').addEventListener('click', function(){ helpVeil.classList.remove('show'); });
   helpVeil.addEventListener('click', function(e){ if(e.target===helpVeil) helpVeil.classList.remove('show'); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && helpVeil.classList.contains('show')) helpVeil.classList.remove('show'); });
+  // First-ever visit on this browser/device: open the guide once automatically, then never again
+  // (separate flag from identity so clearing just the "welcomed" key never re-rolls the pseudonym).
+  try{
+    if(!localStorage.getItem('losdosreinos_welcomed')){
+      localStorage.setItem('losdosreinos_welcomed','1');
+      setTimeout(openHelp,500);
+    }
+  }catch(e){}
   document.getElementById('helpSupport').addEventListener('click', function(e){
     e.preventDefault();
     var subj=encodeURIComponent('Apoyar Los Dos Reinos');
