@@ -430,14 +430,14 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .status .lvl.tablero-tag{ display:block; margin-left:0; margin-top:2px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:13px }
 .status .lvl.tablero-tag b{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; letter-spacing:1px }
 /* Tablero themes - background applied to .app */
-.app.t-capablanca{ background:radial-gradient(900px 600px at 50% 0%,#1a3a3a 0%,#0a1a1a 60%,#050a0a 100%) }
-.app.t-fischer{    background:radial-gradient(900px 600px at 50% 0%,#1f2a3a 0%,#0a121e 60%,#050810 100%) }
-.app.t-tal{        background:radial-gradient(900px 600px at 50% 0%,#3a1a1a 0%,#1a0808 60%,#0c0303 100%) }
-.app.t-polgar{     background:radial-gradient(900px 600px at 50% 0%,#2a1a3a 0%,#150a1e 60%,#0a0512 100%) }
-.app.t-carlsen{    background:radial-gradient(900px 600px at 50% 0%,#0a1f3a 0%,#050f1c 60%,#02080e 100%) }
-.app.t-morphy{     background:radial-gradient(900px 600px at 50% 0%,#3a2e1a 0%,#1e180a 60%,#0e0c05 100%) }
-.app.t-kasparov{   background:radial-gradient(900px 600px at 50% 0%,#3a0a0a 0%,#1c0505 60%,#0e0202 100%) }
-.app.t-alekhine{   background:radial-gradient(900px 600px at 50% 0%,#0a2a3a 0%,#05151e 60%,#020a0e 100%) }
+/* One fixed background for the whole app — JFC was explicit (2026-06-19) that he never wanted a
+   switchable color-palette system at all ("no quiero ningún sistema de paletas y nunca lo he
+   querido"). This used to be 8 separate .app.t-<key> variants cycled by a "Tema" button; the
+   button's gone, but until now the game still silently picked a random one of these 8 per match
+   with zero way to control or even notice it, which is exactly the kind of unrequested feature he
+   flagged. Same gradient shape as .start (radial, warm dark medieval glow) for visual continuity
+   across the whole site, just one definitive look, not eight competing for attention. */
+.app{ background:radial-gradient(1100px 700px at 50% -6%,#3a2a1a 0%,#160f08 60%,#0a0604 100%) }
 /* Lobby resume by code */
 .lobby-resume{ display:flex; gap:6px; width:100%; max-width:360px; align-items:center }
 .lobby-resume input{ flex:1; font-size:15px; font-weight:800; padding:8px 10px; min-height:40px; border:2px solid var(--gold); border-radius:10px;
@@ -1156,46 +1156,51 @@ function genPseudo(){ return _NN[Math.floor(Math.random()*_NN.length)]+_AJ[Math.
    indios are already named as next in the help modal's "Próximamente" section. Each world gets its
    own background, atmosphere, AND its own piece/king sprite set (not just a recolor).
 
-   DO NOT confuse this with TABLEROS right below this comment. TABLEROS is a much smaller, already-
-   shipped feature: 8 named COLOR PALETTES (Capablanca, Fischer, Tal...) that only change the .app
-   background gradient via .t-<key> CSS classes (see applyTablero()/themeBtn handler near the bottom
-   of the script). Same pieces, same king art, just a different background tint. The "board worlds"
-   feature described here is a different, bigger concept: swapping the entire piece/king sprite set
-   and atmosphere, selected via a NEW splash screen before "¿Cómo quieres jugar?" — not yet built.
+   THERE IS NO COLOR-PALETTE SYSTEM AND THERE NEVER SHOULD BE ONE AGAIN. An earlier session added
+   8 switchable background-color palettes (TABLEROS below, named after chess players) with a "Tema"
+   cycling button. JFC was explicit (2026-06-19) that he never wanted this, it was never requested,
+   and it added nothing — "no quiero ningún sistema de paletas y nunca lo he querido". The button
+   was already gone, but the game was STILL silently picking a random one of those 8 backgrounds
+   per match with zero way to see or control it, which is precisely the kind of unrequested feature
+   he's flagging. That's now removed down to a single fixed .app background (see the CSS near
+   ".app{ background:" above). Do not resurrect palette-switching in any form — no button, no
+   auto-cycling, no "surprise me" random pick. One look, period.
 
-   When this gets built, here's the shape it should probably take, so whoever picks this up (me in
-   a future session, or JFC) doesn't have to rediscover the constraints:
-   - A new array, name it BOARD_WORLDS (NOT "tableros" or "TABLEROS" — that name is taken and means
-     something else; reusing it would silently break the existing theme-cycling feature or confuse
-     future edits). Each entry needs at minimum: {key, name, splashImg, pieceSet, kingOptions}.
+   TABLEROS (just below) still exists as a tiny, deliberately inert COMPATIBILITY SHIM, not a real
+   feature: old saved games (localStorage/IndexedDB/Firebase, already out in the wild before this
+   fix) have a `tab` field with values like 'fischer' or 'tal' from the old palette system.
+   tableroFromKey() still needs to resolve those without throwing when an old game loads — it just
+   no longer does anything visually once resolved. Do not delete TABLEROS/tableroFromKey() outright;
+   that would break loading anyone's pre-2026-06-19 saved games. Do not add entries back to it.
+
+   The REAL future plan is "board worlds": Los Dos Reinos becomes the first of several fully
+   distinct boards inside El Multiverso del Ajedrez — sci-fi, la selva, españoles vs. indios are
+   already named in the help modal's "Próximamente" section. Each world gets its own background,
+   atmosphere, AND its own piece/king sprite set (not a recolor — a different game-piece-set
+   entirely). This is a different, bigger concept than the dead palette system above, and when it's
+   built it should probably just TAKE OVER the `tab` field (repurpose it to mean "which world", since
+   there will only ever be one `tab` value live in a saved game at a time) rather than keep both
+   concepts alive side by side. Shape it might take:
+   - A new array, name it BOARD_WORLDS (not "tableros" — that name is now permanently associated
+     with the dead palette system in match-data history; reusing it invites confusion later).
+     Each entry needs at minimum: {key, name, splashImg, pieceSet, kingOptions}.
    - pieceSet likely means a new assets/pieces/<world-key>/ subfolder mirroring the current flat
      assets/pieces/ naming (wP.png, wN.png... bK.png) so renderBoard()'s piece-image lookup can stay
      a simple path swap (assets/pieces/ -> assets/pieces/<world-key>/) rather than a rewrite.
    - The king-choice system already exists per-color (k_bkA/B/C, k_rkA/B/C — see the .kingpick UI
-     around line ~870ish and blueKing/redKing globals) and would need to become per-world: each
-     world brings its own 3 king options per side, not a shared pool.
+     and blueKing/redKing globals) and would need to become per-world: each world brings its own 3
+     king options per side, not a shared pool.
    - Selecting a world is a NEW choice, logically BEFORE "¿Cómo quieres jugar?", not instead of it.
-     It should default to "Los Dos Reinos" with zero extra taps for anyone who never touches it,
-     since that's the only complete world today — an empty/half-built world picker would be worse
-     than no picker at all.
-   - matchCode/saveMatch() already stores `tab` (the TABLEROS color-palette key) per game — a world
-     selection would need its own field (e.g. `world`) alongside it, both independent, so a saved
-     game remembers BOTH which color palette AND which board world it was played in.
-   - Keep it OUT of the existing TABLEROS/themeBtn cycling button entirely. That button is a quick
-     "change the background tint" toggle for the CURRENT world; mixing world-selection into it would
-     make both features confusing. World selection is a deliberate, infrequent choice (made once per
-     game, probably at the splash), not a quick cycle-through-8-options button.
+     Default to "Los Dos Reinos" with zero extra taps for anyone who never touches it, since that's
+     the only complete world at launch — a half-built world picker is worse than none.
+   - Unlike the dead palette system, this should be a deliberate, infrequent, EXPLICIT choice made
+     once per game at the splash — never a random pick, never a quick-cycle button. That's the exact
+     pattern that caused this whole removal; don't repeat it with worlds.
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
-/* ===== Tableros (named board themes) + match continue codes ===== */
+/* ===== TABLEROS: dead palette system, kept only so pre-2026-06-19 saved games still resolve their
+   `tab` field without crashing. Single entry on purpose — see the dev note above. ===== */
 const TABLEROS=[
-  {key:'capablanca',name:'Capablanca'},
-  {key:'fischer',   name:'Fischer'},
-  {key:'tal',       name:'Tal'},
-  {key:'polgar',    name:'Polgar'},
-  {key:'carlsen',   name:'Carlsen'},
-  {key:'morphy',    name:'Morphy'},
-  {key:'kasparov',  name:'Kasparov'},
-  {key:'alekhine',  name:'Alekhine'},
+  {key:'capablanca',name:'Los Dos Reinos'},
 ];
 function genCode(){ var s='',c='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; for(var i=0;i<6;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }
 /* Side-bound codes: 6-char base + side letter. A=Azul (w), R=Rojo (b).
@@ -2457,10 +2462,6 @@ $('chatReplyBtn').onclick=function(){
 };
 
 let pendingResume=null;
-function applyTablero(t){
-  TABLEROS.forEach(function(x){ $('app').classList.remove('t-'+x.key); });
-  $('app').classList.add('t-'+t.key);
-}
 function startGame(m){
   if(typeof hideVictory==='function') hideVictory();
   stopTavernMusic();
@@ -2509,7 +2510,6 @@ function startGame(m){
                   : (net.rivalName||'rival');
     matchLineage=[{at:0,opp:initialOpp,mode:m}];
   }
-  applyTablero(currentTablero);
   if(m==='online' && net.myColor==='b') flipped=true;
   if(m==='ai' && playerColor==='b') flipped=true;
   $('zoombtn').style.display='block';
@@ -2536,7 +2536,6 @@ function backToStart(){
   $('colorpick').classList.remove('show'); playerColor='w';
   $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden'); $('uniCallout').classList.remove('hidden');
   levelsEl.classList.remove('show'); $('btn2p').style.display=''; $('btnAI').style.display=''; $('btnOnline').style.display=''; $('startH2').textContent='¿Cómo quieres jugar?'; $('backBtn').style.display='none';
-  TABLEROS.forEach(function(x){ $('app').classList.remove('t-'+x.key); });
   currentTablero=null; matchCode=null;
 }
 
@@ -2856,7 +2855,6 @@ $('rematch').onclick=()=>{
   if(mode==='ai') boot();
 };
 $('mutebtn').onclick=()=>{ muted=!muted; $('mutebtn').textContent=muted?'🔇':'🔊'; actxInit(); };
-(function(){ try{ var tk=localStorage.getItem('losdosreinos_theme'); if(tk){ var t=tableroFromKey(tk); if(t) currentTablero=t; } }catch(e){} })();
 function buildPgn(){
   var headers='[Event "ElMultiVersoDelAjedrez"]\n[Site "elmultiversodelajedrez.com"]\n'
     +'[Date "'+new Date().toISOString().slice(0,10).replace(/-/g,'.')+'\"]\n'
