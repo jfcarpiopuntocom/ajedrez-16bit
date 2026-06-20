@@ -166,6 +166,26 @@ firebase-config.js` that it was never previously committed (no history scrub was
 you ever see `firebase-config.js` show up in `git status` as staged, stop and check
 `.gitignore` before committing anything.
 
+### Radio Online (added 2026-06-21): 4 genres via radio-browser.info, isolated by design
+A 3rd fixed circular button (top-right cluster) opens a panel with Synthwave / Taberna Medieval
+/ Gregoriano / Metal Relajado, streamed via radio-browser.info (free, no-auth, CORS-friendly
+station directory — no API key, no backend). Key things to know before touching this:
+- `RADIO_TAGS`/`RADIO_NAMES` per genre were chosen by manually testing real API responses, not
+  guessed. Gregorian and medieval-tavern in particular have very few stations actually TAGGED
+  that way — the name-search fallback (`RADIO_NAMES`) is load-bearing for those two, not a
+  redundant nice-to-have. If a genre stops finding stations, check both the tag AND name lists.
+- Playback is self-healing: `fetchCandidates()` collects several station URLs, then
+  `tryPlayCandidates()` advances to the next one on an `<audio>` `error` event. This is required,
+  not decorative — confirmed live that individual stations do silently fail and the fallback is
+  what makes the feature reliable.
+- Calls the EXISTING `stopTavernMusic()` when a genre starts, so the new radio and the old tavern
+  Web Audio ambience never overlap. Doesn't touch `tavernCtx`/`tavernGain` itself — different
+  audio system entirely (plain `<audio>` element vs Web Audio API), deliberately not unified.
+- `positionRadioBtn()` computes the button's `right` offset from Librería Real's actual rendered
+  width at runtime, not a hardcoded breakpoint number — that pill's width already changes by
+  breakpoint (label hides under 560px). If you add a 4th fixed top-right button, follow this
+  pattern (measure the previous button, don't guess a pixel offset).
+
 ## Things that are correct on purpose (don't "fix" these)
 - AI mode never silently falls back to AI after an online human takes over — human-over-AI
   priority is enforced by the takeover flow stopping AI mode outright, not by a runtime check.
