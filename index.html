@@ -3114,19 +3114,38 @@ function fbMove(){ const ms=game.moves({verbose:true}); if(!ms.length){ busy=fal
   const m=pool[Math.floor(Math.random()*pool.length)]; engMove(m.from+m.to+(m.promotion||'')); }
 
 /* ===== Controls ===== */
-$('newgame').onclick=()=>backToStart();
+// DEV NOTE (2026-06-20): "Nueva Partida" used to call backToStart(), which manually resets ~15
+// in-memory flags (mode, net, busy, timers, the stockfish worker, peer connections, audio loops...)
+// but never ALL of them — every new feature that adds its own piece of state is one more thing
+// that backToStart() forgets to clear. JFC reported it sometimes lands in the wrong place and
+// sometimes hangs (worse on mobile, where iOS Safari is already fragile re: stuck AudioContext/
+// peer connections). A full page reload is the bulletproof fix: zero leftover JS state, full stop.
+// We clear the #multiverso= hash FIRST so the reload lands on the fresh start screen instead of
+// auto-resuming the match we're leaving (see roomFromUrl()/tryResumeCode() at boot).
+$('newgame').onclick=()=>{
+  try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){ location.hash=''; }
+  location.reload();
+};
 function rebuildCaptures(){ capW.length=0; capB.length=0;
   game.history({verbose:true}).forEach(m=>{ if(m.captured) (m.color==='w'?capW:capB).push({color:m.color==='w'?'b':'w',type:m.captured}); });
   const h=game.history({verbose:true}); lastMove=h.length?{from:h[h.length-1].from,to:h[h.length-1].to}:null;
 }
+// DEV NOTE (2026-06-20): the checkmate/draw veil (showVictory/showDraw) auto-opens 600ms after
+// the game ends and visually sits ON TOP of the HUD's Deshacer/Rehacer buttons. Without closing it
+// first, a click on those buttons silently lands on the veil's backdrop instead — looked like
+// "undo doesn't work after checkmate" but the button handler was never even reached. Undo/redo's
+// whole purpose is to leave the just-ended position, so auto-closing the veil here is correct in
+// every case, not a workaround.
 $('undo').onclick=()=>{ if(busy) return;
   // King of the hill stays serious: no take-backs while an online human duel is live.
   if(mode==='online' && !game.game_over() && !resigned) return;
+  if(typeof hideVictory==='function') hideVictory();
   const u1=game.undo(); if(u1) redoStack.push(u1);
   if(mode==='ai'){ const u2=game.undo(); if(u2) redoStack.push(u2); }
   rebuildCaptures(); render(); status(); renderHistory(); maybeShowRematch(); };
 $('redo').onclick=()=>{ if(busy||!redoStack.length) return;
   if(mode==='online' && !game.game_over() && !resigned) return;
+  if(typeof hideVictory==='function') hideVictory();
   const steps=mode==='ai'?2:1;
   for(let i=0;i<steps && redoStack.length;i++){
     const mv=redoStack.pop();
