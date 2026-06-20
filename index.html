@@ -565,10 +565,6 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .cell.last{ background:rgba(232,160,32,.20) }
 .cell.check::after{ content:""; position:absolute; inset:5%; border:3px solid #ff5252; border-radius:7px; box-shadow:0 0 12px #ff2020 }
 .cell.selected{ background:rgba(232,160,32,.38) }
-.cell.legal-dot::after{ content:""; position:absolute; top:50%; left:50%; width:26%; height:26%;
-  transform:translate(-50%,-50%); border-radius:50%; background:rgba(232,160,32,.55) }
-.cell.legal-dot.has-piece::after{ width:100%; height:100%; top:0; left:0; transform:none; border-radius:7px;
-  background:transparent; box-shadow:inset 0 0 0 3px rgba(232,160,32,.7) }
 
 /* ---------- History panel (always visible, left of board) ---------- */
 /* JFC 2026-06-18: peace-card hidden until 16-bit art is ready */
@@ -2945,15 +2941,13 @@ function killGhost(){ document.querySelectorAll('.drag-ghost').forEach(g=>g.remo
 function cleanupDrag(){ killGhost(); gridEl.querySelectorAll('img[style*="hidden"]').forEach(i=>i.style.visibility=''); drag=null; }
 function clearSelection(){
   selectedSq=null;
-  gridEl.querySelectorAll('.cell.selected,.cell.legal-dot').forEach(c=>c.classList.remove('selected','legal-dot','has-piece'));
+  gridEl.querySelectorAll('.cell.selected').forEach(c=>c.classList.remove('selected'));
 }
+// JFC 2026-06-20: NO legal-move hints, by explicit request — just select + tap destination,
+// nothing else lights up. Keep it that way; don't reintroduce destination dots/highlights here.
 function selectSquare(sq){
   clearSelection(); selectedSq=sq;
   const cell=gridEl.querySelector(`.cell[data-sq="${sq}"]`); if(cell) cell.classList.add('selected');
-  game.moves({square:sq,verbose:true}).forEach(m=>{
-    const tc=gridEl.querySelector(`.cell[data-sq="${m.to}"]`); if(!tc) return;
-    tc.classList.add('legal-dot'); if(m.captured) tc.classList.add('has-piece');
-  });
 }
 gridEl.addEventListener('pointerdown',e=>{
   try{ const cell=e.target.closest('.cell'); if(!cell) return; const sq=cell.dataset.sq, p=game.get(sq);
