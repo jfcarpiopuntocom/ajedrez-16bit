@@ -461,20 +461,33 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
    sections (siblings in the DOM, not naturally stackable with flex alone) land in the same column
    stacked vertically instead of flanking the board like they do in the normal (non-zoom) layout.
    Captures explicitly must NOT render below the board in zoom — that's the bug being fixed here.
-   2026-06-20 follow-up: align-self:stretch was forcing both the quote/history rail AND the two
+   2026-06-20 follow-up #1: align-self:stretch was forcing both the quote/history rail AND the two
    capture boxes to inflate to fill the FULL grid-row height — on a tall desktop viewport that's a
    very long, mostly-empty rectangle, and the .status "Tu turno" badge (fixed top:6px) sat directly
    on top of where capR began. Fixed by (1) reserving top clearance on the grid for the fixed
    badge instead of letting content start at y:0, and (2) switching stretch->start so each box is
-   only as tall as its real content, not the full row. */
+   only as tall as its real content, not the full row.
+   2026-06-20 follow-up #2 (JFC: "hiciste el tablero del zoom enano, idiota" — correct, this was a
+   real regression from follow-up #1): grid-template-rows:auto auto sizes each row to its CONTENT
+   height instead of dividing up the available space. .board-area spans both rows ("board" appears
+   in both grid-template-areas lines), so its track height collapsed to whatever the auto rows
+   computed from the OTHER cells (quotes/captures, now deliberately short) — fitBoard() then read a
+   tiny boardAreaEl.clientHeight and shrank the board to match. Back to grid-template-rows:1fr 1fr
+   so the board's spanned rows reserve the FULL available height again; board-area is back to
+   align-self:stretch (not center) so it actually receives that height to measure — .board-area's
+   own internal flex centering (line ~516) is what keeps the board canvas itself centered inside
+   that tall area, this has nothing to do with the quotes/captures fix, which stays as-is via THEIR
+   OWN align-self:start (start is still correct on the side panels — do not change that part). If
+   you touch this grid again: board MUST get fr-based (not auto) row sizing, full stop, the rest
+   can flex independently because board-area stretches and self-centers its content regardless. */
 @media (min-width:860px){
-  body.focusmode .stage{ display:grid; grid-template-columns:220px minmax(0,1fr) 150px; grid-template-rows:auto auto;
+  body.focusmode .stage{ display:grid; grid-template-columns:220px minmax(0,1fr) 150px; grid-template-rows:1fr 1fr;
     grid-template-areas:"quotes board capR" "quotes board capB"; align-items:start; justify-items:center;
     gap:10px 16px; width:100%; max-width:1100px; margin:0 auto; padding-top:40px }
   body.focusmode .left-rail, body.focusmode .cap{ display:flex !important }
   body.focusmode .left-rail{ grid-area:quotes; flex-direction:column; width:100%; max-width:220px; align-self:start }
   body.focusmode .left-rail .peace-card{ display:none !important }
-  body.focusmode .board-area{ grid-area:board; align-self:center }
+  body.focusmode .board-area{ grid-area:board; align-self:stretch; justify-self:stretch }
   body.focusmode .cap.red{ grid-area:capR }
   body.focusmode .cap.blue{ grid-area:capB }
   body.focusmode .cap{ width:100%; max-width:150px; height:auto; max-height:120px; flex-direction:column; align-items:stretch; align-self:start }
@@ -564,7 +577,6 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .cell img.flip.rot{ transform:translateX(-50%) scaleX(-1) rotate(180deg) }
 .cell.last{ background:rgba(232,160,32,.20) }
 .cell.check::after{ content:""; position:absolute; inset:5%; border:3px solid #ff5252; border-radius:7px; box-shadow:0 0 12px #ff2020 }
-.cell.selected{ background:rgba(232,160,32,.38) }
 
 /* ---------- History panel (always visible, left of board) ---------- */
 /* JFC 2026-06-18: peace-card hidden until 16-bit art is ready */
@@ -2884,10 +2896,6 @@ function ensureNoScroll(){
 function needFlip(color,type){ const bottom=(color==='w')!==flipped; return bottom!==NATIVE_RIGHT(type); }
 function sqAt(r,c){ const f=flipped?7-c:c, rk=flipped?r+1:8-r; return FILES[f]+rk; }
 function render(){
-  // gridEl is fully rebuilt below, so any selected-square reference and its DOM classes are
-  // about to go stale — drop it here rather than leaving a phantom selection after a move/undo/
-  // opponent move re-render (selectSquare() re-applies it fresh in response to the next tap).
-  selectedSq=null;
   labels(); gridEl.innerHTML='';
   const board=game.board();
   // In human-vs-human (2p / online) the opponent sits across: rotate their (top) pieces 180deg
@@ -2926,70 +2934,47 @@ function audit(){
 }
 function heal(why){ if(healing) return; healing=true; try{ render(); } finally{ healing=false; } }
 
-/* ===== Drag + tap-to-move ===== */
-// DEV NOTE (2026-06-20): originally pure-drag by deliberate design (see commit 95437c9, "pure
-// drag, NO move-suggestion hints"). JFC explicitly asked this back: tap a piece to select it
-// (legal destinations light up, exactly what the tutorial text already promised), tap a
-// destination to move, tap the same piece again to deselect. Drag still works unchanged — this
-// is additive, layered onto the same pointerdown/move/up handlers so there's one source of truth
-// for "can this piece move" (canDrag) instead of two diverging interaction systems.
+/* ===== Pure drag (instant lift) ===== */
+// DEV NOTE (2026-06-20, corrected same day): an earlier pass on this date added a TAP-TO-SELECT
+// system (tap piece, tap destination, legal-move dots). JFC's actual request was misread — he
+// never wanted tap-to-move at all. His exact words on the correction: "no es tap to move, idiota,
+// es DRAG" / "lo que queria es el clic al mover, que sea mas inmediato, fin". The real ask was:
+// keep pure drag (the original 95437c9 design), just make the PICK-UP feel more immediate. That
+// tap-to-select system has been fully removed — do NOT reintroduce select/tap/legal-dot logic
+// here without an explicit, unambiguous request. If asked again for "click to move", confirm
+// with JFC whether he means drag responsiveness or an actual tap-select system before building
+// either — this exact misunderstanding already cost a full revert once.
+//
+// "More immediate" = the ghost piece now appears the instant you press down (pointerdown), not
+// after a 5px movement threshold like before. Picking up a piece has zero perceptible delay.
 function canDrag(color){ if(busy||game.game_over()||resigned) return false; if(color!==game.turn()) return false;
   if(mode==='online') return net.active && color===net.myColor;
   return mode==='2p'?true:color===playerColor; }
-let drag=null, selectedSq=null;
+let drag=null;
 function killGhost(){ document.querySelectorAll('.drag-ghost').forEach(g=>g.remove()); }
 function cleanupDrag(){ killGhost(); gridEl.querySelectorAll('img[style*="hidden"]').forEach(i=>i.style.visibility=''); drag=null; }
-function clearSelection(){
-  selectedSq=null;
-  gridEl.querySelectorAll('.cell.selected').forEach(c=>c.classList.remove('selected'));
-}
-// JFC 2026-06-20: NO legal-move hints, by explicit request — just select + tap destination,
-// nothing else lights up. Keep it that way; don't reintroduce destination dots/highlights here.
-function selectSquare(sq){
-  clearSelection(); selectedSq=sq;
-  const cell=gridEl.querySelector(`.cell[data-sq="${sq}"]`); if(cell) cell.classList.add('selected');
-}
 gridEl.addEventListener('pointerdown',e=>{
   try{ const cell=e.target.closest('.cell'); if(!cell) return; const sq=cell.dataset.sq, p=game.get(sq);
-    if(!p||!canDrag(p.color)){
-      // Empty/enemy square: still arm a no-op "drag" so pointerup can resolve it as a tap-to-move
-      // destination (only meaningful if something is already selected).
-      drag={from:sq,moved:false,sx:e.clientX,sy:e.clientY,noOwnPiece:true};
-      try{gridEl.setPointerCapture(e.pointerId);}catch(_){}
-      return;
-    }
-    e.preventDefault();
-    drag={from:sq,moved:false,sx:e.clientX,sy:e.clientY}; try{gridEl.setPointerCapture(e.pointerId);}catch(_){}
+    if(!p||!canDrag(p.color)) return; e.preventDefault();
+    drag={from:sq,sx:e.clientX,sy:e.clientY}; try{gridEl.setPointerCapture(e.pointerId);}catch(_){}
+    const rect=gridEl.querySelector('.cell').getBoundingClientRect();
+    const g=document.createElement('div'); g.className='drag-ghost';
+    const img=document.createElement('img'); img.src=PIECE(p.color,p.type); img.style.height=Math.round(rect.height*1.05)+'px';
+    if(needFlip(p.color,p.type)) img.classList.add('flip');
+    g.appendChild(img); document.body.appendChild(g); drag.ghost=g;
+    g.style.left=e.clientX+'px'; g.style.top=e.clientY+'px';
+    const oi=gridEl.querySelector(`.cell[data-sq="${sq}"] img`); if(oi) oi.style.visibility='hidden';
   }catch(err){ console.warn(err); cleanupDrag(); }
 });
 gridEl.addEventListener('pointermove',e=>{
   if(!drag) return;
-  try{
-    if(drag.noOwnPiece) return; // empty/enemy square armed only for a tap-to-move destination
-    if(!drag.moved){
-      if(Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)<5) return;
-      drag.moved=true; const p=game.get(drag.from); if(!p){ cleanupDrag(); return; }
-      const rect=gridEl.querySelector('.cell').getBoundingClientRect();
-      const g=document.createElement('div'); g.className='drag-ghost';
-      const img=document.createElement('img'); img.src=PIECE(p.color,p.type); img.style.height=Math.round(rect.height*1.05)+'px';
-      if(needFlip(p.color,p.type)) img.classList.add('flip');
-      g.appendChild(img); document.body.appendChild(g); drag.ghost=g;
-      const oi=gridEl.querySelector(`.cell[data-sq="${drag.from}"] img`); if(oi) oi.style.visibility='hidden';
-    }
-    drag.ghost.style.left=e.clientX+'px'; drag.ghost.style.top=e.clientY+'px';
-  }catch(err){ console.warn(err); cleanupDrag(); }
+  try{ drag.ghost.style.left=e.clientX+'px'; drag.ghost.style.top=e.clientY+'px'; }
+  catch(err){ console.warn(err); cleanupDrag(); }
 });
 function endDrag(e,cancel){
   if(!drag){ killGhost(); return; }
-  const moved=drag.moved, from=drag.from, noOwnPiece=drag.noOwnPiece; cleanupDrag();
+  const from=drag.from; cleanupDrag();
   if(cancel) return;
-  if(!moved){
-    // A true tap (no >5px drag): resolve as select / move-to-destination / deselect.
-    if(selectedSq && selectedSq!==from){ const src=selectedSq; clearSelection(); tryMove(src,from); return; }
-    if(selectedSq===from){ clearSelection(); return; }
-    if(!noOwnPiece){ selectSquare(from); } else { clearSelection(); }
-    return;
-  }
   try{ const el=document.elementFromPoint(e.clientX,e.clientY), cell=el&&el.closest?el.closest('.cell'):null;
     const to=cell?cell.dataset.sq:null;
     if(to&&to!==from) tryMove(from,to); else render();
