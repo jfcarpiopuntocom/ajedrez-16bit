@@ -760,11 +760,15 @@ body.focusmode #radioPanel{ display:none !important } /* #radioBtn already cover
   -webkit-text-fill-color:#CCCCCC !important; padding:8px 20px; border-radius:8px; cursor:pointer }
 /* Quote: own gentle frame so it never visually bleeds into the move history below.
    Truncates to 3 lines with ellipsis to keep the layout stable when an aphorism is long. */
+/* JFC 2026-06-21: "no salga apachurrado" — -webkit-line-clamp:3 + overflow:hidden was cutting
+   off longer aphorisms mid-sentence on mobile (confirmed: scrollHeight 82px vs clientHeight 61px
+   clientHeight 61px on a 375px viewport). Desktop's override (below, min-width:900px) already
+   lets the box grow with content; mobile now does too — consistent with mobile no longer being
+   locked to no-scroll outside zoom mode, a taller quote box is no longer a layout risk. */
 .quote{ flex:0 0 auto; width:100%; max-width:430px; text-align:center; font-style:italic; font-size:13px; line-height:1.35;
   color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; padding:4px 10px; min-height:17px; transition:opacity .35s;
   background:linear-gradient(160deg,#1f160d,#150e07); border:1px solid rgba(232,160,32,.3); border-radius:8px; margin-bottom:2px;
-  font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif; word-wrap:break-word; overflow-wrap:break-word;
-  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden }
+  font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif; word-wrap:break-word; overflow-wrap:break-word }
 .quote b{ font-style:normal; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; display:block; margin-top:4px }
 
 /* ---------- Desktop / tablet ---------- */
@@ -1512,7 +1516,7 @@ function rotateQuote(){ const el=document.getElementById('quote'); if(!el) retur
   if(APHORISMS.length>1 && ni===qi) ni=(ni+1)%APHORISMS.length;
   qi=ni; const q=APHORISMS[qi];
   el.style.opacity='0'; setTimeout(()=>{ el.innerHTML='&ldquo;'+q.t+'&rdquo; <b>&mdash; '+q.a+'</b>'; el.style.opacity='1'; },160); }
-function startQuotes(){ if(qTimer) clearInterval(qTimer); qi=-1; rotateQuote(); qTimer=setInterval(rotateQuote,9000); }
+function startQuotes(){ if(qTimer) clearInterval(qTimer); qi=-1; rotateQuote(); qTimer=setInterval(rotateQuote,10000); }
 const BOARD_W=472, BOARD_H=536, ASPECT=BOARD_W/BOARD_H, FILES='abcdefgh';
 
 let mode='2p', level=LEVELS[1];
