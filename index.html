@@ -4144,14 +4144,20 @@ function setTavernMute(muted){
   // FM is THE dedicated 24/7 synthwave/outrun station (verified reachable, tags exactly
   // "outrun,retrowave,synthwave", nothing else). The old tag-search result is NOT removed — it's
   // still reachable as a fallback candidate via RADIO_TAGS below if the pinned URL ever goes down.
+  // 2026-06-21 follow-up: "metal relajado" was landing on doom/stoner metal (heavy, sludgy) when
+  // JFC actually meant epic but SOFT — "baladas pero soft o lofi metal". First pin tried
+  // (Radio Caprice Rock Ballads) timed out on live testing and was dropped; RadCap Instrumental
+  // Metal is confirmed reachable AND fits the brief better (atmospheric/instrumental, not heavy
+  // riffing). Old doom/stoner tags kept further down the RADIO_TAGS list as fallback, not removed.
   var RADIO_PINNED={
-    synthwave:['https://stream.nightride.fm/nightride.mp3']
+    synthwave:['https://stream.nightride.fm/nightride.mp3'],
+    metal:['http://79.111.119.111:8004/instrumentalmetal']
   };
   var RADIO_TAGS={
     synthwave:['synthwave','retrowave','outrun'],
     medieval:['medieval','celtic'],
     gregorian:['chant','sacred','choir'],
-    metal:['doom metal','stoner rock']
+    metal:['instrumental metal','melodic metal','symphonic metal','metal ballads','doom metal','stoner rock']
   };
   var RADIO_NAMES={
     synthwave:['synthwave'],
