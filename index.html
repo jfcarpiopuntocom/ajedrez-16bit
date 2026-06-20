@@ -532,8 +532,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 /* mago: limitado por ALTURA (max-width:100%) para que rojo y azul rindan la
    misma altura visible pese a sus distintos aspect ratios. Levita. */
 .cell img[data-t="b"]{ height:96%; max-width:109%; bottom:3% }
-.cell img[data-t="q"]{ height:96%; bottom:-3.5% }
-.cell img[data-t="k"]{ height:99%; bottom:-1.5% }
+.cell img[data-t="q"]{ height:96%; bottom:-9% }
+.cell img[data-t="k"]{ height:99%; bottom:-12% }
 .cell img.flip{ transform:translateX(-50%) scaleX(-1) }
 /* opponent pieces (top side) rotated 180 deg for face-to-face mobile/tablet play.
    Rotation flips the box's content but not its geometry, so a negative bottom
@@ -542,8 +542,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
    instead of negative) so rotated r/q/k sit flush for the opposite player too. */
 .cell img.rot{ transform:translateX(-50%) rotate(180deg) }
 .cell img.rot[data-t="r"]{ bottom:6% }
-.cell img.rot[data-t="q"]{ bottom:3.5% }
-.cell img.rot[data-t="k"]{ bottom:1.5% }
+.cell img.rot[data-t="q"]{ bottom:9% }
+.cell img.rot[data-t="k"]{ bottom:12% }
 .cell img.flip.rot{ transform:translateX(-50%) scaleX(-1) rotate(180deg) }
 .cell.last{ background:rgba(232,160,32,.20) }
 .cell.check::after{ content:""; position:absolute; inset:5%; border:3px solid #ff5252; border-radius:7px; box-shadow:0 0 12px #ff2020 }
