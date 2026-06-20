@@ -638,6 +638,11 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .tut-sq-b{ background:#1a130d }
 .tut-piece{ position:absolute; width:42px; height:42px; object-fit:contain; transition:left .6s cubic-bezier(.4,0,.2,1),top .6s cubic-bezier(.4,0,.2,1);
   filter:drop-shadow(0 2px 4px rgba(0,0,0,.6)) }
+/* SNES-tactics-style move arrow: tutorial ONLY (JFC 2026-06-20, explicit scope: "solo en el
+   tutorial, no vuelvas a hacer cambios generales"). One SVG line + arrowhead, fades in/out, zero
+   extra image assets or animation libraries — same approach FFVI-era SRPGs used for move previews. */
+.tut-arrow{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; opacity:0; transition:opacity .25s }
+.tut-arrow.show{ opacity:1 }
 .tut-box{ position:relative; width:100%; max-width:520px; margin:0 12px 18px; padding:16px 20px 14px;
   background:linear-gradient(180deg,#0e1830,#060c1a); border:3px solid #FFFFFF; border-radius:4px;
   box-shadow:0 0 0 2px var(--gold), 0 10px 30px rgba(0,0,0,.6); cursor:pointer }
@@ -3502,7 +3507,7 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
       {text:'Cada partida guarda un código NES de seis caracteres. Cualquiera, en cualquier dispositivo, puede continuarla. Eso es el Multiverse.',
        status:{text:'Turno Azules (blancas)',cls:'azul'}, check:false, move:function(){}}
     ];
-    var idx=0, board, pieceN, pieceK, textEl, dotsEl, statusEl, nextEl, veil, built=false;
+    var idx=0, board, pieceN, pieceK, textEl, dotsEl, statusEl, nextEl, veil, built=false, arrowSvg, arrowLine, arrowTimer;
     // Grid-cell coordinates (0-3), not raw pixels — the board's pixel size changes between the
     // 200px desktop and 160px mobile breakpoint, so positions are computed from SQ at build time
     // and every move stays clamped to the 4x4 grid (a prior pixel-based version let the knight's
@@ -3527,9 +3532,28 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
       pieceK=document.createElement('img'); pieceK.className='tut-piece'; pieceK.alt=''; pieceK.src='assets/pieces/bK.png';
       applyPos(pieceK,kgC,kgR);
       board.appendChild(pieceN); board.appendChild(pieceK);
+      // Suggested-move arrow (tutorial only): one <svg><line> with an auto-orienting arrowhead
+      // marker, built once and reused — no per-move DOM churn, no image assets.
+      arrowSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+      arrowSvg.setAttribute('class','tut-arrow'); arrowSvg.setAttribute('viewBox','0 0 '+(SQ*4)+' '+(SQ*4));
+      arrowSvg.innerHTML='<defs><marker id="tutArrowHead" markerWidth="6" markerHeight="6" refX="4.2" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#f5c24a"/></marker></defs>'
+        +'<line id="tutArrowLine" x1="0" y1="0" x2="0" y2="0" stroke="#f5c24a" stroke-width="4" stroke-linecap="round" marker-end="url(#tutArrowHead)"/>';
+      board.appendChild(arrowSvg); arrowLine=arrowSvg.querySelector('#tutArrowLine');
+    }
+    function showArrow(c1,r1,c2,r2){
+      if(!arrowLine) return;
+      var cx=function(c){ return c*SQ+SQ/2; }, cy=function(r){ return r*SQ+SQ/2; };
+      // Pull both ends in slightly so the line starts/ends at piece edges, not piece centers.
+      var x1=cx(c1),y1=cy(r1),x2=cx(c2),y2=cy(r2), dx=x2-x1, dy=y2-y1, len=Math.hypot(dx,dy)||1, pull=SQ*0.3;
+      arrowLine.setAttribute('x1',x1+dx/len*pull); arrowLine.setAttribute('y1',y1+dy/len*pull);
+      arrowLine.setAttribute('x2',x2-dx/len*pull); arrowLine.setAttribute('y2',y2-dy/len*pull);
+      arrowSvg.classList.add('show');
+      clearTimeout(arrowTimer); arrowTimer=setTimeout(function(){ arrowSvg.classList.remove('show'); },900);
     }
     function moveN(dc,dr){
+      var c1=knC, r1=knR;
       knC=Math.max(0,Math.min(3,knC+dc)); knR=Math.max(0,Math.min(3,knR+dr));
+      showArrow(c1,r1,knC,knR);
       applyPos(pieceN,knC,knR);
     }
     function flashKing(){
@@ -3565,6 +3589,7 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
     function closeTutorial(){
       veil.classList.remove('show'); veil.setAttribute('aria-hidden','true');
       if(board) board.classList.remove('tut-check');
+      clearTimeout(arrowTimer); if(arrowSvg) arrowSvg.classList.remove('show');
     }
     document.getElementById('tutSkip').addEventListener('click', closeTutorial);
     document.getElementById('tutNext').addEventListener('click', next);
