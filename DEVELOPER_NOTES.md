@@ -96,6 +96,76 @@ matching the button style used everywhere else (`var(--gold)` border, `2px solid
 re-add a CSS animation or mask-image here without checking with JFC first — this was an
 explicit "stop doing that" correction.
 
+### Piece input: PURE DRAG ONLY — do not add tap-to-move again (corrected 2026-06-20)
+This was tried and explicitly rejected the SAME session it was added. Sequence: JFC asked for
+"el clic al mover, que sea mas inmediato" → misread as "add tap-to-select-then-tap-destination
+with legal-move dots" → built it → corrected hard: **"no es tap to move, idiota, es DRAG"** /
+"lo que queria es el clic al mover, que sea mas inmediato, fin" / "no hagas cosas que no he
+pedido". The actual ask was about drag responsiveness, not a new input paradigm. Current
+behavior: pure drag, original 95437c9 design, but the ghost piece now appears the INSTANT you
+press down (pointerdown) instead of after a 5px movement threshold — that's the "more
+immediate" part. No selection state, no legal-move hints, no tap-only move path exist in the
+code. **If "click to move" comes up again, ask explicitly whether it means (a) drag feeling
+faster/snappier or (b) an actual tap-to-select system before writing any code** — assuming
+either one cost a full build-then-revert once already.
+
+### Zoom mode (`body.focusmode`, `@media min-width:860px`) — two non-obvious failure modes
+1. **Hiding an element's CONTENT isn't the same as hiding its WRAPPER.** `.title-img` is
+   `display:none` in focus mode, but its parent `.title-wrap` (which got its own gold border +
+   background in the masthead change above) was NOT in that hidden list — left an empty
+   gold-bordered box floating top-center ("la pildora dorada", flagged twice before being
+   found). Whenever hiding a themed element in zoom, check whether its wrapper has its own
+   visible styling (border/background/padding) and hide that too.
+2. **`.board-area` spans both grid rows** (`grid-template-areas:"quotes board capR" "quotes
+   board capB"`), so its height comes from the TRACK sizing, not its own content. The grid
+   rows MUST be `1fr 1fr` (or otherwise fraction/available-space based) — `auto auto` sizes
+   each row to the SHORTEST content in it, and since the quotes/captures panels are
+   deliberately kept short (`align-self:start`, see below), the board's spanned rows collapsed
+   with them, shrinking the board to nearly nothing ("hiciste el tablero del zoom enano,
+   idiota" — a real regression caught and reverted same day). `.board-area` itself must be
+   `align-self:stretch` (not `center`) so it actually receives that full track height — its
+   own internal `display:flex;align-items:center;justify-content:center` (base CSS, ~line 516)
+   is what keeps the board canvas itself centered within that tall area. The quotes/captures
+   panels use `align-self:start` + `max-height` on THEMSELVES to stay compact — that's a
+   different, unrelated mechanism and is correct as-is; don't touch it when fixing the board.
+
+### Capture FX: NO visual effect, haptics + audio only (corrected 2026-06-20, don't re-add)
+A capture used to spawn a particle burst (4 sparks from board-center), then a smaller
+burst+ring anchored on the actual captured square. JFC rejected BOTH passes as "super gheeey":
+**"ya dijimos haptics y choques varoniles o nada"**. Landed on "nada" — `window.fxCapture` is
+now a no-op. Capture feedback is exactly: the existing `vibe(20)` haptic
+(`navigator.vibrate`, in the `wrap('capture',...)` hook) + `SFX.capture()`'s two audio tones.
+The generic `burst()`/`ring()` particle-engine functions are still defined (dormant, used by
+nothing) — left in place rather than ripped out to avoid destabilizing `stepFx()`/`boardCenter()`
+for no benefit; just don't wire a capture effect back into them without explicit sign-off.
+`fxCheck()` (the red vignette flash on check) was never part of this complaint and is untouched.
+
+### Piece rotation: ONLY in face-to-face 2P, never online (fixed 2026-06-20)
+`render()`'s `topColor` (which pieces get the `.rot` 180°-flip class) used to trigger for both
+`mode==='2p'` and `mode==='online'`. That's wrong: rotation exists because in 2P, two people
+share ONE physical screen sitting across from each other, so the far player's pieces need to
+face them. Online players each have their OWN screen — the opponent is remote, never
+physically across the table — so rotating their pieces made no sense. Condition is now
+`mode==='2p'` only. JFC's exact framing: "recuerda que solo EN PERSONA necesitan estar viradas
+las piezas." The capture-tray rotation (`.cap.red` `rotcap` class) already correctly checked
+`mode==='2p'` only and didn't need fixing — only the board piece rotation had the bug.
+
+### Tutorial-only features need explicit scope confirmation
+JFC added a suggested-move arrow (SVG line + auto-orienting arrowhead, FFVI/SNES-tactics
+style) to the intro tutorial's demo board — but was explicit: **"solo en el tutorial, no
+vuelvas a hacer cambios generales sin consultar conmigo."** The real game board has NO move
+arrows, NO legal-move highlights, NO suggested moves — that's deliberate (see "pure drag only"
+above; legal-move hints were tried and rejected in the same session). Don't generalize the
+tutorial arrow into the main game without a separate, explicit request.
+
+### Firebase config protection (gap found + fixed 2026-06-20)
+`firebase-config.js` holds live credentials and must never be committed. A `.gitignore`
+existed in this repo but never actually listed it — it was untracked only by manual
+discipline, not by any enforced rule. Now added. Verified via `git log --all --full-history --
+firebase-config.js` that it was never previously committed (no history scrub was needed). If
+you ever see `firebase-config.js` show up in `git status` as staged, stop and check
+`.gitignore` before committing anything.
+
 ## Things that are correct on purpose (don't "fix" these)
 - AI mode never silently falls back to AI after an online human takes over — human-over-AI
   priority is enforced by the takeover flow stopping AI mode outright, not by a runtime check.
