@@ -3536,7 +3536,13 @@ function tavernEnsureRunning(){
 }
 ['touchstart','pointerdown','click'].forEach(function(ev){
   document.addEventListener(ev,function(){
-    if(!tavernCtx){ try{ tavernCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+    // iOS Safari: two separate AudioContext instances on one page (one for SFX, one for tavern
+    // music) is a known source of "only one of them ever actually plays" — Safari's per-page audio
+    // session sometimes grants playback to whichever context grabbed it first and silently starves
+    // the second, even after .resume() reports success. JFC 2026-06-20 reported exactly this:
+    // crowd <audio> plays fine but the synth tavern score stays silent on iOS. Fix: tavernCtx is no
+    // longer its own AudioContext — it's just a reference to the SAME shared context as actx (SFX).
+    if(!tavernCtx){ actxInit(); tavernCtx=actx; }
     tavernEnsureRunning();
   },{passive:true});
 });
@@ -3564,7 +3570,7 @@ function tavernCrowdStart(){
 function tavernCrowdStop(){ if(tavernCrowdEl){ tavernCrowdEl.pause(); } }
 function playTavernMelody(){
   if(tavernPlaying) return;
-  if(!tavernCtx) tavernCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(!tavernCtx){ actxInit(); tavernCtx=actx; }
   if(tavernCtx.state==='suspended') tavernCtx.resume();
   tavernGain=tavernCtx.createGain(); tavernGain.gain.value=tavernMuted?0:MUSIC_VOL;
   tavernGain.connect(tavernCtx.destination);
