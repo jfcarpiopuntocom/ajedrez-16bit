@@ -438,11 +438,31 @@ body.mode-online #chatPanel{ display:flex }
   background:#241a10; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; cursor:pointer; text-align:left; line-height:1.15 }
 .chat-quick button:hover,.chat-quick button:active{ background:#34260f; border-color:#FFD060 }
 .chat-quick button:disabled{ color:#999999 !important; -webkit-text-fill-color:#999999 !important; cursor:wait }
-body.focusmode .title-img, body.focusmode .left-rail,
+body.focusmode .title-img, body.focusmode .left-rail, body.focusmode .cap,
 body.focusmode .note, body.focusmode .hud, body.focusmode .site-credit,
 body.focusmode #chatPanel, body.focusmode .help-btn{ display:none !important }
 body.focusmode .status{ position:fixed; top:6px; right:6px; z-index:301; background:rgba(0,0,0,.85); padding:4px 14px; border-radius:10px; border:1px solid var(--gold); font-size:14px; min-height:auto }
 body.focusmode .app{ height:100vh !important; height:100svh !important }
+/* JFC 2026-06-20: zoom on a narrow/mobile screen stays board-only (no room for sidebars, hidden
+   above). On a wide screen there's space going totally unused on both flanks of the board — JFC's
+   exact complaint ("sobra espacio al lado derecho"). From here up: bring back quotes+jugadas on the
+   LEFT and both capture trays grouped in ONE column on the RIGHT, via CSS Grid so the two .cap
+   sections (siblings in the DOM, not naturally stackable with flex alone) land in the same column
+   stacked vertically instead of flanking the board like they do in the normal (non-zoom) layout.
+   Captures explicitly must NOT render below the board in zoom — that's the bug being fixed here. */
+@media (min-width:860px){
+  body.focusmode .stage{ display:grid; grid-template-columns:220px minmax(0,1fr) 150px; grid-template-rows:1fr 1fr;
+    grid-template-areas:"quotes board capR" "quotes board capB"; align-items:center; justify-items:center;
+    gap:10px 16px; width:100%; max-width:1100px; margin:0 auto }
+  body.focusmode .left-rail, body.focusmode .cap{ display:flex !important }
+  body.focusmode .left-rail{ grid-area:quotes; flex-direction:column; width:100%; max-width:220px; align-self:stretch }
+  body.focusmode .left-rail .peace-card{ display:none !important }
+  body.focusmode .board-area{ grid-area:board }
+  body.focusmode .cap.red{ grid-area:capR }
+  body.focusmode .cap.blue{ grid-area:capB }
+  body.focusmode .cap{ width:100%; max-width:150px; height:auto; flex-direction:column; align-items:stretch; align-self:stretch }
+  body.focusmode .cap .slots{ flex-wrap:wrap; align-content:flex-start; height:auto }
+}
 
 /* ---------- Turn / status ---------- */
 .status{ flex:0 0 auto; text-align:center; font-size:15px; font-weight:800; min-height:24px; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
