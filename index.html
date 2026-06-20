@@ -1526,7 +1526,7 @@ function hubIdFor(code){ return HUB_ID_BASE+'-'+code.toLowerCase(); }
 function roomLink(code){ return location.origin+'/#multiverso='+code; }
 const PRESENCE_TTL=20000; // 20s (4x guest ping)
 const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'', rivalTag:'',
-            hubPeer:null, hubConn:null, isHub:false, roster:[],
+            hubPeer:null, hubConn:null, isHub:false, roster:[], connectingTo:null,
             matchInfo:{live:false}, queue:[], openMulti:{} };
 const MULTI_CAP=12; // soft cap on how many published Multiverse gamestates a room keeps at once
 function netReset(){
@@ -1535,7 +1535,7 @@ function netReset(){
   try{ if(net.hubPeer) net.hubPeer.destroy(); }catch(e){}
   try{ if(net.peer) net.peer.destroy(); }catch(e){}
   net.active=false; net.peer=null; net.conn=null; net.isHost=false; net.myColor='w'; net.rivalName=''; net.rivalTag='';
-  net.hubPeer=null; net.hubConn=null; net.isHub=false; net.roster=[];
+  net.hubPeer=null; net.hubConn=null; net.isHub=false; net.roster=[]; net.connectingTo=null;
   net.matchInfo={live:false}; net.queue=[]; net.iResigned=false; net.endReported=false; net.openMulti={};
   if(lobbyTimer){ clearInterval(lobbyTimer); lobbyTimer=null; }
   if(hubHeartbeat){ clearInterval(hubHeartbeat); hubHeartbeat=null; }
@@ -1546,7 +1546,7 @@ function netSend(o){ if(net.conn && net.conn.open){ try{ net.conn.send(o); }catc
 function wireConn(c){
   c.on('data',d=>{ if(!d||!d.t) return;
     if(d.t==='hello'){
-      net.rivalName=d.name||'???'; net.rivalTag=d.tag||'';
+      net.rivalName=d.name||'???'; net.rivalTag=d.tag||''; net.connectingTo=null;
       if(net.isHost){
         net.active=true; net.endReported=false; net.iResigned=false;
         // If the room code matches a saved local match (vs AI), open parallel universe:
@@ -1584,7 +1584,7 @@ function wireConn(c){
       }
     }
     else if(d.t==='start'){
-      net.rivalName=d.name||'???'; net.rivalTag=d.tag||''; net.active=true;
+      net.rivalName=d.name||'???'; net.rivalTag=d.tag||''; net.active=true; net.connectingTo=null;
       if(d.takeover){
         var t=d.takeover;
         net.myColor=t.guestColor||'b';
@@ -2097,6 +2097,29 @@ function goOnline(){
   net.peer.on('open',function(){
     $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
     net.peer.on('connection',function(c){
+      // Glare: both sides dialed each other in the same instant (two clicks landing at once,
+      // or a stale roster entry retried right as the other player also clicked). Each side then
+      // has its OWN outgoing connection already sitting in net.conn (set by lobbyConnect) when
+      // this incoming one from the very same peer arrives. Without this check, both sides saw
+      // "net.conn is already set" and answered each other with {t:'full'} — so two people online
+      // and clicking each other would just bounce forever instead of ever matching.
+      // Fix: agree on a winner using only locally-known, identical-on-both-sides data — the two
+      // peer ids — so no extra round trip is needed to break the tie.
+      if(!net.active && net.connectingTo && net.connectingTo===c.peer){
+        if(net.peer.id<c.peer){
+          // We're the lexicographically lower id: by convention we stay host on OUR OWN outgoing
+          // attempt (already net.conn) and shed this duplicate incoming one.
+          c.on('open',function(){ try{ c.send({t:'full'}); }catch(e){} });
+          try{ c.close(); }catch(e){}
+        } else {
+          // We're the higher id: defer to the other side's outgoing attempt — drop ours and
+          // adopt their incoming connection as host instead (mirrors the normal receiver role).
+          try{ if(net.conn) net.conn.close(); }catch(e){}
+          net.connectingTo=null;
+          net.conn=c; net.isHost=true; net.myColor='w'; wireConn(c);
+        }
+        return;
+      }
       if(net.conn){ c.on('open',function(){ try{ c.send({t:'full'}); }catch(e){} }); return; }
       net.conn=c; net.isHost=true; net.myColor='w'; wireConn(c);
     });
@@ -2134,14 +2157,20 @@ function lobbyConnect(targetId,name,tag){
   }
   $('lobbyStatus').innerHTML='<span class="lobby-searching">Conectando con '+creditName(name,tag)+'...</span>';
   net.isHost=false; net.myColor='b'; net.rivalName=name||'rival'; net.rivalTag=tag||'';
+  net.connectingTo=targetId; // lets the 'connection' handler recognize a simultaneous mutual dial (glare)
   var c=net.peer.connect(targetId,{reliable:true,metadata:{type:'match'}});
   if(!c){
+    net.connectingTo=null;
     $('lobbyStatus').innerHTML='<span class="lobby-searching">No se pudo iniciar la conexión, reintenta</span>';
     return;
   }
   net.conn=c; wireConn(c);
   c.on('open',function(){ try{ c.send({t:'hello',name:myPseudo,tag:myTag||''}); }catch(e){} });
+  // Clear connectingTo once this attempt is no longer "in flight" either way, so a stale value
+  // never causes a future, unrelated incoming connection to be mistaken for glare.
+  c.on('close',function(){ if(net.connectingTo===targetId) net.connectingTo=null; });
   setTimeout(function(){
+    if(net.connectingTo===targetId) net.connectingTo=null;
     if(!net.active && net.conn===c){
       try{ c.close(); }catch(e){} net.conn=null;
       $('lobbyStatus').innerHTML='<span class="lobby-searching">'+name+' no respondió. Toca otro nombre o reintenta.</span>';
