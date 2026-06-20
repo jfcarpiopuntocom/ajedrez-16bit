@@ -1,4 +1,4 @@
-# El Reino de JuanFerland
+# Los Dos Reinos - ElMultiversoDelAjedrez.com
 
 Ajedrez HTML5 con arte pixel propio. Juegas con el ejército **Azul** contra una IA con 5 niveles de dificultad, desde *Medio* hasta el simulador **Bobby Fischer**.
 
