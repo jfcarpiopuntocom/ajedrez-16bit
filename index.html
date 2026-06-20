@@ -84,6 +84,15 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 
 .app{ height:100vh; height:100svh; max-width:1180px; margin:0 auto; padding:5px 6px;
   display:flex; flex-direction:column; gap:4px; overflow:hidden }
+/* Mobile in-game: JFC approved breaking the no-scroll rule here (2026-06-20) — board/captures/quote
+   stay prioritized near the top via DOM order, move history gets a shorter cap, everything below
+   the fold (history tail, hud buttons) scrolls instead of being crammed/clipped. Splash screen
+   (.start) keeps its own separate no-scroll layout untouched. */
+@media (max-width:899px){
+  html,body{ overflow-y:auto }
+  .app{ height:auto; min-height:100vh; min-height:100svh; overflow:visible }
+  .history{ max-height:64px }
+}
 
 /* ══════ START SCREEN ══════
    Splash: title + side picker + lobby. Mobile collapses art. */
@@ -518,7 +527,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 /* SUBSYSTEM 3: Render Scale — per-type heights so pieces fill the cell.
    All bottom:0 (on the floor) except the wizard, which levitates. */
 .cell img[data-t="p"]{ height:81% }
-.cell img[data-t="r"]{ height:86%; bottom:-3% }
+.cell img[data-t="r"]{ height:86%; bottom:2% }
 .cell img[data-t="n"]{ height:92% }
 /* mago: limitado por ALTURA (max-width:100%) para que rojo y azul rindan la
    misma altura visible pese a sus distintos aspect ratios. Levita. */
@@ -532,7 +541,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
    the floor for a rotated one — the fix below mirrors the offset (positive
    instead of negative) so rotated r/q/k sit flush for the opposite player too. */
 .cell img.rot{ transform:translateX(-50%) rotate(180deg) }
-.cell img.rot[data-t="r"]{ bottom:3% }
+.cell img.rot[data-t="r"]{ bottom:-2% }
 .cell img.rot[data-t="q"]{ bottom:4% }
 .cell img.rot[data-t="k"]{ bottom:5% }
 .cell img.flip.rot{ transform:translateX(-50%) scaleX(-1) rotate(180deg) }
@@ -2843,6 +2852,9 @@ function fitBoard(){
   ensureNoScroll();
 }
 function ensureNoScroll(){
+  // Mobile non-zoom view now intentionally allows vertical scroll (JFC 2026-06-20) so the board
+  // never gets crushed to fit everything above the fold. Zoom/focus mode keeps the tight no-scroll fit.
+  if(window.innerWidth<=899 && !document.body.classList.contains('focusmode')) return;
   let guard=0;
   while(document.documentElement.scrollHeight>document.documentElement.clientHeight+1 && guard<8){
     const bw=parseFloat(boardEl.style.width)||0; if(bw<=170) break;
