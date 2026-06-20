@@ -819,7 +819,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
       <li><span class="accent">Sin servidor, sin cuentas:</span> todo corre en tu navegador. Tu juego es tuyo.</li>
       <li><span class="accent">IA local:</span> el motor Stockfish, clase mundial, calcula dentro de tu propio dispositivo (con una IA de respaldo si no carga).</li>
       <li><span class="accent">Online directo:</span> conexión jugador a jugador por WebRTC, sin intermediarios. La presencia en la Taberna viaja por la red abierta Nostr.</li>
-      <li><span class="accent">Tus partidas, blindadas:</span> cada jugada se respalda en localStorage e IndexedDB, y puedes exportar todo a JSON cuando quieras.</li>
+      <li><span class="accent">Tus partidas, blindadas:</span> cada jugada se respalda en localStorage e IndexedDB, y puedes exportar todo a JSON (incluida tu identidad y tus logros) e importarlo de vuelta en otro dispositivo cuando quieras.</li>
       <li><span class="accent">Música viva:</span> la melodía de la Taberna se compone en tiempo real con Web Audio, nota por nota. No hay archivo de audio que cargar.</li>
     </ul>
 
@@ -853,6 +853,8 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
     <ul class="matches-list" id="matchesList"></ul>
     <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap">
       <button class="yes" id="matchesExport">&#128190; Exportar JSON</button>
+      <button class="no" id="matchesImport">&#128194; Importar JSON</button>
+      <input type="file" id="matchesImportFile" accept="application/json,.json" style="display:none">
       <button class="no" id="matchesClose">Cerrar</button>
     </div>
   </div>
@@ -2501,7 +2503,17 @@ $('matchesClose').onclick=function(){ $('matchesVeil').classList.remove('show');
 $('matchesExport').onclick=function(){
   var codes=indexList(); var all=[];
   codes.forEach(function(c){ var d=loadMatch(c); if(d) all.push({code:c,data:d}); });
-  var dump={app:'losdosreinos',version:1,player:myPseudo,exported:new Date().toISOString(),matches:all};
+  // v2: the old dump only carried `matches` (the saved gamestates/"retos pendientes" — every
+  // mode:'ai' entry here is a Multiverse fork waiting to be taken over). That meant a backup could
+  // restore your games on a new device but never recognize you as the same player, never bring
+  // back your stats ("logros"), and never restore Mi Tablero's history. Naming (pid+pseudo+tag) and
+  // achievements now travel in the same file so a real device migration is possible, not just a
+  // game-by-game code re-entry. `player` stays for anyone/anything still reading v1 dumps.
+  var dump={app:'losdosreinos',version:2,player:myPseudo,exported:new Date().toISOString(),
+            identity:{pid:myPid,pseudo:myPseudo,tag:myTag||''},
+            stats:loadStats(),
+            board:myBoard,
+            matches:all};
   var json=JSON.stringify(dump,null,2);
   var blob=new Blob([json],{type:'application/json'});
   var url=URL.createObjectURL(blob);
@@ -2512,6 +2524,124 @@ $('matchesExport').onclick=function(){
   var btn=$('matchesExport'); var orig=btn.innerHTML;
   btn.textContent='✓ Descargado'; setTimeout(function(){ btn.innerHTML=orig; },1800);
 };
+/* ===== Import: the other half of the backup loop. Merges (never silently overwrites) a previously
+   exported JSON back into this device — matches, stats, Mi Tablero history, and (only with explicit
+   confirmation, since it changes "who you are" everywhere — self-detection, dedupe-by-pid, the
+   Taberna roster) the player's identity. Accepts both v1 dumps (matches only) and v2. ===== */
+/* ===== Kintsugi merge: how two avgMoves aggregates combine into one number.
+   Named for 金継ぎ (kintsugi), the Japanese practice of repairing broken pottery with gold instead
+   of hiding the crack — the object's whole history stays visible and honored, but the repair is
+   what catches the light. Same spirit here: nobody's past games are ever deleted or zeroed out, but
+   recent play counts for more — so the player you are NOW, not a flat lifetime average, sets the
+   number. (Honest disclaimer: there is no Nobel Prize in mathematics — the real honors there are the
+   Fields Medal, Abel Prize and Wolf Prize. What follows is a real, citable synthesis of two
+   established statistical ideas, not a literal prize-winning formula.)
+     1) Exponential recency decay — the mechanism behind exponential smoothing (Holt/Brown) and,
+        specifically in game-rating theory, Rémi Coulom's Whole-History Rating (2008): older evidence
+        is never deleted, just exponentially down-weighted, so the estimate tracks who you are now
+        instead of flattening your entire history into one number.
+     2) Credibility shrinkage — the logic behind Bayesian/credibility averages (the same family as
+        IMDB's weighted rating) and, more famously, Charles Stein's shrinkage estimator ("Stein's
+        paradox", Wolf Prize 1989): a thin sample is mathematically untrustworthy on its own, so it's
+        blended toward the more credible side in proportion to how little evidence it has — which is
+        exactly what makes this forgiving to newcomers instead of letting one or two games swing the
+        number.
+   Combined: each side's voice = (games played) × (recency decay since last played). A newcomer with
+   2 very recent games can outweigh a dusty 200-game history from a year ago — "lo aprendido pesa más
+   que lo pasado" — while a single newcomer game still can't override real, fresh volume from someone
+   who's merely been away a week. Theoretically clean (it's just a weighted mean with principled
+   weights), auditable, and never throws away a single number from either side. */
+var KINTSUGI_HALF_LIFE_MS=45*24*60*60*1000; // 45 days: recent form roughly doubles its influence every 45 days
+function kintsugiAverage(local,incoming,now){
+  now=now||Date.now();
+  function weight(side){
+    if(!side || !side.n) return 0;
+    var age=Math.max(0,now-(side.last||0));
+    var decay=Math.pow(0.5,age/KINTSUGI_HALF_LIFE_MS); // 1 at age 0, 0.5 per half-life, asymptotic to 0 — dimmed, never erased
+    return side.n*decay;
+  }
+  var wL=weight(local), wI=weight(incoming);
+  if(wL+wI<=0) return (incoming&&incoming.avg)||(local&&local.avg)||0;
+  return Math.round((((local&&local.avg)||0)*wL+((incoming&&incoming.avg)||0)*wI)/(wL+wI));
+}
+function mergeStats(local,incoming){
+  if(!incoming || typeof incoming!=='object') return local;
+  var out=Object.assign({},local);
+  ['total','wins','losses','draws','forks'].forEach(function(k){ out[k]=(local[k]||0)+(incoming[k]||0); });
+  out.avgMoves=kintsugiAverage(
+    {avg:local.avgMoves||0,n:local.total||0,last:local.lastPlayed||0},
+    {avg:incoming.avgMoves||0,n:incoming.total||0,last:incoming.lastPlayed||0}
+  );
+  out.byLevel=Object.assign({},local.byLevel);
+  if(incoming.byLevel){
+    Object.keys(incoming.byLevel).forEach(function(lk){
+      var a=out.byLevel[lk]||{w:0,l:0,d:0}, b=incoming.byLevel[lk]||{w:0,l:0,d:0};
+      out.byLevel[lk]={w:(a.w||0)+(b.w||0),l:(a.l||0)+(b.l||0),d:(a.d||0)+(b.d||0)};
+    });
+  }
+  out.lastPlayed=Math.max(local.lastPlayed||0,incoming.lastPlayed||0);
+  return out;
+}
+function importMatches(list){
+  var added=0, updated=0;
+  (list||[]).forEach(function(entry){
+    if(!entry || !entry.code || !entry.data) return;
+    var code=String(entry.code).toUpperCase().trim();
+    if(!/^[A-Z0-9]{6}$/.test(code)) return; // ignore malformed/foreign codes defensively
+    var existing=loadMatch(code);
+    if(existing && (existing.ts||0)>=(entry.data.ts||0)) return; // never let an import regress a newer local copy
+    try{ localStorage.setItem(MATCH_KEY+code,JSON.stringify(entry.data)); }catch(e){}
+    indexAdd(code); idbPut(code,entry.data);
+    existing?updated++:added++;
+  });
+  return {added:added,updated:updated};
+}
+function importBoardHistory(incomingBoard){
+  if(!incomingBoard || !Array.isArray(incomingBoard.gameHistory)) return 0;
+  var seen={}; myBoard.gameHistory.forEach(function(h){ if(h&&h.matchCode) seen[h.matchCode]=true; });
+  var addedCount=0;
+  incomingBoard.gameHistory.forEach(function(h){
+    if(!h || !h.matchCode || seen[h.matchCode]) return;
+    seen[h.matchCode]=true; myBoard.gameHistory.push(h); addedCount++;
+  });
+  myBoard.gameHistory.sort(function(a,b){ return (b.date||0)-(a.date||0); });
+  if(myBoard.gameHistory.length>30) myBoard.gameHistory.length=30;
+  saveMyBoard();
+  return addedCount;
+}
+$('matchesImport').onclick=function(){ $('matchesImportFile').click(); };
+$('matchesImportFile').addEventListener('change',function(e){
+  var file=e.target.files && e.target.files[0];
+  e.target.value=''; // reset so picking the same filename again still fires 'change' next time
+  if(!file) return;
+  var reader=new FileReader();
+  reader.onload=async function(){
+    var dump, btn=$('matchesImport'), orig=btn.innerHTML;
+    function flash(t){ btn.textContent=t; setTimeout(function(){ btn.innerHTML=orig; },2000); }
+    try{ dump=JSON.parse(reader.result); }catch(err){ flash('✗ Archivo inválido'); return; }
+    if(!dump || typeof dump!=='object' || !Array.isArray(dump.matches)){ flash('✗ Formato no reconocido'); return; }
+    var n=dump.matches.length;
+    var statsTxt=(dump.stats && dump.stats.total)?(', '+dump.stats.total+' partida(s) de estadísticas'):'';
+    var idTxt=(dump.identity && dump.identity.pseudo)?(' de '+dump.identity.pseudo):(dump.player?(' de '+dump.player):'');
+    var ok=await showConfirm('Se encontraron '+n+' partida(s) guardada(s)'+statsTxt+idTxt+' en el archivo. Se añaden o actualizan en este dispositivo sin borrar nada existente. ¿Importar?','Importar','Cancelar');
+    if(!ok) return;
+    var res=importMatches(dump.matches);
+    if(dump.stats) saveStats(mergeStats(loadStats(),dump.stats));
+    if(dump.identity && dump.identity.pid && dump.identity.pid!==myPid){
+      var okId=await showConfirm('El archivo pertenece a "'+(dump.identity.pseudo||'otro jugador')+'". ¿Restaurar también esa identidad en este dispositivo? Tu nombre, iniciales y Mi Tablero pasarán a ser los de esa copia (recomendado al migrar de dispositivo).','Sí, restaurar identidad','No, solo partidas y logros');
+      if(okId){
+        myPid=dump.identity.pid; myPseudo=dump.identity.pseudo||myPseudo; myTag=dump.identity.tag||'';
+        saveIdentity(); loadMyBoard(); // re-derive Mi Tablero under the restored pid before merging history into it
+        $('myName').value=myPseudo; $('myTagInput').value=myTag||'';
+      }
+    }
+    if(dump.board) importBoardHistory(dump.board);
+    openLibrary();
+    if($('helpStats')) $('helpStats').textContent=getStatsText();
+    flash('✓ Importado ('+(res.added+res.updated)+')');
+  };
+  reader.readAsText(file);
+});
 $('matchesVeil').addEventListener('click',function(e){ if(e.target===$('matchesVeil')) $('matchesVeil').classList.remove('show'); });
 document.addEventListener('keydown',function(e){ if(e.key==='Escape' && $('matchesVeil').classList.contains('show')) $('matchesVeil').classList.remove('show'); });
 $('celAzul').onclick=function(){ celebrePick.col='w'; paintCelColor(); };
