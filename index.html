@@ -1311,7 +1311,7 @@ let matchLineage=[]; // [{at:moveCount, opp:'IA Casual' | 'DragonAzul' | '2P'}]
 function saveMatch(){
   if(!matchCode||!started||resigned) return;
   var data={fen:game.fen(),tab:currentTablero.key,m:mode,col:playerColor,bk:blueKing,rk:redKing,
-            lvl:level?level.key:null,creator:myPseudo,creatorPid:myPid,
+            lvl:level?level.key:null,creator:myPseudo,creatorTag:myTag||'',creatorPid:myPid,
             caps:{w:capW.slice(),b:capB.slice()},
             moves:game.history(),lineage:matchLineage.slice(),over:game.game_over(),ts:Date.now(),v:1};
   try{ localStorage.setItem(MATCH_KEY+matchCode,JSON.stringify(data)); indexAdd(matchCode); }catch(e){}
@@ -1724,7 +1724,7 @@ function renderMultiBlock(){
     // you'd actually get a click later. Move count comes from the moves[] already published.
     var forkColor=(e.fen && e.fen.indexOf(' w ')>0)?'w':'b';
     var moveCount=(e.moves&&e.moves.length)||0;
-    var meta=document.createElement('span'); meta.className='mmeta'; meta.textContent='de '+(e.creator||'alguien')+(e.lvl?(' · vs IA '+e.lvl):'')+' · '+moveCount+(moveCount===1?' jugada':' jugadas');
+    var meta=document.createElement('span'); meta.className='mmeta'; meta.textContent='de '+creditName(e.creator||'alguien',e.creatorTag)+(e.lvl?(' · vs IA '+e.lvl):'')+' · '+moveCount+(moveCount===1?' jugada':' jugadas');
     left.appendChild(nm); left.appendChild(meta);
     var right=document.createElement('div'); right.className='mright';
     right.innerHTML='<span class="multi-color '+(forkColor==='w'?'azul':'rojo')+'">'+(forkColor==='w'?'Azul':'Rojo')+'</span><span>Tomar 🌀</span>';
@@ -1841,7 +1841,7 @@ function exitSpectator(){
    clickable. Taking it over reuses forkMultiverse() unchanged — same mechanism as the live-duel fork. */
 function publishMultiverse(code,d){
   if(!net.peer||net.peer.destroyed) return;
-  var entry={code:code,creator:myPseudo,creatorPid:myPid,tab:d.tab,fen:d.fen,bk:d.bk,rk:d.rk,
+  var entry={code:code,creator:myPseudo,creatorTag:myTag||'',creatorPid:myPid,tab:d.tab,fen:d.fen,bk:d.bk,rk:d.rk,
     moves:(d.moves||[]).slice(),lineage:(d.lineage||[]).slice(),lvl:d.lvl,ts:Date.now()};
   if(net.isHub){ hubAddOpenMulti(entry); }
   else if(net.hubConn && net.hubConn.open){ try{ net.hubConn.send({t:'multi-open',entry:entry}); }catch(e){} }
@@ -2216,7 +2216,7 @@ function tryResumeCode(raw,msgEl,fromLobby){
   // generic "Cargando..." text — the magic of the feature should be felt right when it happens.
   if(msgEl){
     msgEl.textContent=(d.creator && d.creator!==myPseudo)
-      ? ('🌀 Entrando al multiverso de '+d.creator+'... tomas el bando '+sideName)
+      ? ('🌀 Entrando al multiverso de '+creditName(d.creator,d.creatorTag)+'... tomas el bando '+sideName)
       : ('Cargando partida '+p.code+' como '+sideName+'...');
     msgEl.classList.add('ok');
   }
@@ -3132,8 +3132,8 @@ $('mutebtn').onclick=()=>{ muted=!muted; $('mutebtn').textContent=muted?'🔇':'
 function buildPgn(){
   var headers='[Event "ElMultiVersoDelAjedrez"]\n[Site "elmultiversodelajedrez.com"]\n'
     +'[Date "'+new Date().toISOString().slice(0,10).replace(/-/g,'.')+'\"]\n'
-    +'[White "Azul'+(mode==='ai'&&playerColor==='w'?' ('+myPseudo+')':'')+'"]\n'
-    +'[Black "Rojo'+(mode==='ai'&&playerColor==='b'?' ('+myPseudo+')':'')+'"]\n'
+    +'[White "Azul'+(mode==='ai'&&playerColor==='w'?(' ('+myCredit()+')'):'')+'"]\n'
+    +'[Black "Rojo'+(mode==='ai'&&playerColor==='b'?(' ('+myCredit()+')'):'')+'"]\n'
     +'[Result "'+(game.in_checkmate()?(game.turn()==='w'?'0-1':'1-0'):(game.game_over()?'1/2-1/2':'*'))+'\"]\n\n';
   return headers+game.history().join(' ');
 }
