@@ -446,9 +446,12 @@ body.mode-online #chatPanel{ display:flex }
   background:#241a10; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; cursor:pointer; text-align:left; line-height:1.15 }
 .chat-quick button:hover,.chat-quick button:active{ background:#34260f; border-color:#FFD060 }
 .chat-quick button:disabled{ color:#999999 !important; -webkit-text-fill-color:#999999 !important; cursor:wait }
-body.focusmode .title-img, body.focusmode .left-rail, body.focusmode .cap,
+body.focusmode .title-img, body.focusmode .title-wrap, body.focusmode .left-rail, body.focusmode .cap,
 body.focusmode .note, body.focusmode .hud, body.focusmode .site-credit,
 body.focusmode #chatPanel, body.focusmode .help-btn, body.focusmode #codesBar{ display:none !important }
+/* .title-wrap added 2026-06-20: it's the masthead's gold-border WRAPPER (not just the image inside
+   it) — hiding only .title-img left an empty bordered box floating top-center in zoom, the
+   "pildora dorada" JFC kept seeing. Always hide both together. */
 /* #codesBar ("Continuar esta jugada" + share codes) explicitly does NOT belong in zoom — JFC:
    that's part of what you de-zoom to see, it's not gameplay. Leaving it visible here is what
    produced the stray gold-bordered box floating at the top of the screen in zoom on desktop. */
@@ -2898,8 +2901,12 @@ function sqAt(r,c){ const f=flipped?7-c:c, rk=flipped?r+1:8-r; return FILES[f]+r
 function render(){
   labels(); gridEl.innerHTML='';
   const board=game.board();
-  // In human-vs-human (2p / online) the opponent sits across: rotate their (top) pieces 180deg
-  const topColor=(mode==='2p'||mode==='online') ? (flipped?'w':'b') : null;
+  // Only rotate the opponent's (top) pieces 180deg in face-to-face 2P, where both players share
+  // ONE physical screen sitting across from each other. Online players each have their OWN
+  // screen (opponent is remote, not physically across the table) — rotating there was a bug
+  // (JFC 2026-06-20: "recuerda que solo EN PERSONA necesitan estar viradas las piezas"). Do not
+  // re-add 'online' to this condition.
+  const topColor=(mode==='2p') ? (flipped?'w':'b') : null;
   for(let r=0;r<8;r++)for(let c=0;c<8;c++){
     const sq=sqAt(r,c); const cell=document.createElement('div'); cell.className='cell'; cell.dataset.sq=sq;
     const f=FILES.indexOf(sq[0]), rk=parseInt(sq[1]); const p=board[8-rk][f];
@@ -3928,11 +3935,13 @@ function setTavernMute(muted){
     if(sparks.length||flash>0||rings.length) requestAnimationFrame(stepFx); else { running=false; fxc.clearRect(0,0,innerWidth,innerHeight); }
   }
   function boardCenter(){ var b=document.getElementById('board'); if(b){ var r=b.getBoundingClientRect(); if(r.width) return {x:r.left+r.width/2,y:r.top+r.height/2,r:r.width/2}; } return {x:innerWidth/2,y:innerHeight/2,r:120}; }
-  // x,y (optional): screen position of the actual captured square, passed from doMove(). Falls
-  // back to board-center if unavailable (e.g. board not yet measured). Half the old particle
-  // count (4->2) plus one tight impact ring, anchored to where the capture actually happened.
-  window.fxCapture=function(x,y){ if(reduce||!fx) return; var c=(typeof x==='number')?{x:x,y:y}:boardCenter();
-    burst(c.x,c.y,'#f5c24a',2); ring(c.x,c.y,'#f5c24a'); };
+  // DEV NOTE (2026-06-20): capture used to spawn a particle burst/ring on the board — JFC killed
+  // it twice in one session ("super gheeey la explosioncita esa... haptics y choques varoniles o
+  // nada"). Landed on "nada": capture now gets ONLY the existing haptic vibrate(20) (see wrap()
+  // below) + its audio tones (SFX.capture, unchanged) — no visual canvas effect at all. Don't
+  // re-add a capture burst/ring/sparkle without explicit sign-off; this exact thing keeps getting
+  // rejected. fxCheck's red vignette flash on check is untouched — that one was never the complaint.
+  window.fxCapture=function(){};
   window.fxCheck=function(){ if(reduce||!fx) return; flashCol='rgba(255,80,70,'; flash=1; ensureRun(); };
 
   /* ---------- Dust canvas (golden ambient particles on start screen) ---------- */
