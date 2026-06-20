@@ -3422,14 +3422,23 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
       {text:'Arrastra una pieza hasta su destino. Las casillas legales se iluminan al levantarla.',
        status:{text:'Turno Azules (blancas)',cls:'azul'}, check:false, move:function(){ moveN(1,1); }},
       {text:'Cada pieza se mueve distinto. El caballo salta en L, ignora lo que esté en medio.',
-       status:{text:'Turno Rojas (negras)',cls:'rojo'}, check:false, move:function(){ moveN(-1,2); }},
+       status:{text:'Turno Rojas (negras)',cls:'rojo'}, check:false, move:function(){ moveN(1,-2); }},
       {text:'¡Jaque! Cuando tu rey está amenazado, el tablero se ilumina en rojo y el aviso aparece arriba — exactamente como en la partida real.',
        status:{text:'¡Jaque!',cls:'warn'}, check:true, move:function(){ flashKing(); }},
       {text:'Cada partida guarda un código NES de seis caracteres. Cualquiera, en cualquier dispositivo, puede continuarla. Eso es el Multiverse.',
        status:{text:'Turno Azules (blancas)',cls:'azul'}, check:false, move:function(){}}
     ];
     var idx=0, board, pieceN, pieceK, textEl, dotsEl, statusEl, nextEl, veil, built=false;
-    var SQ=50;
+    // Grid-cell coordinates (0-3), not raw pixels — the board's pixel size changes between the
+    // 200px desktop and 160px mobile breakpoint, so positions are computed from SQ at build time
+    // and every move stays clamped to the 4x4 grid (a prior pixel-based version let the knight's
+    // L-jump land off-board on step 2, clipped invisible by overflow:hidden).
+    var SQ=50, pieceSize=41, knC=0, knR=3, kgC=3, kgR=0;
+    function applyPos(el,c,r){
+      var pad=(SQ-pieceSize)/2;
+      el.style.left=(c*SQ+pad)+'px'; el.style.top=(r*SQ+pad)+'px';
+      el.style.width=pieceSize+'px'; el.style.height=pieceSize+'px';
+    }
     function buildBoard(){
       if(built) return; built=true;
       board=document.getElementById('tutBoard');
@@ -3437,15 +3446,17 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
         var sq=document.createElement('div'); sq.className='tut-sq '+(((r+c)%2===0)?'tut-sq-a':'tut-sq-b');
         board.appendChild(sq);
       }
+      SQ=board.clientWidth/4 || 50; pieceSize=Math.round(SQ*0.82);
+      knC=0; knR=3; kgC=3; kgR=0;
       pieceN=document.createElement('img'); pieceN.className='tut-piece'; pieceN.alt=''; pieceN.src='assets/pieces/wN.png';
-      pieceN.style.left='10px'; pieceN.style.top='110px';
+      applyPos(pieceN,knC,knR);
       pieceK=document.createElement('img'); pieceK.className='tut-piece'; pieceK.alt=''; pieceK.src='assets/pieces/bK.png';
-      pieceK.style.left='150px'; pieceK.style.top='10px';
+      applyPos(pieceK,kgC,kgR);
       board.appendChild(pieceN); board.appendChild(pieceK);
     }
     function moveN(dc,dr){
-      var left=parseInt(pieceN.style.left,10), top=parseInt(pieceN.style.top,10);
-      pieceN.style.left=(left+dc*SQ)+'px'; pieceN.style.top=(top+dr*SQ)+'px';
+      knC=Math.max(0,Math.min(3,knC+dc)); knR=Math.max(0,Math.min(3,knR+dr));
+      applyPos(pieceN,knC,knR);
     }
     function flashKing(){
       pieceK.style.filter='drop-shadow(0 0 10px #ff5050) drop-shadow(0 2px 4px rgba(0,0,0,.6))';
@@ -3471,8 +3482,10 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
       veil=document.getElementById('tutorialVeil'); textEl=document.getElementById('tutText'); dotsEl=document.getElementById('tutDots');
       statusEl=document.getElementById('tutStatus'); nextEl=document.getElementById('tutNext');
       if(!dotsEl.children.length){ steps.forEach(function(){ var d=document.createElement('span'); dotsEl.appendChild(d); }); }
-      buildBoard();
+      // veil must be visible (display:flex) BEFORE buildBoard() reads board.clientWidth, or the
+      // hidden ancestor reports 0 and the SQ math falls back to the wrong desktop scale.
       idx=0; veil.classList.add('show'); veil.setAttribute('aria-hidden','false');
+      buildBoard();
       renderStep();
     }
     function closeTutorial(){
