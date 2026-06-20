@@ -511,6 +511,12 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 .status .lvl{ font-size:13px; font-weight:700; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important; margin-left:6px }
 .status .lvl.tablero-tag{ display:block; margin-left:0; margin-top:2px; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:13px }
 .status .lvl.tablero-tag b{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; letter-spacing:1px }
+/* Micro-improvement 2026-06-21: small live cloud-sync dot in the status bar, not just inside the
+   Guardar panel — so a mid-game Firebase failure (dropped connection, ad-blocker) is visible
+   without opening a panel. Solid colors only (no opacity), matches existing status chip rules. */
+.cloud-dot{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-left:8px; vertical-align:middle }
+.cloud-dot.ok{ background:var(--emerald) }
+.cloud-dot.fail{ background:#E8A020 }
 /* Tablero themes - background applied to .app */
 /* One fixed background for the whole app — JFC was explicit (2026-06-19) that he never wanted a
    switchable color-palette system at all ("no quiero ningún sistema de paletas y nunca lo he
@@ -1366,6 +1372,11 @@ function indexList(){
   try{ var raw=localStorage.getItem(IDX_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; }
 }
 let matchLineage=[]; // [{at:moveCount, opp:'IA Casual' | 'DragonAzul' | '2P'}]
+// cloudOk: null = no save attempted yet this session (dot hidden), true = last fbSave succeeded,
+// false = Firebase is available but the last write failed (dropped connection mid-game, etc).
+// Drives the small .cloud-dot in the status bar (see status()) — a live, always-visible signal
+// instead of only surfacing cloud state inside the Guardar panel.
+let cloudOk=null;
 // Returns the Firebase-save promise (true/false/undefined-if-offline) so callers that care about
 // cloud-sync confirmation (the "Guardar" panel's ☁️ indicator) can await it. Nothing else in the
 // codebase awaits this return value — local save (localStorage+IDB) stays fully synchronous above,
@@ -1378,7 +1389,11 @@ function saveMatch(){
             moves:game.history(),lineage:matchLineage.slice(),over:game.game_over(),ts:Date.now(),v:1};
   try{ localStorage.setItem(MATCH_KEY+matchCode,JSON.stringify(data)); indexAdd(matchCode); }catch(e){}
   idbPut(matchCode,data);
-  return window.fbSave ? window.fbSave(matchCode,data) : null;
+  var fbPromise=window.fbSave ? window.fbSave(matchCode,data) : null;
+  if(fbPromise && typeof fbPromise.then==='function'){
+    fbPromise.then(function(ok){ cloudOk=ok; try{ status(); }catch(e){} });
+  }
+  return fbPromise;
 }
 function loadMatch(code){
   try{
@@ -2267,7 +2282,11 @@ function tryResumeCode(raw,msgEl,fromLobby){
       });
       return true;
     }
-    if(msgEl){ msgEl.textContent='Código no encontrado'; msgEl.classList.remove('ok'); }
+    // Micro-improvement 2026-06-21: window.fbLoad missing means Firebase never finished loading
+    // (CDN blocked, ad-blocker, genuinely offline) — we never actually checked the cloud, so
+    // saying "Código no encontrado" here was misleading; the code might be perfectly valid on
+    // another device. Distinguish "couldn't check" from "checked and it's not there".
+    if(msgEl){ msgEl.textContent='Sin conexión a la nube: revisa el código o intenta con internet'; msgEl.classList.remove('ok'); }
     return false;
   }
   var side=p.side||d.col; // 7-char code pins the bando; 6-char keeps the saved color
@@ -2538,6 +2557,15 @@ function openLibrary(){
         var badge=document.createElement('div'); badge.className='mtakeover';
         badge.textContent='🌀 Tomada por '+d.takenOverBy;
         left.appendChild(badge);
+      }
+      // Micro-improvement 2026-06-21: the genealogy (matchLineage) was only ever shown inside the
+      // Guardar panel of the CURRENT match, never when browsing past saves here — so returning days
+      // later, there was no hint a given save was part of a longer Multiverse chain. Compact label
+      // only (not the full chapter chain — that stays in Guardar once you actually resume it).
+      if(d.lineage && d.lineage.length>1){
+        var lbadge=document.createElement('div'); lbadge.className='lineage-label';
+        lbadge.textContent='🌀 '+d.lineage.length+' capítulos del Multiverso';
+        left.appendChild(lbadge);
       }
       // Only AI-mode games can be handed off to a rival (online matches already have a live opponent).
       // Tag them as Multiverse-ready and, while connected to the Taberna, offer a one-tap publish.
@@ -3094,6 +3122,7 @@ function status(){
     else{ var eng=fallback?'IA local':'Stockfish'; var ln=level.name+' &middot; powered by '+eng;
       s=(game.turn()===playerColor?'<span class="chip '+(playerColor==='w'?'azul':'rojo')+'">Tu turno</span> <span class="lvl">vs. '+ln+'</span>':'<span class="chip '+(playerColor==='w'?'rojo':'azul')+'">Piensa el rival…</span> <span class="lvl">'+ln+'</span>'); }
   }
+  if(matchCode && cloudOk!==null && s) s+='<span class="cloud-dot '+(cloudOk?'ok':'fail')+'" title="'+(cloudOk?'Sincronizado con la nube':'Solo local: sin conexión a la nube ahora mismo')+'"></span>';
   statusEl.innerHTML=s;
   var cb=$('codesBar');
   if(cb){
