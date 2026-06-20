@@ -1629,7 +1629,7 @@ function wireConn(c){
       resigned=true; statusEl.innerHTML='<span class="warn">Tablas por acuerdo mutuo.</span>'; showEndButtons();
     }
     else if(d.t==='draw-decline'){
-      statusEl.innerHTML+=' <span class="warn">(rechazadas)</span>';
+      statusEl.innerHTML='<span class="warn">Tablas rechazadas.</span>';
     }
   });
   c.on('close',()=>{ if(net.active){ statusEl.innerHTML='<span class="warn">'+creditName(net.rivalName,net.rivalTag)+' se desconectó.</span>'; net.active=false; if(typeof showEndButtons==='function') showEndButtons(); } });
@@ -2111,8 +2111,10 @@ function goOnline(){
         if(net.peer.id<c.peer){
           // We're the lexicographically lower id: by convention we stay host on OUR OWN outgoing
           // attempt (already net.conn) and shed this duplicate incoming one.
-          c.on('open',function(){ try{ c.send({t:'full'}); }catch(e){} });
-          try{ c.close(); }catch(e){}
+          // Wait for the channel to open before sending the rejection, then close.
+          // Closing c immediately after registering the send can race and cancel the send
+          // before the data channel is ready, leaving the other side waiting for a timeout.
+          c.on('open',function(){ try{ c.send({t:'full'}); }catch(e){} setTimeout(function(){ try{ c.close(); }catch(e){} },300); });
         } else {
           // We're the higher id: defer to the other side's outgoing attempt — drop ours and
           // adopt their incoming connection as host instead (mirrors the normal receiver role).
@@ -2631,14 +2633,22 @@ $('matchesImportFile').addEventListener('change',function(e){
       var okId=await showConfirm('El archivo pertenece a "'+(dump.identity.pseudo||'otro jugador')+'". ¿Restaurar también esa identidad en este dispositivo? Tu nombre, iniciales y Mi Tablero pasarán a ser los de esa copia (recomendado al migrar de dispositivo).','Sí, restaurar identidad','No, solo partidas y logros');
       if(okId){
         myPid=dump.identity.pid; myPseudo=dump.identity.pseudo||myPseudo; myTag=dump.identity.tag||'';
-        saveIdentity(); loadMyBoard(); // re-derive Mi Tablero under the restored pid before merging history into it
+        saveIdentity();
+        // Preserve the original boardCode from the backup: loadMyBoard() would generate a fresh one
+        // because the new pid has no entry in localStorage yet on this device. Temporarily seed the
+        // key so loadMyBoard() finds it and keeps it instead of minting a new one.
+        if(dump.board && dump.board.boardCode){
+          try{ localStorage.setItem('board_'+myPid,JSON.stringify(dump.board)); }catch(e){}
+        }
+        loadMyBoard(); // re-derive Mi Tablero under the restored pid (boardCode now preserved)
         $('myName').value=myPseudo; $('myTagInput').value=myTag||'';
       }
     }
     if(dump.board) importBoardHistory(dump.board);
     openLibrary();
     if($('helpStats')) $('helpStats').textContent=getStatsText();
-    flash('✓ Importado ('+(res.added+res.updated)+')');
+    var total=res.added+res.updated;
+    flash(total>0?'✓ Importado ('+total+')':'✓ Ya al día (sin cambios)');
   };
   reader.readAsText(file);
 });
@@ -3228,17 +3238,28 @@ function backToLobby(){
 $('backLobbyBtn').onclick=backToLobby;
 
 let __confirmResolver=null;
+// Re-entrant confirm queue: if a second showConfirm() arrives while one is already open,
+// it waits until the first is resolved instead of silently stealing __confirmResolver.
+var __confirmQueue=[];
 function showConfirm(msg,yesLabel,noLabel){
-  $('confirmMsg').textContent=msg;
-  $('confirmYes').textContent=yesLabel||'Sí';
-  $('confirmNo').textContent=noLabel||'Cancelar';
+  return new Promise(function(res){
+    __confirmQueue.push({msg:msg,yes:yesLabel||'Sí',no:noLabel||'Cancelar',res:res});
+    if(__confirmQueue.length===1) __openNextConfirm();
+  });
+}
+function __openNextConfirm(){
+  if(!__confirmQueue.length) return;
+  var q=__confirmQueue[0];
+  $('confirmMsg').textContent=q.msg;
+  $('confirmYes').textContent=q.yes;
+  $('confirmNo').textContent=q.no;
   $('confirmModal').classList.add('show');
-  return new Promise(function(res){ __confirmResolver=res; });
 }
 function __closeConfirm(v){
   $('confirmModal').classList.remove('show');
-  var r=__confirmResolver; __confirmResolver=null;
-  if(r) r(v);
+  var q=__confirmQueue.shift();
+  if(q) q.res(v);
+  if(__confirmQueue.length) setTimeout(__openNextConfirm,80); // brief gap so the modal isn't jarring
 }
 $('confirmYes').onclick=function(){ __closeConfirm(true); };
 $('confirmNo').onclick=function(){ __closeConfirm(false); };
