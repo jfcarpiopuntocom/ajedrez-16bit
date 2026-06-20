@@ -2,3 +2,6 @@
 *.tmp
 Thumbs.db
 .DS_Store
+
+# Firebase credentials — never commit, live config only on this machine.
+firebase-config.js
