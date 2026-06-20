@@ -377,18 +377,9 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
    every animation frame regardless of compositor-layer promotion. Splitting them onto parent
    (animates) vs child (masked/filtered, static) means the filter+mask pass runs once, gets
    cached as a layer, and the wrapper just repositions that cached layer — zero flicker. */
-.title-wrap{ display:block; width:fit-content; margin:0 auto; animation:titleFloat 5s ease-in-out infinite }
-@keyframes titleFloat{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-3px) } }
+.title-wrap{ display:block; width:fit-content; margin:0 auto; border:2px solid var(--gold); border-radius:10px; padding:4px 12px; background:rgba(10,6,4,.6) }
 .banner, .title-img{
-  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
-          mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
-  /* Tight gold outline traces the title's alpha so it doesn't look pasted on black, plus the existing glow + shadow. */
-  filter:
-    drop-shadow(0 0 0.6px var(--gold))
-    drop-shadow(0 0 0.6px var(--gold))
-    drop-shadow(0 0 1px rgba(232,160,32,.85))
-    drop-shadow(0 6px 16px rgba(0,0,0,.55))
-    drop-shadow(0 0 22px rgba(232,160,32,.32)); }
+  filter:drop-shadow(0 6px 16px rgba(0,0,0,.55)); }
 /* Footer: fixed bottom bar, always visible over both screens */
 .site-credit{ position:fixed; left:0; right:0; bottom:0; z-index:200; height:28px;
   display:flex; align-items:center; justify-content:center;
@@ -526,14 +517,14 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.55)); pointer-events:none }
 /* SUBSYSTEM 3: Render Scale — per-type heights so pieces fill the cell.
    All bottom:0 (on the floor) except the wizard, which levitates. */
-.cell img[data-t="p"]{ height:84% }
-.cell img[data-t="r"]{ height:86%; bottom:-6% }
+.cell img[data-t="p"]{ height:81% }
+.cell img[data-t="r"]{ height:86%; bottom:-3% }
 .cell img[data-t="n"]{ height:92% }
 /* mago: limitado por ALTURA (max-width:100%) para que rojo y azul rindan la
    misma altura visible pese a sus distintos aspect ratios. Levita. */
 .cell img[data-t="b"]{ height:96%; max-width:109%; bottom:3% }
-.cell img[data-t="q"]{ height:96%; bottom:-9% }
-.cell img[data-t="k"]{ height:99%; bottom:-12% }
+.cell img[data-t="q"]{ height:96%; bottom:-4% }
+.cell img[data-t="k"]{ height:99%; bottom:-5% }
 .cell img.flip{ transform:translateX(-50%) scaleX(-1) }
 /* opponent pieces (top side) rotated 180 deg for face-to-face mobile/tablet play.
    Rotation flips the box's content but not its geometry, so a negative bottom
@@ -541,9 +532,9 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
    the floor for a rotated one — the fix below mirrors the offset (positive
    instead of negative) so rotated r/q/k sit flush for the opposite player too. */
 .cell img.rot{ transform:translateX(-50%) rotate(180deg) }
-.cell img.rot[data-t="r"]{ bottom:6% }
-.cell img.rot[data-t="q"]{ bottom:9% }
-.cell img.rot[data-t="k"]{ bottom:12% }
+.cell img.rot[data-t="r"]{ bottom:3% }
+.cell img.rot[data-t="q"]{ bottom:4% }
+.cell img.rot[data-t="k"]{ bottom:5% }
 .cell img.flip.rot{ transform:translateX(-50%) scaleX(-1) rotate(180deg) }
 .cell.last{ background:rgba(232,160,32,.20) }
 .cell.check::after{ content:""; position:absolute; inset:5%; border:3px solid #ff5252; border-radius:7px; box-shadow:0 0 12px #ff2020 }
@@ -3891,9 +3882,9 @@ function setTavernMute(muted){
     var name=winner==='w'?'Azul':'Rojo', cls=winner==='w'?'blue':'red';
     var img=document.getElementById('victoryKing'); img.src=kingSrc(winner); img.className='victory-king '+cls;
     var kick=document.getElementById('victoryKicker'), ttl=document.getElementById('victoryTitle'), sub=document.getElementById('victorySub');
-    if(mineKnown&&iWon){ kick.textContent='Victoria!'; ttl.innerHTML='El Reino <span class="'+cls+'">'+name+'</span> prevalece'; sub.textContent='Jaque mate. El tablero es tuyo.'; }
-    else if(mineKnown&&!iWon){ kick.textContent='Jaque Mate'; ttl.innerHTML='Vence el Reino <span class="'+cls+'">'+name+'</span>'; sub.textContent='Tu rey ha caido. La revancha aguarda.'; }
-    else { kick.textContent='Jaque Mate'; ttl.innerHTML='Vence el Reino <span class="'+cls+'">'+name+'</span>'; sub.textContent='La corona cambia de manos.'; }
+    if(mineKnown&&iWon){ kick.textContent='Victoria!'; ttl.innerHTML='El Rey <span class="'+cls+'">'+name+'</span> prevalece'; sub.textContent='Jaque mate. El tablero es tuyo.'; }
+    else if(mineKnown&&!iWon){ kick.textContent='Jaque Mate'; ttl.innerHTML='Vence el Rey <span class="'+cls+'">'+name+'</span>'; sub.textContent='Tu rey ha caido. La revancha aguarda.'; }
+    else { kick.textContent='Jaque Mate'; ttl.innerHTML='Vence el Rey <span class="'+cls+'">'+name+'</span>'; sub.textContent='La corona cambia de manos.'; }
     setCode(); rematchLabel(); openVeil(); vibe([0,55,45,55,45,150]);
   };
   window.showDraw=function(){
