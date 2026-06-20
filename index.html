@@ -4137,6 +4137,16 @@ function setTavernMute(muted){
   // genres (gregorian, medieval-tavern) have very few stations actually TAGGED that way, but
   // plenty whose station NAME says so. Verified manually before shipping (2026-06-21): every
   // genre below returns at least 2 real, recently-checked (lastcheckok) streams.
+  // PINNED: known-good, manually-verified dedicated stream URLs tried FIRST, before the tag/name
+  // search below. Added 2026-06-21 because the tag search alone picked, by clickcount, a station
+  // whose tag list includes "synthwave" among 30 other genres (effectively classic
+  // rock/alternative, not synthwave) — JFC: "la radio synthwave apunta a rock clasico". Nightride
+  // FM is THE dedicated 24/7 synthwave/outrun station (verified reachable, tags exactly
+  // "outrun,retrowave,synthwave", nothing else). The old tag-search result is NOT removed — it's
+  // still reachable as a fallback candidate via RADIO_TAGS below if the pinned URL ever goes down.
+  var RADIO_PINNED={
+    synthwave:['https://stream.nightride.fm/nightride.mp3']
+  };
   var RADIO_TAGS={
     synthwave:['synthwave','retrowave','outrun'],
     medieval:['medieval','celtic'],
@@ -4161,6 +4171,7 @@ function setTavernMute(muted){
 
   async function fetchCandidates(genre){
     var urls=[], seen={};
+    (RADIO_PINNED[genre]||[]).forEach(function(u){ if(!seen[u]){ seen[u]=1; urls.push(u); } });
     var tags=RADIO_TAGS[genre]||[], names=RADIO_NAMES[genre]||[];
     for(var i=0;i<tags.length && urls.length<4;i++){
       try{
