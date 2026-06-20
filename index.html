@@ -564,7 +564,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
 /* SUBSYSTEM 3: Render Scale — per-type heights so pieces fill the cell.
    All bottom:0 (on the floor) except the wizard, which levitates. */
 .cell img[data-t="p"]{ height:81% }
-.cell img[data-t="r"]{ height:86%; bottom:2% }
+.cell img[data-t="r"]{ height:86%; bottom:-3% }
 .cell img[data-t="n"]{ height:92% }
 /* mago: limitado por ALTURA (max-width:100%) para que rojo y azul rindan la
    misma altura visible pese a sus distintos aspect ratios. Levita. */
@@ -578,7 +578,7 @@ body.focusmode .app{ height:100vh !important; height:100svh !important }
    the floor for a rotated one — the fix below mirrors the offset (positive
    instead of negative) so rotated r/q/k sit flush for the opposite player too. */
 .cell img.rot{ transform:translateX(-50%) rotate(180deg) }
-.cell img.rot[data-t="r"]{ bottom:-2% }
+.cell img.rot[data-t="r"]{ bottom:3% }
 .cell img.rot[data-t="q"]{ bottom:4% }
 .cell img.rot[data-t="k"]{ bottom:5% }
 .cell img.flip.rot{ transform:translateX(-50%) scaleX(-1) rotate(180deg) }
