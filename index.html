@@ -1627,6 +1627,15 @@ async function __msvTest(verbose){
       add('Current match present in localStorage', !!ls, ls?'':'no localStorage entry for '+matchCode);
       add('Current match mirrored in IDB', !!idb, idb?'':'no IDB entry for '+matchCode+' (only matters after first saveMatch() this game)');
       if(ls) add('localStorage record matchCode-keyed FEN looks sane', typeof ls.fen==='string' && ls.fen.indexOf('/')>0);
+      // Regression guard for the "engMove() never called saveMatch()" bug fixed 2026-06-21: if some
+      // future move-application path (human move, AI move, remote move...) forgets to persist, this
+      // catches it live instead of only on the next reload.
+      if(ls && typeof game!=='undefined'){
+        var liveMoves=(game.history?game.history():[]).length;
+        var savedMoves=(ls.moves||[]).length;
+        add('Saved move count matches live board ('+savedMoves+'/'+liveMoves+')', savedMoves===liveMoves,
+          savedMoves===liveMoves?'':'a move was applied without saveMatch() running afterward — check whichever function just moved a piece');
+      }
     }catch(e){ add('Current match persistence check', false, String(e)); }
   } else {
     add('Current match persistence check', true, 'skipped — no active match (start/resume a game to exercise this)');
@@ -3405,6 +3414,12 @@ function engMove(uci){ const from=uci.slice(0,2), to=uci.slice(2,4), promo=uci.l
   }
   else SFX.move();
   render(); status(); renderHistory(); maybeShowRematch();
+  // BUGFIX 2026-06-21: this was the one move-application path that never persisted. doMove() (the
+  // human's move) always called saveMatch(); engMove() (the AI's reply, from both Stockfish and the
+  // fbMove fallback) never did. Closing the tab right after the AI moved meant the saved snapshot was
+  // permanently one ply stale — resuming replayed from BEFORE the AI's last move and let it pick a
+  // (possibly different) move on resume, silently rewriting what the player actually saw happen.
+  saveMatch();
 }
 function fbMove(){ const ms=game.moves({verbose:true}); if(!ms.length){ busy=false; return; }
   ms.sort((a,b)=>(b.captured?VAL[b.captured]:0)-(a.captured?VAL[a.captured]:0));
