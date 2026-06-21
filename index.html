@@ -1186,6 +1186,7 @@ const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
 const VAL={p:1,n:3,b:3,r:5,q:9,k:0};
 const LEVELS=[
+  {key:'distraido', name:'Distraído',        elo:null, skill:0,  mt:80,  tag:'~200 Elo', blunderChance:0.6},
   {key:'casual', name:'Casual',            elo:null, skill:0,  mt:150, tag:'~333 Elo'},
   {key:'novato', name:'Novato',            elo:null, skill:1,  mt:200, tag:'~600 Elo'},
   {key:'medio',  name:'Medio',             elo:1200, skill:3,  mt:400},
@@ -1194,6 +1195,10 @@ const LEVELS=[
   {key:'gm',     name:'Grandmaster',       elo:2600, skill:20, mt:1500},
   {key:'fischer',name:'Bobby Fischer Bot', elo:null, skill:20, mt:8000, tag:'inhumano'},
 ];
+// Looks a level up by key instead of trusting array position — LEVELS has grown/reordered before
+// (Distraído added 2026-06-21 as the new easiest slot) and every hardcoded LEVELS[n] default below
+// this point used to silently point at the wrong level whenever the array shape changed.
+function levelByKey(k){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].key===k) return LEVELS[i]; return LEVELS[0]; }
 const APHORISMS=[
   {t:'Cuando veas una buena jugada, busca una mejor.', a:'Emanuel Lasker'},
   {t:'El peón es el alma del ajedrez.', a:'A. Philidor'},
@@ -1680,7 +1685,7 @@ function rotateQuote(){ const el=document.getElementById('quote'); if(!el) retur
 function startQuotes(){ if(qTimer) clearInterval(qTimer); qi=-1; rotateQuote(); qTimer=setInterval(rotateQuote,10000); }
 const BOARD_W=472, BOARD_H=536, ASPECT=BOARD_W/BOARD_H, FILES='abcdefgh';
 
-let mode='2p', level=LEVELS[1];
+let mode='2p', level=levelByKey('novato');
 let started=false, flipped=false, lastMove=null, busy=false, healing=false, resigned=false, playerColor='w';
 let spectating=false, specFenTimer=null;
 const game=new Chess(); const capW=[], capB=[];
@@ -2068,7 +2073,7 @@ function forkMultiverse(mi){
     pendingResume={data:{fen:mi.fen,tab:mi.tab||'capablanca',m:'ai',col:forkColor,
       bk:mi.bk||'k_bkA',rk:mi.rk||'k_rkA',moves:(mi.moves||[]).slice(),
       lineage:(mi.lineage||[]).concat([{at:(mi.moves||[]).length,opp:'Fork Multiverse',mode:'ai'}])},code:newCode};
-    level=LEVELS[2]; // default to Medio for forked AI side
+    level=levelByKey('medio'); // default to Medio for forked AI side
     netReset(); currentRoom=newCode;
     setTimeout(function(){ startGame('ai'); },300);
   });
@@ -3396,6 +3401,10 @@ function configEngine(){ note.textContent=''; status();
   engine.postMessage('setoption name Skill Level value '+level.skill);
 }
 function aiMove(){ if(game.game_over()) return; busy=true; status();
+  // Distraído (and any future easy level tagged the same way) plays a genuinely random legal move
+  // most of the time — Stockfish at Skill Level 0 is still a real engine and quietly avoids hanging
+  // pieces, which doesn't give a brand-new visitor the easy, confidence-building win they need.
+  if(level && level.blunderChance && Math.random()<level.blunderChance){ setTimeout(randomMove,260); return; }
   if(fallback||!engine){ setTimeout(fbMove,260); return; }
   engine.postMessage('position fen '+game.fen()); engine.postMessage('go movetime '+level.mt);
 }
@@ -3425,6 +3434,8 @@ function fbMove(){ const ms=game.moves({verbose:true}); if(!ms.length){ busy=fal
   ms.sort((a,b)=>(b.captured?VAL[b.captured]:0)-(a.captured?VAL[a.captured]:0));
   const top=ms[0].captured?VAL[ms[0].captured]:0, pool=ms.filter(m=>(m.captured?VAL[m.captured]:0)===top);
   const m=pool[Math.floor(Math.random()*pool.length)]; engMove(m.from+m.to+(m.promotion||'')); }
+function randomMove(){ const ms=game.moves({verbose:true}); if(!ms.length){ busy=false; return; }
+  const m=ms[Math.floor(Math.random()*ms.length)]; engMove(m.from+m.to+(m.promotion||'')); }
 
 /* ===== Controls ===== */
 // DEV NOTE (2026-06-20): "Nueva Partida" used to call backToStart(), which manually resets ~15
