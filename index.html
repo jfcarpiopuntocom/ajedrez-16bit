@@ -1722,6 +1722,10 @@ function wireConn(c){
       // Mirror: swap colors locally so we stay opposite each other.
       net.myColor=(net.myColor==='w'?'b':'w'); flipped=(net.myColor==='b');
       game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0; resigned=false;
+      // Mirror the new matchCode/lineage the initiator just assigned (see $('rematch').onclick),
+      // so this side's saveMatch() doesn't clobber the finished match's saved record either.
+      matchCode=(mode==='online' && currentRoom)?currentRoom:genCode();
+      matchLineage=[{at:0,opp:creditName(net.rivalName||'rival',net.rivalTag),mode:'online'}];
       $('undo').style.display='none'; $('redo').style.display='none';
       $('resign').style.display=''; $('drawbtn').style.display='';
       $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
@@ -3299,7 +3303,11 @@ $('rematch').onclick=()=>{
     playerColor=(playerColor==='w'?'b':'w');
   }
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0; resigned=false;
-  // Restore the in-game HUD (Deshacer/Rehacer hidden again in online live).
+  // New game, new identity: a rematch must get its own matchCode so saveMatch() doesn't overwrite
+  // the just-finished match's record in localStorage/IDB (which still holds the result/moves).
+  matchCode=(mode==='online' && currentRoom)?currentRoom:genCode();
+  var rematchOpp=(mode==='online')?(net.rivalName||'rival'):(mode==='2p'?'2P en persona':('IA '+(level?level.name:'?')));
+  matchLineage=[{at:0,opp:rematchOpp,mode:mode}];
   var hideUR=(mode==='online'); $('undo').style.display=hideUR?'none':''; $('redo').style.display=hideUR?'none':'';
   var pc=$('peaceCard'); if(pc) pc.style.display='none';
   $('resign').style.display=''; $('drawbtn').style.display=(mode==='ai')?'none':'';
@@ -3461,6 +3469,10 @@ async function doResign(){
     :'<span class="win">Rojas se rindieron. Vencen las Azules (blancas). 🦁</span>';
   var winner=(loser==='w'?'b':'w');
   if(typeof showVictory==='function') setTimeout(function(){ showVictory(winner); },600);
+  var oppForResign=(mode==='online'?net.rivalName:(mode==='2p'?'2P':'IA'));
+  if(matchCode && myBoard) addGameToHistory(matchCode,oppForResign,'loss');
+  trackGame('losses',oppForResign,game.history().length);
+  saveMatch();
   SFX.mate(); showEndButtons();
 }
 async function offerDraw(){
@@ -3475,6 +3487,9 @@ async function offerDraw(){
   if(ok){
     resigned=true;
     statusEl.innerHTML='<span class="warn">Tablas por acuerdo mutuo.</span>';
+    if(matchCode && myBoard) addGameToHistory(matchCode,'2P','draw');
+    trackGame('draws','2P',game.history().length);
+    saveMatch();
     showEndButtons();
   }
 }
