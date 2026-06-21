@@ -1419,11 +1419,20 @@ let cloudOk=null;
 // codebase awaits this return value — local save (localStorage+IDB) stays fully synchronous above,
 // completely unaffected by whether the cloud write succeeds, fails, or never starts.
 function saveMatch(){
-  if(!matchCode||!started||resigned) return;
-  var data={fen:game.fen(),tab:currentTablero.key,m:mode,col:playerColor,bk:blueKing,rk:redKing,
+  if(!matchCode||!started) return;
+  // JFC 2026-06-21: two fixes bundled here, both needed for online-match resume to work correctly.
+  // (1) col used to always read `playerColor`, which is never kept in sync with net.myColor during
+  //     online play — it's left over from whatever AI-mode game was played last, or its 'w' default.
+  //     Online saves now correctly record net.myColor, so a resumed match restores the right side.
+  // (2) the old `||resigned` early-return meant a resignation/tablas-agreement was NEVER persisted
+  //     (resigned flips true, then nothing calls saveMatch again) — the local snapshot stayed frozen
+  //     at "over:false", which would make an already-finished match look auto-resumable. `over` now
+  //     also considers `resigned`, and callers that end a match this way explicitly call saveMatch()
+  //     once right after (see doResign / the resign,draw-offer,draw-accept handlers below).
+  var data={fen:game.fen(),tab:currentTablero.key,m:mode,col:(mode==='online'?net.myColor:playerColor),bk:blueKing,rk:redKing,
             lvl:level?level.key:null,creator:myPseudo,creatorTag:myTag||'',creatorPid:myPid,
             caps:{w:capW.slice(),b:capB.slice()},
-            moves:game.history(),lineage:matchLineage.slice(),over:game.game_over(),ts:Date.now(),v:1};
+            moves:game.history(),lineage:matchLineage.slice(),over:(game.game_over()||resigned),ts:Date.now(),v:1};
   try{ localStorage.setItem(MATCH_KEY+matchCode,JSON.stringify(data)); indexAdd(matchCode); }catch(e){}
   idbPut(matchCode,data);
   var fbPromise=window.fbSave ? window.fbSave(matchCode,data) : null;
@@ -1674,6 +1683,37 @@ function netReset(){
 }
 function netSend(o){ if(net.conn && net.conn.open){ try{ net.conn.send(o); }catch(e){} } }
 function wireConn(c){
+// JFC 2026-06-21: "retomar partida online" — a saved match for this exact private room, still
+// in progress (mode 'online', not flagged over). Never matches the shared Plaza Pública, because
+// PUBLIC_PLAZA isn't a unique match id — many different strangers' games share that room code, so
+// "resuming" by room code there would silently hand someone a stranger's board.
+function liveOnlineSnap(code){
+  if(!code||code===PUBLIC_PLAZA) return null;
+  var d=loadMatch(code);
+  return (d && d.m==='online' && !d.over) ? d : null;
+}
+// Host-side half of resuming an interrupted online match. The guest offers its own saved snapshot
+// for this room in {t:'hello',resume:...} (see lobbyConnect); compared against the host's own
+// loadMatch(currentRoom), whichever has more moves recorded wins — handles the common case where
+// only one side's last autosave landed before the connection dropped. Returns true (and has already
+// sent {t:'start',resume:...} plus set pendingResume/net.myColor) if a resume happened; false means
+// there's nothing to resume here — caller falls back to the normal fresh start.
+function tryResumeOnlineMatch(c,d){
+  var hostSnap=liveOnlineSnap(currentRoom);
+  var guestSnap=(d.resume && d.resume.m==='online' && !d.resume.over && currentRoom!==PUBLIC_PLAZA) ? d.resume : null;
+  var hMoves=hostSnap?(hostSnap.moves||[]).length:-1, gMoves=guestSnap?(guestSnap.moves||[]).length:-1;
+  var winner=null, winnerIsHost=false;
+  if(hostSnap && hMoves>=gMoves){ winner=hostSnap; winnerIsHost=true; }
+  else if(guestSnap){ winner=guestSnap; winnerIsHost=false; }
+  if(!winner) return false;
+  net.myColor=winnerIsHost?(winner.col||'w'):((winner.col==='w')?'b':'w');
+  var guestColor=(net.myColor==='w')?'b':'w';
+  pendingResume={data:{fen:winner.fen,tab:winner.tab,m:'online',col:net.myColor,bk:winner.bk,rk:winner.rk,
+    caps:winner.caps,moves:winner.moves||[],lineage:winner.lineage||[]},code:currentRoom};
+  c.send({t:'start',name:myPseudo,tag:myTag||'',resume:{fen:winner.fen,tab:winner.tab,bk:winner.bk,rk:winner.rk,
+    guestColor:guestColor,moves:winner.moves||[],lineage:winner.lineage||[],code:currentRoom}});
+  return true;
+}
   c.on('data',d=>{ if(!d||!d.t) return;
     if(d.t==='hello'){
       net.rivalName=d.name||'???'; net.rivalTag=d.tag||''; net.connectingTo=null;
@@ -1701,6 +1741,8 @@ function wireConn(c){
               localStorage.setItem(MATCH_KEY+currentRoom,JSON.stringify(orig)); idbPut(currentRoom,orig); }
           }catch(e){}
           startGame('online');
+        } else if(tryResumeOnlineMatch(c,d)){
+          startGame('online');
         } else {
           c.send({t:'start',name:myPseudo,tag:myTag||''});
           startGame('online');
@@ -1720,6 +1762,11 @@ function wireConn(c){
         net.myColor=t.guestColor||'b';
         pendingResume={data:{fen:t.fen,tab:t.tab,m:'online',col:net.myColor,bk:t.bk,rk:t.rk,moves:t.moves||[],lineage:t.lineage||[]},code:t.newCode||genCode()};
         statusEl && (statusEl.innerHTML='<span class="warn">Multiverse abierto desde '+(t.creator||'tu amigo')+'</span>');
+      } else if(d.resume){
+        var r=d.resume;
+        net.myColor=r.guestColor||'b';
+        pendingResume={data:{fen:r.fen,tab:r.tab,m:'online',col:net.myColor,bk:r.bk,rk:r.rk,moves:r.moves||[],lineage:r.lineage||[]},code:r.code||currentRoom};
+        statusEl && (statusEl.innerHTML='<span class="warn">Retomando la partida donde quedó…</span>');
       }
       startGame('online');
     }
@@ -1740,7 +1787,7 @@ function wireConn(c){
     else if(d.t==='chat'){ showChat(net.rivalName||'rival',d.i,false); }
     else if(d.t==='full'){ $('lobbyStatus').textContent='Ese jugador ya tiene rival.'; }
     else if(d.t==='resign'){
-      resigned=true;
+      resigned=true; saveMatch();
       const w=net.myColor==='w'?'Azul':'Rojo';
       statusEl.innerHTML='<span class="win">'+creditName(net.rivalName,net.rivalTag)+' se rindió. Vence el '+w+'. '+(net.myColor==='w'?'🦁':'🐉')+'</span>';
       SFX.mate(); showEndButtons();
@@ -1748,13 +1795,13 @@ function wireConn(c){
     else if(d.t==='draw-offer'){
       showConfirm(creditName(net.rivalName,net.rivalTag)+' ofrece tablas. ¿Aceptar?','Aceptar tablas','Rechazar').then(function(ok){
         if(ok){
-          netSend({t:'draw-accept'}); resigned=true;
+          netSend({t:'draw-accept'}); resigned=true; saveMatch();
           statusEl.innerHTML='<span class="warn">Tablas por acuerdo mutuo.</span>'; showEndButtons();
         } else { netSend({t:'draw-decline'}); }
       });
     }
     else if(d.t==='draw-accept'){
-      resigned=true; statusEl.innerHTML='<span class="warn">Tablas por acuerdo mutuo.</span>'; showEndButtons();
+      resigned=true; saveMatch(); statusEl.innerHTML='<span class="warn">Tablas por acuerdo mutuo.</span>'; showEndButtons();
     }
     else if(d.t==='draw-decline'){
       statusEl.innerHTML='<span class="warn">Tablas rechazadas.</span>';
@@ -2320,7 +2367,7 @@ function lobbyConnect(targetId,name,tag){
     return;
   }
   net.conn=c; wireConn(c);
-  c.on('open',function(){ try{ c.send({t:'hello',name:myPseudo,tag:myTag||''}); }catch(e){} });
+  c.on('open',function(){ try{ c.send({t:'hello',name:myPseudo,tag:myTag||'',resume:liveOnlineSnap(currentRoom)}); }catch(e){} });
   // Clear connectingTo once this attempt is no longer "in flight" either way, so a stale value
   // never causes a future, unrelated incoming connection to be mistaken for glare.
   c.on('close',function(){ if(net.connectingTo===targetId) net.connectingTo=null; });
@@ -2344,7 +2391,7 @@ $('resumeCode').addEventListener('input',function(){
   $('resumeMsg').textContent=''; $('resumeMsg').classList.remove('ok');
 });
 $('resumeCode').addEventListener('keydown',function(e){ if(e.key==='Enter' && !$('resumeBtn').disabled) $('resumeBtn').click(); });
-function tryResumeCode(raw,msgEl,fromLobby){
+function tryResumeCode(raw,msgEl,fromLobby,forceAI){
   var p=parseResumeInput(raw);
   if(p.code.length!==6) return false;
   var d=loadMatch(p.code);
@@ -2363,6 +2410,15 @@ function tryResumeCode(raw,msgEl,fromLobby){
     if(msgEl){ msgEl.textContent='Sin conexión a la nube: revisa el código o intenta con internet'; msgEl.classList.remove('ok'); }
     return false;
   }
+  // JFC 2026-06-21: an online-mode save has no "just resume" — it needs a live rival to reconnect,
+  // same mechanics as a Multiverse hand-off. Route there instead of starting a disconnected 'online'
+  // board that can never actually move. The one exception is the explicit "Con la IA" choice from
+  // the lobby (forceAI=true), which deliberately wants to keep playing this position solo.
+  if(d.m==='online' && !forceAI){
+    if(msgEl){ msgEl.textContent='🔌 Partida en línea: abriendo la sala '+p.code+' para reconectar…'; msgEl.classList.add('ok'); }
+    setTimeout(function(){ hostGamestateForRival(p.code); },350);
+    return true;
+  }
   var side=p.side||d.col; // 7-char code pins the bando; 6-char keeps the saved color
   d=Object.assign({},d,{col:side});
   var sideName=side==='w'?'Azul':'Rojo';
@@ -2378,7 +2434,7 @@ function tryResumeCode(raw,msgEl,fromLobby){
   if(fromLobby){ stopTavernMusic(); netReset(); }
   pendingResume={data:d,code:p.code};
   if(d.lvl){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].key===d.lvl){ level=LEVELS[i]; break; } }
-  setTimeout(function(){ startGame(d.m||'ai'); },350);
+  setTimeout(function(){ startGame(forceAI?'ai':(d.m||'ai')); },350);
   return true;
 }
 $('resumeBtn').onclick=function(){
@@ -2400,7 +2456,7 @@ $('lobbyResumeBtn').onclick=function(){
     // You have this gamestate on this device. The Multiverse choice: finish it solo vs the AI,
     // or open it in the Taberna so a real rival takes the other side from the exact position.
     showConfirm('Partida '+p.code+' encontrada. ¿Cómo la sigues?','Con la IA','Con un rival').then(function(withAI){
-      if(withAI){ tryResumeCode($('lobbyResumeCode').value,$('lobbyResumeMsg'),true); }
+      if(withAI){ tryResumeCode($('lobbyResumeCode').value,$('lobbyResumeMsg'),true,true); }
       else { hostGamestateForRival(p.code); }
     });
   } else {
@@ -2654,6 +2710,9 @@ function openLibrary(){
       }
       li.onclick=function(){
         $('matchesVeil').classList.remove('show');
+        // JFC 2026-06-21: an 'online' save needs a live rival reconnecting, same as elsewhere in this
+        // file — startGame('online') here used to drop the player into a board with no connection.
+        if(d.m==='online'){ setTimeout(function(){ hostGamestateForRival(code); },200); return; }
         pendingResume={data:d,code:code};
         if(d.lvl){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].key===d.lvl){ level=LEVELS[i]; break; } }
         setTimeout(function(){ startGame(d.m||'ai'); },200);
@@ -3484,7 +3543,7 @@ async function doResign(){
   var ok=await showConfirm('¿Rendirse?','Sí, rendirme','Seguir jugando');
   if(!ok) return;
   resigned=true;
-  if(mode==='online'){ net.iResigned=true; netSend({t:'resign'}); }
+  if(mode==='online'){ net.iResigned=true; netSend({t:'resign'}); saveMatch(); }
   var loser=mode==='online'?net.myColor:game.turn();
   statusEl.innerHTML=loser==='w'
     ?'<span class="warn">Azules se rindieron. Vencen las Rojas (negras). 🐉</span>'
