@@ -1666,7 +1666,7 @@ const ICE_CONFIG={iceServers:[
 ]};
 const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'', rivalTag:'',
             hubPeer:null, hubConn:null, isHub:false, roster:[], connectingTo:null,
-            matchInfo:{live:false}, queue:[], openMulti:{} };
+            matchInfo:{live:false}, queue:[], openMulti:{}, resumeBanner:null };
 const MULTI_CAP=12; // soft cap on how many published Multiverse gamestates a room keeps at once
 function netReset(){
   try{ if(net.conn) net.conn.close(); }catch(e){}
@@ -1675,7 +1675,7 @@ function netReset(){
   try{ if(net.peer) net.peer.destroy(); }catch(e){}
   net.active=false; net.peer=null; net.conn=null; net.isHost=false; net.myColor='w'; net.rivalName=''; net.rivalTag='';
   net.hubPeer=null; net.hubConn=null; net.isHub=false; net.roster=[]; net.connectingTo=null;
-  net.matchInfo={live:false}; net.queue=[]; net.iResigned=false; net.endReported=false; net.openMulti={};
+  net.matchInfo={live:false}; net.queue=[]; net.iResigned=false; net.endReported=false; net.openMulti={}; net.resumeBanner=null;
   if(lobbyTimer){ clearInterval(lobbyTimer); lobbyTimer=null; }
   if(hubHeartbeat){ clearInterval(hubHeartbeat); hubHeartbeat=null; }
   if(fenStreamTimer){ clearInterval(fenStreamTimer); fenStreamTimer=null; }
@@ -1761,12 +1761,16 @@ function tryResumeOnlineMatch(c,d){
         var t=d.takeover;
         net.myColor=t.guestColor||'b';
         pendingResume={data:{fen:t.fen,tab:t.tab,m:'online',col:net.myColor,bk:t.bk,rk:t.rk,moves:t.moves||[],lineage:t.lineage||[]},code:t.newCode||genCode()};
-        statusEl && (statusEl.innerHTML='<span class="warn">Multiverse abierto desde '+(t.creator||'tu amigo')+'</span>');
+        // JFC 2026-06-21: this used to write straight to statusEl, but startGame() right below
+        // calls status() synchronously, which unconditionally overwrites statusEl.innerHTML — the
+        // message never actually rendered. Route it through net.resumeBanner instead, which status()
+        // now prepends exactly once on its first call after a resume/takeover (see status()).
+        net.resumeBanner='<span class="warn">Multiverse abierto desde '+(t.creator||'tu amigo')+'</span>';
       } else if(d.resume){
         var r=d.resume;
         net.myColor=r.guestColor||'b';
         pendingResume={data:{fen:r.fen,tab:r.tab,m:'online',col:net.myColor,bk:r.bk,rk:r.rk,moves:r.moves||[],lineage:r.lineage||[]},code:r.code||currentRoom};
-        statusEl && (statusEl.innerHTML='<span class="warn">Retomando la partida donde quedó…</span>');
+        net.resumeBanner='<span class="warn">Retomando la partida donde quedó…</span>';
       }
       startGame('online');
     }
@@ -3256,6 +3260,7 @@ function status(){
       s=(game.turn()===playerColor?'<span class="chip '+(playerColor==='w'?'azul':'rojo')+'">Tu turno</span> <span class="lvl">vs. '+ln+'</span>':'<span class="chip '+(playerColor==='w'?'rojo':'azul')+'">Piensa el rival…</span> <span class="lvl">'+ln+'</span>'); }
   }
   if(matchCode && cloudOk!==null && s) s+='<span class="cloud-dot '+(cloudOk?'ok':'fail')+'" title="'+(cloudOk?'Sincronizado con la nube':'Solo local: sin conexión a la nube ahora mismo')+'"></span>';
+  if(net.resumeBanner){ s=net.resumeBanner+(s?' '+s:''); net.resumeBanner=null; }
   statusEl.innerHTML=s;
   var cb=$('codesBar');
   if(cb){
