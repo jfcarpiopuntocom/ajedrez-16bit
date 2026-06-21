@@ -1641,6 +1641,20 @@ function hubIdFor(code){ return HUB_ID_BASE+'-'+code.toLowerCase(); }
 // self-correcting if the domain ever moves again.
 function roomLink(code){ return location.origin+'/#multiverso='+code; }
 const PRESENCE_TTL=20000; // 20s (4x guest ping)
+// JFC 2026-06-20: PeerJS had ZERO ice server config until now — meaning every connection relied
+// purely on the browser's own default STUN, with no TURN relay fallback. That works fine when both
+// players are on open networks, but fails silently (the data channel just never opens) whenever
+// either side is behind a symmetric/carrier-grade NAT — extremely common on mobile data in LatAm.
+// From the player's seat this looks exactly like "se cuelga": the connect attempt just sits there
+// until the 10s timeout, every time, with every rival. Adding a TURN relay (free Open Relay Project
+// tier, fine for this traffic volume) gives WebRTC a path through those NATs instead of dead-ending.
+const ICE_CONFIG={iceServers:[
+  {urls:'stun:stun.l.google.com:19302'},
+  {urls:'stun:stun1.l.google.com:19302'},
+  {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
+  {urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
+  {urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}
+]};
 const net={ active:false, peer:null, conn:null, myColor:'w', isHost:false, rivalName:'', rivalTag:'',
             hubPeer:null, hubConn:null, isHub:false, roster:[], connectingTo:null,
             matchInfo:{live:false}, queue:[], openMulti:{} };
@@ -1748,6 +1762,22 @@ function wireConn(c){
   });
   c.on('close',()=>{ if(net.active){ statusEl.innerHTML='<span class="warn">'+creditName(net.rivalName,net.rivalTag)+' se desconectó.</span>'; net.active=false; if(typeof showEndButtons==='function') showEndButtons(); } });
   c.on('error',()=>{});
+}
+// JFC 2026-06-20: accept an incoming challenge and become host on it. Mirrors the 10s
+// "no respondió" safety net the GUEST side already has in lobbyConnect(). Without this, a guest
+// whose {t:'hello'} send silently fails after the channel opens (seen on flaky mobile/iOS WebRTC)
+// leaves the host stuck forever: net.conn stays set but net.active never flips true, so every
+// future challenger who tries this host just gets bounced with {t:'full'} — looking like the host
+// always "already has a rival" even though no real match is happening. Auto-heal after 10s.
+function acceptAsHost(c){
+  net.conn=c; net.isHost=true; net.myColor='w'; wireConn(c);
+  setTimeout(function(){
+    if(!net.active && net.conn===c){
+      try{ c.close(); }catch(e){}
+      net.conn=null; net.isHost=false; net.myColor='w';
+      renderLobby();
+    }
+  },10000);
 }
 let lobbyTimer=null, hubHeartbeat=null, fenStreamTimer=null;
 const trysteroPeers={}; // trysteroId -> {name, peerJsId}
@@ -2087,7 +2117,7 @@ function startFenStream(){
 
 function tryClaimHub(){
   if(!net.peer||net.peer.destroyed||net.isHub||net.hubPeer||net.conn||!currentRoom) return;
-  var hp=new Peer(hubIdFor(currentRoom)); net.hubPeer=hp;
+  var hp=new Peer(hubIdFor(currentRoom),{config:ICE_CONFIG}); net.hubPeer=hp;
   hp.on('open',function(){
     net.isHub=true;
     net.roster=[{id:net.peer.id,name:myPseudo,tag:myTag||'',pid:myPid,last:Date.now(),conn:null}];
@@ -2191,6 +2221,13 @@ function tryConnectHub(){
 
 function goOnline(){
   if(typeof Peer==='undefined'){ $('startH2').textContent='No se pudo cargar el modo online.'; return; }
+  // JFC 2026-06-20: guard against double-init. The URL auto-entry (setTimeout 200ms below) and a
+  // manual tap on "Online" — or simply a double-tap on a slow connection — can both call goOnline()
+  // before either finishes. Re-running the body below would spin up a SECOND Peer with a salted id,
+  // orphaning the first: any rival who already saw/clicked the first id would then silently never
+  // reach anyone (the live, UI-bound peer is the second one). Callers that genuinely want a fresh
+  // peer always call netReset() first (which nulls/destroys net.peer), so this never blocks them.
+  if(net.peer && !net.peer.destroyed) return;
   $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none';
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
   $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
@@ -2209,7 +2246,7 @@ function goOnline(){
   // slot instead of spawning a ghost twin. net.idSalt only bumps if the id is momentarily taken.
   var pidPart=myPid.replace(/[^a-z0-9]/gi,'').toLowerCase().slice(0,12);
   var peerId='jfreino-'+pidPart+'-'+currentRoom.toLowerCase().slice(0,4)+(net.idSalt?('x'+net.idSalt):'');
-  net.peer=new Peer(peerId);
+  net.peer=new Peer(peerId,{config:ICE_CONFIG});
   net.peer.on('open',function(){
     $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
     net.peer.on('connection',function(c){
@@ -2234,12 +2271,12 @@ function goOnline(){
           // adopt their incoming connection as host instead (mirrors the normal receiver role).
           try{ if(net.conn) net.conn.close(); }catch(e){}
           net.connectingTo=null;
-          net.conn=c; net.isHost=true; net.myColor='w'; wireConn(c);
+          acceptAsHost(c);
         }
         return;
       }
       if(net.conn){ c.on('open',function(){ try{ c.send({t:'full'}); }catch(e){} }); return; }
-      net.conn=c; net.isHost=true; net.myColor='w'; wireConn(c);
+      acceptAsHost(c);
     });
     renderLobby(); // shows self immediately
     tryConnectHub();
