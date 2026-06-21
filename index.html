@@ -1726,6 +1726,11 @@ function wireConn(c){
       // so this side's saveMatch() doesn't clobber the finished match's saved record either.
       matchCode=(mode==='online' && currentRoom)?currentRoom:genCode();
       matchLineage=[{at:0,opp:creditName(net.rivalName||'rival',net.rivalTag),mode:'online'}];
+      // Both endReported and iResigned are per-match flags. Without resetting them here,
+      // reportMatchEnd() guards itself out forever after the FIRST online game ends (net.endReported
+      // stays true across every subsequent rematch on this connection), so the hub never learns game
+      // 2, 3... ended: the queue/"Rey de la Colina" promotion silently stops working after one rematch.
+      net.endReported=false; net.iResigned=false;
       $('undo').style.display='none'; $('redo').style.display='none';
       $('resign').style.display=''; $('drawbtn').style.display='';
       $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
@@ -3308,6 +3313,7 @@ $('rematch').onclick=()=>{
   matchCode=(mode==='online' && currentRoom)?currentRoom:genCode();
   var rematchOpp=(mode==='online')?(net.rivalName||'rival'):(mode==='2p'?'2P en persona':('IA '+(level?level.name:'?')));
   matchLineage=[{at:0,opp:rematchOpp,mode:mode}];
+  if(mode==='online'){ net.endReported=false; net.iResigned=false; }
   var hideUR=(mode==='online'); $('undo').style.display=hideUR?'none':''; $('redo').style.display=hideUR?'none':'';
   var pc=$('peaceCard'); if(pc) pc.style.display='none';
   $('resign').style.display=''; $('drawbtn').style.display=(mode==='ai')?'none':'';
