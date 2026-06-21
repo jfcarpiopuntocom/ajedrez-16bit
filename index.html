@@ -1387,6 +1387,14 @@ function idbPut(key,data){ return idbOpen().then(function(db){
       tx.oncomplete=res; tx.onerror=res; }catch(e){ res(); }
   });
 }).catch(function(){}); }
+function idbGet(key){ return idbOpen().then(function(db){
+  return new Promise(function(res){
+    try{ var tx=db.transaction('matches','readonly'); var rq=tx.objectStore('matches').get(key);
+      rq.onsuccess=function(){ res(rq.result===undefined?null:rq.result); };
+      rq.onerror=function(){ res(null); };
+    }catch(e){ res(null); }
+  });
+}).catch(function(){ return null; }); }
 function idbGetAll(){ return idbOpen().then(function(db){
   return new Promise(function(res){
     try{ var tx=db.transaction('matches','readonly'); var st=tx.objectStore('matches');
@@ -1424,8 +1432,24 @@ function saveMatch(){
             lvl:level?level.key:null,creator:myPseudo,creatorTag:myTag||'',creatorPid:myPid,
             caps:{w:capW.slice(),b:capB.slice()},
             moves:game.history(),lineage:matchLineage.slice(),over:(game.game_over()||resigned),ts:Date.now(),v:1};
+  // SAFEGUARD (regression guard for the resign/draw/rematch persistence bugs fixed 2026-06-21):
+  // if this matchCode already held a FINISHED game and we're about to silently replace it with an
+  // EMPTY/IN-PROGRESS one, that's exactly the "rematch reuses matchCode" / "resign never saves" bug
+  // class. It should be structurally impossible now (rematch mints a new code, resign/draw call
+  // saveMatch with over:true), so if this fires, something regressed — surface it loudly for whoever
+  // has devtools open (developer or Claude debugging a future session), don't fail silently.
+  try{
+    var prev=JSON.parse(localStorage.getItem(MATCH_KEY+matchCode)||'null');
+    if(prev && prev.over===true && data.over===false && data.moves.length<=1){
+      console.warn('[MULTIVERSO SAFEGUARD] saveMatch() is about to overwrite a FINISHED match ('+matchCode+
+        ') with what looks like a fresh/empty one. This is the exact shape of the rematch-matchCode-reuse '+
+        'bug fixed 2026-06-21. If you see this, check whatever just called saveMatch() — it likely needs a '+
+        'new matchCode (see $(\'rematch\').onclick and the d.t==="rematch" net handler for the pattern).',
+        {matchCode:matchCode, previousOver:prev.over, previousMoves:(prev.moves||[]).length});
+    }
+  }catch(e){}
   try{ localStorage.setItem(MATCH_KEY+matchCode,JSON.stringify(data)); indexAdd(matchCode); }catch(e){}
-  idbPut(matchCode,data);
+  idbPut(matchCode,data).then(function(r){ if(r===undefined) console.warn('[MULTIVERSO SAFEGUARD] idbPut('+matchCode+') backup may have failed silently (IndexedDB unavailable/blocked) — this match exists in localStorage only.'); });
   var fbPromise=window.fbSave ? window.fbSave(matchCode,data) : null;
   if(fbPromise && typeof fbPromise.then==='function'){
     fbPromise.then(function(ok){ cloudOk=ok; try{ status(); }catch(e){} });
@@ -1498,6 +1522,7 @@ function loadMyBoard(){
 }
 function saveMyBoard(){
   try{ localStorage.setItem('board_'+myPid,JSON.stringify(myBoard)); }catch(e){}
+  try{ idbPut('board_'+myPid,myBoard); }catch(e){}
 }
 function addGameToHistory(matchCode,opponent,result){
   try{
@@ -1508,6 +1533,133 @@ function addGameToHistory(matchCode,opponent,result){
   }catch(e){ console.error('addGameToHistory failed',e); }
 }
 loadMyBoard();
+
+/* ══════ IDB RECOVERY SWEEP (added 2026-06-21) ══════
+   Until now, idbPut() calls throughout this file (identity, myBoard, every saveMatch) wrote to
+   IndexedDB but NOTHING ever read it back — idbGetAll() existed but was never called, and identity/
+   board lookups only ever checked localStorage. The "triple redundancy / survives a cleared storage
+   layer" comment above ID_KEY was therefore aspirational, not real: a cleared localStorage (private
+   browsing exit, iOS Safari eviction, "Clear site data") lost the pseudonym, tag, Mi Tablero history,
+   and every match not also remembered by Firebase, even though IDB still had it sitting right there.
+   This sweep runs once at boot, asynchronously, and heals localStorage FROM IndexedDB wherever the
+   two disagree in IDB's favor (IDB has it, localStorage doesn't). It never overwrites a localStorage
+   value that's already present — IDB here is purely a safety net, never an authority over live state. */
+async function recoverFromIDBIfNeeded(){
+  var report={identityRestored:false,boardRestored:false,matchesRestored:0,idbReachable:true};
+  try{
+    // 1) Identity: only step in if THIS boot had to mint a fresh identity (no ID_KEY in localStorage),
+    // since that's the only case where the freshly-generated myPseudo/myPid could be wrong/throwaway.
+    var hadLocalIdentity=false;
+    try{ hadLocalIdentity=!!(JSON.parse(localStorage.getItem(ID_KEY)||'null')||{}).pseudo; }catch(e){}
+    if(!hadLocalIdentity){
+      var idRec=await idbGet('__identity');
+      if(idRec && idRec.pseudo){
+        myPseudo=idRec.pseudo; myPid=idRec.pid||myPid; myTag=idRec.tag||'';
+        saveIdentity(); // heals localStorage + cookie from the recovered IDB record
+        report.identityRestored=true;
+        // Identity-dependent UI fields may already be on screen by the time this resolves.
+        try{ if($('myName')) $('myName').value=myPseudo; if($('myTagInput')) $('myTagInput').value=myTag||''; }catch(e){}
+      }
+    }
+    // 2) Mi Tablero (game history/achievements board), same logic: only heal if THIS pid has nothing
+    // locally yet but IDB remembers a board for it.
+    var hadLocalBoard=false;
+    try{ hadLocalBoard=!!localStorage.getItem('board_'+myPid); }catch(e){}
+    if(!hadLocalBoard){
+      var boardRec=await idbGet('board_'+myPid);
+      if(boardRec && typeof boardRec==='object'){
+        myBoard=Object.assign(myBoard,boardRec); saveMyBoard();
+        report.boardRestored=true;
+      }
+    }
+    // 3) Individual matches ("Mis partidas"): restore any matchCode IDB has that localStorage's index
+    // doesn't, so a wiped localStorage doesn't silently drop games IDB was still holding.
+    var localCodes={}; indexList().forEach(function(c){ localCodes[c]=true; });
+    var idbEntries=await idbGetAll();
+    idbEntries.forEach(function(e){
+      if(!e || !e.code || e.code==='__identity' || String(e.code).indexOf('board_')===0) return;
+      if(!localCodes[e.code]){
+        try{ localStorage.setItem(MATCH_KEY+e.code,JSON.stringify(e.data)); indexAdd(e.code); report.matchesRestored++; }catch(err){}
+      }
+    });
+  }catch(e){ report.idbReachable=false; }
+  if(report.identityRestored||report.boardRestored||report.matchesRestored>0){
+    console.info('[MULTIVERSO RECOVERY] Restored from IndexedDB after an empty/partial localStorage:',report);
+  }
+  return report;
+}
+// Fire-and-forget at boot. Identity/board healing intentionally happens AFTER loadMyBoard()'s own
+// (possibly-wrong, freshly-generated) board is already saved, since recoverFromIDBIfNeeded only acts
+// when localStorage had nothing — i.e. it can only improve on a throwaway default, never race a real one.
+recoverFromIDBIfNeeded();
+
+/* ══════ LIVE SELF-TEST HARNESS (added 2026-06-21) ══════
+   Callable any time from devtools as window.__msvTest() — for the developer AND for Claude when asked
+   to debug a live session (paste the console output back into chat). Checks structural invariants of
+   the persistence + multiplayer-flag layers that have produced real bugs in this codebase before:
+   IDB read/write roundtrip, saveMatch()'s localStorage+IDB mirror, and that resign/draw/rematch leave
+   net.endReported/net.iResigned/matchCode in a sane state. Pure read-only checks where possible; the
+   IDB roundtrip uses a throwaway probe key it cleans up after itself. Never runs automatically beyond
+   one quiet summary line at boot — call it manually for the full table. */
+async function __msvTest(verbose){
+  var t0=performance.now(); var results=[];
+  function add(name,pass,detail){ results.push({check:name,pass:!!pass,detail:detail||''}); }
+
+  // IDB roundtrip
+  try{
+    var probe={ping:Date.now()};
+    await idbPut('__selftest_probe',probe);
+    var back=await idbGet('__selftest_probe');
+    add('IDB write+read roundtrip', back && back.ping===probe.ping, back?'':'idbGet returned '+JSON.stringify(back));
+  }catch(e){ add('IDB write+read roundtrip', false, String(e)); }
+
+  // localStorage availability
+  try{
+    localStorage.setItem('__msv_probe','1'); var ok=localStorage.getItem('__msv_probe')==='1'; localStorage.removeItem('__msv_probe');
+    add('localStorage available', ok);
+  }catch(e){ add('localStorage available', false, String(e)); }
+
+  // saveMatch mirrors to both localStorage and IDB for the CURRENT match (only meaningful mid-game)
+  if(typeof matchCode!=='undefined' && matchCode && typeof started!=='undefined' && started){
+    try{
+      var ls=null; try{ ls=JSON.parse(localStorage.getItem(MATCH_KEY+matchCode)||'null'); }catch(e){}
+      var idb=await idbGet(matchCode);
+      add('Current match present in localStorage', !!ls, ls?'':'no localStorage entry for '+matchCode);
+      add('Current match mirrored in IDB', !!idb, idb?'':'no IDB entry for '+matchCode+' (only matters after first saveMatch() this game)');
+      if(ls) add('localStorage record matchCode-keyed FEN looks sane', typeof ls.fen==='string' && ls.fen.indexOf('/')>0);
+    }catch(e){ add('Current match persistence check', false, String(e)); }
+  } else {
+    add('Current match persistence check', true, 'skipped — no active match (start/resume a game to exercise this)');
+  }
+
+  // Online net-flag hygiene: these caused the rematch/king-of-hill bug fixed 2026-06-21.
+  if(typeof net!=='undefined'){
+    var flagsLookSane=!(net.active && net.endReported && net.matchInfo && net.matchInfo.live);
+    add('net.endReported not stuck true on a live match', flagsLookSane,
+      flagsLookSane?'':'net.endReported=true while a match is reported live — reportMatchEnd() will no-op for this game; check rematch handlers reset it');
+  }
+
+  // matchLineage / matchCode coherence: every lineage chapter should have at most the running move count
+  if(typeof matchLineage!=='undefined' && Array.isArray(matchLineage) && typeof game!=='undefined'){
+    var hist=game.history?game.history():[];
+    var lineageSane=matchLineage.every(function(ch){ return typeof ch.at==='number' && ch.at<=hist.length; });
+    add('matchLineage chapter offsets within current move count', lineageSane);
+  }
+
+  var dt=Math.round(performance.now()-t0);
+  var passed=results.filter(function(r){ return r.pass; }).length;
+  console.info('%c[MULTIVERSO SELF-TEST] '+passed+'/'+results.length+' checks passed ('+dt+'ms)','font-weight:bold');
+  if(verbose!==false) console.table(results);
+  return {passed:passed,total:results.length,results:results};
+}
+window.__msvTest=__msvTest;
+// Quiet boot-time pass (errors-only) so a regression surfaces in the console even if nobody thinks
+// to run __msvTest() by hand. Delayed 1.5s so it doesn't compete with initial render/connect work.
+setTimeout(function(){
+  __msvTest(false).then(function(r){
+    if(r.passed<r.total) console.warn('[MULTIVERSO SELF-TEST] boot check found '+(r.total-r.passed)+' failing check(s) — run window.__msvTest() for details.');
+  }).catch(function(){});
+},1500);
 
 let qi=-1, qTimer=null;
 function rotateQuote(){ const el=document.getElementById('quote'); if(!el) return;
