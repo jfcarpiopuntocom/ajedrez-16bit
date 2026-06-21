@@ -1419,11 +1419,11 @@ let cloudOk=null;
 // codebase awaits this return value — local save (localStorage+IDB) stays fully synchronous above,
 // completely unaffected by whether the cloud write succeeds, fails, or never starts.
 function saveMatch(){
-  if(!matchCode||!started||resigned) return;
+  if(!matchCode||!started) return;
   var data={fen:game.fen(),tab:currentTablero.key,m:mode,col:(mode==='online'?net.myColor:playerColor),bk:blueKing,rk:redKing,
             lvl:level?level.key:null,creator:myPseudo,creatorTag:myTag||'',creatorPid:myPid,
             caps:{w:capW.slice(),b:capB.slice()},
-            moves:game.history(),lineage:matchLineage.slice(),over:game.game_over(),ts:Date.now(),v:1};
+            moves:game.history(),lineage:matchLineage.slice(),over:(game.game_over()||resigned),ts:Date.now(),v:1};
   try{ localStorage.setItem(MATCH_KEY+matchCode,JSON.stringify(data)); indexAdd(matchCode); }catch(e){}
   idbPut(matchCode,data);
   var fbPromise=window.fbSave ? window.fbSave(matchCode,data) : null;
@@ -1586,8 +1586,8 @@ LEVELS.forEach(l=>{ const b=document.createElement('button'); b.className='lv'; 
   b.innerHTML=`<span>${l.name}</span><span class="tag">${l.tag?l.tag:(l.elo?('~'+l.elo+' Elo'):'máxima')}</span>`;
   b.onclick=()=>{ level=l; showColorPick(); }; levelsEl.appendChild(b); });
 $('btn2p').onclick=()=>startGame('2p');
-$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rival'; $('backBtn').style.display='block'; $('kingpick').classList.remove('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden'); };
-function showColorPick(){ levelsEl.classList.remove('show'); $('colorpick').classList.add('show'); $('kingpick').classList.add('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden'); $('startH2').textContent='¿De qué lado juegas?'; }
+$('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rival'; $('startH2').style.display=''; $('backBtn').style.display='block'; $('kingpick').classList.remove('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden'); };
+function showColorPick(){ levelsEl.classList.remove('show'); $('colorpick').classList.add('show'); $('kingpick').classList.add('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden'); $('startH2').textContent='¿De qué lado juegas?'; $('startH2').style.display=''; }
 $('pickBlue').addEventListener('mouseenter',()=>$('kingpick').classList.add('focus-blue'));
 $('pickBlue').addEventListener('mouseleave',()=>$('kingpick').classList.remove('focus-blue'));
 $('pickRed').addEventListener('mouseenter',()=>$('kingpick').classList.add('focus-red'));
@@ -1605,7 +1605,7 @@ $('colorpick').addEventListener('touchmove',(e)=>{
 $('pickBlue').onclick=()=>{ playerColor='w'; $('colorpick').classList.remove('show'); $('kingpick').classList.remove('focus-blue','focus-red'); startGame('ai'); };
 $('pickRed').onclick=()=>{ playerColor='b'; $('colorpick').classList.remove('show'); $('kingpick').classList.remove('focus-blue','focus-red'); startGame('ai'); };
 $('backBtn').onclick=()=>{
-  if($('colorpick').classList.contains('show')){ $('colorpick').classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); levelsEl.classList.add('show'); $('startH2').textContent='Elige el nivel del Rival'; return; }
+  if($('colorpick').classList.contains('show')){ $('colorpick').classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); levelsEl.classList.add('show'); $('startH2').textContent='Elige el nivel del Rival'; $('startH2').style.display=''; return; }
   levelsEl.classList.remove('show'); $('kingpick').classList.remove('show-step','focus-blue','focus-red'); $('splashBoard').classList.remove('hidden'); $('resumeRow').classList.remove('hidden'); $('resumeMsg').classList.remove('hidden'); $('uniCallout').classList.remove('hidden'); netReset(); $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML=''; stopTavernMusic();
   $('start').classList.remove('in-lobby');
   currentRoom=null; // leaving the lobby fully: next "Jugar online" re-derives room from the URL or defaults back to the Plaza Pública
@@ -1731,7 +1731,7 @@ function wireConn(c){
     else if(d.t==='chat'){ showChat(net.rivalName||'rival',d.i,false); }
     else if(d.t==='full'){ $('lobbyStatus').textContent='Ese jugador ya tiene rival.'; }
     else if(d.t==='resign'){
-      resigned=true;
+      resigned=true; saveMatch();
       const w=net.myColor==='w'?'Azul':'Rojo';
       statusEl.innerHTML='<span class="win">'+creditName(net.rivalName,net.rivalTag)+' se rindió. Vence el '+w+'. '+(net.myColor==='w'?'🦁':'🐉')+'</span>';
       SFX.mate(); showEndButtons();
@@ -1739,13 +1739,13 @@ function wireConn(c){
     else if(d.t==='draw-offer'){
       showConfirm(creditName(net.rivalName,net.rivalTag)+' ofrece tablas. ¿Aceptar?','Aceptar tablas','Rechazar').then(function(ok){
         if(ok){
-          netSend({t:'draw-accept'}); resigned=true;
+          netSend({t:'draw-accept'}); resigned=true; saveMatch();
           statusEl.innerHTML='<span class="warn">Tablas por acuerdo mutuo.</span>'; showEndButtons();
         } else { netSend({t:'draw-decline'}); }
       });
     }
     else if(d.t==='draw-accept'){
-      resigned=true; statusEl.innerHTML='<span class="warn">Tablas por acuerdo mutuo.</span>'; showEndButtons();
+      resigned=true; saveMatch(); statusEl.innerHTML='<span class="warn">Tablas por acuerdo mutuo.</span>'; showEndButtons();
     }
     else if(d.t==='draw-decline'){
       statusEl.innerHTML='<span class="warn">Tablas rechazadas.</span>';
@@ -2201,7 +2201,7 @@ function goOnline(){
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
   $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
   $('start').classList.add('in-lobby');
-  $('startH2').textContent='La Taberna';
+  $('startH2').textContent='La Taberna'; $('startH2').style.display='';
   playTavernMelody(); refreshLobbyTut();
   // No link in the URL? Default to the shared Plaza Pública (not a fresh random room) so strangers
   // who just open the site actually land together and can see/challenge each other.
@@ -3404,7 +3404,7 @@ function backToLobby(){
   $('backBtn').style.display='block'; $('lobby').classList.add('show');
   $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden');
   $('start').classList.add('in-lobby');
-  $('startH2').textContent='La Taberna'; $('myName').value=myPseudo; $('myTagInput').value=myTag||''; playTavernMelody();
+  $('startH2').textContent='La Taberna'; $('startH2').style.display=''; $('myName').value=myPseudo; $('myTagInput').value=myTag||''; playTavernMelody();
   if(net.peer && !net.peer.destroyed){
     $('lobbyStatus').innerHTML='<span class="lobby-searching">Buscando rivales...</span>';
     if(net.isHub){ renderLobby(); }
