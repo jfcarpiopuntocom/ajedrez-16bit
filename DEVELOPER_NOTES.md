@@ -12,16 +12,25 @@ JFC built a 4-layer Web Audio synth replacing the old electronic move sound — 
 move sounds, MUST sound like wood on wood. After the first wood synth landed he reported it still
 "sonando lento y poco solidas" (2026-06-21). The tuning fix that finally landed:
 
+### First tuning pass (2026-06-21):
 - Layer 2 (body formant): Q dropped 8→2.4, freq 800→540 Hz, decay 60→30 ms, attack 6→1.6 ms.
-  High-Q bandpass made it RING (tonal), not knock (percussive). Lower Q + lower freq + faster
-  decay = "tock" not "tone."
-- Layer 3 (overtone): Q 4→2, freq 1360→1120, decay 40→22 ms. Same logic — broader bite, less whistle.
-- Layer 4 (low thump): freq 195/255 → 175/215, attack 3→1.8 ms, gain 0.10/0.065 → 0.16/0.11.
-  More low-end "mass," still snappy.
-- Layer 1 (clack transient) was already good (10-15 ms, high-pass 2.7 kHz), unchanged.
+- Layer 3 (overtone): Q 4→2, freq 1360→1120, decay 40→22 ms.
+- Layer 4 (low thump): freq 195/255 → 175/215, gain 0.10/0.065 → 0.16/0.11.
+- Layer 1 (clack transient): unchanged at this pass.
 
-Result: snappier, weightier, less ringy. If JFC ever asks for "more solid" again, the move is
-LOWER frequencies + LOWER Q + FASTER decay, not louder. Loud + ringy = electronic, not wood.
+### Second tuning pass (2026-06-22) — JFC said "siguen sonando lento y poco solidas":
+- Layer 1 (transient): **boosted gain 0.40/0.26 → 0.55/0.36, shorter buffer 14→8 ms, HP 2700→3200 Hz**.
+  Critical insight: the transient ("click of contact") is what reads as "solid", not the body tone.
+  Layer 1 should DOMINATE the mix.
+- Layer 2 (body): decay 30→20 ms, slight gain trim 0.34/0.24 → 0.30/0.20 (let Layer 1 lead).
+- Layer 4 (low thump): **decay 30→18 ms**. Long low-frequency tails sound like a soft drum, not a
+  hard knock. This was the main culprit of the "lento" feeling.
+- Layer 3 (overtone): unchanged at this pass.
+
+Result: transient-led, weight-supported, no tonal ring, no long tail. If JFC ever asks for "more
+solid" again, the move is: BOOST TRANSIENT GAIN, SHORTEN ALL DECAYS, never lower frequencies
+arbitrarily. "Solid" = sharp attack + fast decay. "Slow" = long decay (especially on bass).
+"Electronic" = high Q, sustained tones, ring.
 
 **Do NOT** replace `woodKnock` with a sampled .wav/mp3 unless JFC explicitly asks — the procedural
 synth has zero asset weight and random micro-variations per knock, so repeated moves never sound

@@ -1762,30 +1762,32 @@ function woodKnock(heavy){
     const t=actx.currentTime;
     const jit=()=>Math.random()*0.008; // micro-randomise timing for naturalness
 
-    // ── Layer 1: Bright clack transient (high-pass noise, 10-15 ms) ──
-    // Models the sharp initial contact between piece and board surface.
-    { const b1=_noiseBuf(13+Math.random()*4); if(!b1) return;
+    // ── Layer 1: Bright clack transient (high-pass noise, 8-10 ms) ──
+    // JFC 2026-06-22 pass: still "lento y poco solidas". Boosted transient gain (0.40→0.55 heavy /
+    // 0.26→0.36 light), shortened buffer/decay (14→8 ms total), shifted HP up (2700→3200 Hz) for
+    // sharper initial attack — the "click" of contact is what reads as "solid", not the body tone.
+    { const b1=_noiseBuf(8+Math.random()*3); if(!b1) return;
       const src=actx.createBufferSource(); src.buffer=b1;
-      const hp=actx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=2700+Math.random()*400; hp.Q.value=0.9;
+      const hp=actx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=3200+Math.random()*400; hp.Q.value=0.9;
       const g=actx.createGain();
       g.gain.setValueAtTime(0,t);
-      g.gain.linearRampToValueAtTime(heavy?0.40:0.26,t+0.001);
-      g.gain.exponentialRampToValueAtTime(0.0001,t+0.014+jit());
+      g.gain.linearRampToValueAtTime(heavy?0.55:0.36,t+0.0005);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.008+jit()*0.5);
       src.connect(hp); hp.connect(g); g.connect(actx.destination);
-      src.start(t); src.stop(t+0.025); }
+      src.start(t); src.stop(t+0.014); }
 
     // ── Layer 2: Wood body — primary formant ~560 Hz ──
-    // Models the resonant body of solid hardwood. JFC 2026-06-21: lowered Q (8→2.6) so it reads
-    // as a percussive "tock" not a ringing tone, lower freq + shorter decay (60→30ms) for a more
-    // solid, snappier knock ("seguían sonando lento y poco sólidas"). Attack near-instant (+0.001).
-    { const src=actx.createBufferSource(); src.buffer=_noiseBuf(40);
+    // JFC 2026-06-22 pass: decay 30→20 ms, slight gain trim so the (now louder+sharper) Layer 1
+    // transient stays dominant — transient reads as "solid", body reads as "weight". Q stays at
+    // 2.4 (still percussive, not ringing).
+    { const src=actx.createBufferSource(); src.buffer=_noiseBuf(28);
       const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=540+Math.random()*50; bp.Q.value=2.4+Math.random()*0.5;
-      const g=actx.createGain(); const vb=heavy?0.34:0.24;
+      const g=actx.createGain(); const vb=heavy?0.30:0.20;
       g.gain.setValueAtTime(0,t);
-      g.gain.linearRampToValueAtTime(vb,t+0.0016+jit());
-      g.gain.exponentialRampToValueAtTime(0.0001,t+0.030+jit());
+      g.gain.linearRampToValueAtTime(vb,t+0.0014+jit());
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.020+jit());
       src.connect(bp); bp.connect(g); g.connect(actx.destination);
-      src.start(t); src.stop(t+0.040); }
+      src.start(t); src.stop(t+0.028); }
 
     // ── Layer 3: Secondary overtone ~1150 Hz ──
     // Adds bite/character. Lower Q (4→2) = broader, more knock-like, less tonal whistle.
@@ -1799,15 +1801,16 @@ function woodKnock(heavy){
       src.start(t); src.stop(t+0.028); }
 
     // ── Layer 4: Low pitch thump (weight / mass of the piece) ──
-    // Sine at sub-220 Hz gives the physical "weight" feel. Boosted + faster decay for solidity.
+    // JFC 2026-06-22 pass: decay 30→18 ms — Layer 4 was the main culprit of the "lento" feeling.
+    // A long low-frequency tail sounds like a soft drum, not a hard knock. Short = solid.
     { const o=actx.createOscillator(); o.type='sine';
       o.frequency.value=(heavy?175:215)+Math.random()*15;
       const g=actx.createGain();
       g.gain.setValueAtTime(0,t);
-      g.gain.linearRampToValueAtTime(heavy?0.16:0.11,t+0.0018);
-      g.gain.exponentialRampToValueAtTime(0.0001,t+0.030+jit());
+      g.gain.linearRampToValueAtTime(heavy?0.16:0.11,t+0.0014);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.018+jit()*0.5);
       o.connect(g); g.connect(actx.destination);
-      o.start(t); o.stop(t+0.038); }
+      o.start(t); o.stop(t+0.026); }
   }catch(e){}
 }
 // woodLift: the lighter sound of picking up a piece (drag-start).
