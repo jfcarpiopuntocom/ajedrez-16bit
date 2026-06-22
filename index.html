@@ -902,7 +902,7 @@ body.focusmode #radioPanel{ display:none !important } /* #radioBtn already cover
     <h3>Tres modos de juego</h3>
     <ul>
       <li><span class="accent">Con un amigo en persona:</span> mismo dispositivo, la barra de capturas roja viene rotada 180° para que tu rival la lea desde su lado.</li>
-      <li><span class="accent">Contra la IA:</span> siete niveles, desde Casual (~333 Elo) hasta Bobby Fischer Bot (inhumano).</li>
+      <li><span class="accent">Contra la IA:</span> ocho niveles, desde Distraído (~200 Elo, ideal para tu primera victoria) hasta Bobby Fischer Bot (inhumano).</li>
       <li><span class="accent">En línea:</span> lobby global, comparte el link por WhatsApp y rivales aparecen en la lista. Un click empieza la partida.</li>
     </ul>
 
@@ -1660,6 +1660,26 @@ async function __msvTest(verbose){
   } else {
     add('Engine checks', true, 'skipped — no active AI game (start a vs-AI game to exercise this)');
   }
+
+  // UI / render layer checks
+  if(typeof started!=='undefined' && started && typeof gridEl!=='undefined' && gridEl){
+    var cellCount=gridEl.children.length;
+    add('Grid has exactly 64 cells', cellCount===64, cellCount===64?'':'found '+cellCount+' — render() may not have run or DOM is corrupt; heal() should self-correct');
+    var boardPieceCount=0; try{ game.board().forEach(function(row){ row.forEach(function(c){ if(c) boardPieceCount++; }); }); }catch(e2){}
+    var domPieceCount=gridEl.querySelectorAll('.cell>img').length;
+    add('DOM piece count matches chess.js board ('+domPieceCount+'/'+boardPieceCount+')', domPieceCount===boardPieceCount,
+      domPieceCount===boardPieceCount?'':'DOM and game state disagree — if persists after next move, check render() call path');
+    var bw2=parseFloat((typeof boardEl!=='undefined'&&boardEl&&boardEl.style.width)||'0')||0;
+    add('Board has been sized by fitBoard()', bw2>0, bw2>0?'':'board width is 0px — fitBoard() may not have run; try calling fitBoard() in console');
+    if(bw2>0 && window.innerWidth>899){
+      var boardBottom2=(typeof boardEl!=='undefined'&&boardEl)?boardEl.getBoundingClientRect().bottom:0;
+      add('Board fits within viewport (desktop)', boardBottom2<=window.innerHeight+4,
+        boardBottom2<=window.innerHeight+4?'':'board bottom ('+Math.round(boardBottom2)+'px) > viewport ('+window.innerHeight+'px) — call fitBoard() to refit');
+    }
+  } else {
+    add('UI / render checks', true, 'skipped — no active game');
+  }
+
   if(typeof net!=='undefined'){
     var flagsLookSane=!(net.active && net.endReported && net.matchInfo && net.matchInfo.live);
     add('net.endReported not stuck true on a live match', flagsLookSane,
@@ -3120,10 +3140,13 @@ function startGame(m){
   var hideUR=(m==='online');
   $('undo').style.display=hideUR?'none':''; $('redo').style.display=hideUR?'none':'';
   if(mode==='ai'){ boot(); if((ready||fallback)&&!game.game_over()&&game.turn()!==playerColor) setTimeout(aiMove,400);
-    // Cancelable handle: prevents watchdog instances accumulating if the player starts multiple AI
-    // games in the same session (old setTimeouts kept firing on each new game, could double-move).
+    // Both handles cancelable: prevents watchdog instances accumulating if the player starts multiple AI
+    // games in the same session. (Before: both were fire-and-forget; even with engineTeardown resetting
+    // state, the old setTimeouts were already queued and would fire on the new game's board.)
     if(_watchdogHandle) clearTimeout(_watchdogHandle);
-    _watchdogHandle=setTimeout(aiWatchdog,9000); setTimeout(aiWatchdog,16000); }
+    if(_watchdogHandle2) clearTimeout(_watchdogHandle2);
+    _watchdogHandle=setTimeout(aiWatchdog,9000);
+    _watchdogHandle2=setTimeout(aiWatchdog,16000); }
   render(); status(); startQuotes(); renderHistory(); saveMatch();
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); });
 }
@@ -3162,6 +3185,14 @@ function ensureNoScroll(){
   let guard=0;
   while(document.documentElement.scrollHeight>document.documentElement.clientHeight+1 && guard<8){
     const bw=parseFloat(boardEl.style.width)||0; if(bw<=170) break;
+    // Safeguard (added 2026-06-21): only shrink if the board itself is actually spilling below the
+    // viewport. Without this check, a long status message, a full captures bar, or an open chat
+    // panel (all of which add scrollHeight WITHOUT the board being the cause) would trigger this loop
+    // and keep shrinking the board to the 170px floor for a non-board reason, causing a jarring
+    // layout jump. Check: if the board's bottom edge fits comfortably within the viewport, the
+    // scroll is coming from something else — don't touch the board, break immediately.
+    var boardBottom=boardEl.getBoundingClientRect().bottom;
+    if(boardBottom<=window.innerHeight-4) break; // board fits; non-board element is the scroller
     const nw=Math.floor(bw*0.94); boardEl.style.width=nw+'px'; boardEl.style.height=Math.round(nw/ASPECT)+'px'; guard++;
   }
 }
@@ -3379,7 +3410,7 @@ function status(){
 
 /* ===== Stockfish ===== */
 let engine=null, ready=false, fallback=false;
-let _watchdogHandle=null; // single cancelable handle — prevents watchdog instances accumulating across games
+let _watchdogHandle=null, _watchdogHandle2=null; // two cancelable handles — prevents watchdog instances accumulating across games
 
 // Send 'stop' whenever we need to interrupt a running search (before undo, level change, or new game).
 // Without this, a deferred bestmove from a *previous* position arrives and gets applied to a
@@ -3401,7 +3432,8 @@ function engineStop(){
 function engineTeardown(){
   engineStop();
   if(_watchdogHandle) clearTimeout(_watchdogHandle);
-  _watchdogHandle=null;
+  if(_watchdogHandle2) clearTimeout(_watchdogHandle2);
+  _watchdogHandle=null; _watchdogHandle2=null;
   if(engine){ try{ engine.terminate(); }catch(e){} engine=null; }
   ready=false; fallback=false;
 }
@@ -3642,6 +3674,12 @@ function backToLobby(){
   try{ if(net.conn) net.conn.close(); }catch(e){}
   net.conn=null; net.active=false; net.isHost=false; net.myColor='w'; net.rivalName=''; net.rivalTag='';
   resigned=false; started=false;
+  // BUGFIX 2026-06-21: backToLobby() was the other exit path from an AI game that didn't call
+  // engineTeardown(). backToStart() got the fix in the engine-lifecycle overhaul; backToLobby()
+  // (the "Volver al Lobby" button in the online game HUD, also reachable from AI games) was missed.
+  // Without it: worker kept running, Contempt/Skill flags persisted, watchdog timers accumulated —
+  // identical consequences to the backToStart() bug, just reached via a different button.
+  engineTeardown();
   game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0;
   document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='🔍 zoom!'; showChatUI(false);
   $('app').style.display='none'; $('start').classList.remove('hidden');
@@ -3804,6 +3842,13 @@ let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(f
 function refitChain(){ fitBoard(); setTimeout(fitBoard,150); setTimeout(fitBoard,400); setTimeout(fitBoard,800); }
 window.addEventListener('orientationchange',refitChain);
 if(window.screen && window.screen.orientation){ try{ window.screen.orientation.addEventListener('change',refitChain); }catch(e){} }
+// ResizeObserver on the board's container (added 2026-06-21): catches the cases window.resize misses —
+// the sidebar/HUD growing when captures fill in, chat opening, status text wrapping to two lines, etc.
+// Without this, fitBoard() never fired on those events, leaving the board subtly wrong-sized until the
+// next window resize or orientation flip.
+if(window.ResizeObserver){ try{
+  new ResizeObserver(function(){ clearTimeout(rt); rt=setTimeout(fitBoard,60); }).observe(boardAreaEl);
+}catch(e){} }
 if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(fitBoard,90); }); }
 
 /* footer mail link, obfuscated: (1) base64, (2) string reversed, (3) the address
