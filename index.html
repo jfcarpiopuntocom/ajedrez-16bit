@@ -8,7 +8,7 @@
   ╠══════════════════════════════════════════════════════════════════╣
   ║  ARCHITECTURE                                                   ║
   ║  Single-file game: HTML + CSS + JS, no build step.              ║
-  ║  Chess engine: chess.js (logic) + Stockfish.js (AI, 8 levels).  ║
+  ║  Chess engine: chess.js (logic) + Stockfish.js (AI, 7 levels).  ║
   ║  Online: PeerJS (WebRTC P2P), Trystero (lobby via Nostr/BT).   ║
   ║  Storage: localStorage + IndexedDB + 2-year cookie (identity).  ║
   ║                                                                 ║
@@ -1646,7 +1646,20 @@ async function __msvTest(verbose){
     add('Current match persistence check', true, 'skipped — no active match (start/resume a game to exercise this)');
   }
 
-  // Online net-flag hygiene: these caused the rematch/king-of-hill bug fixed 2026-06-21.
+  // Engine / AI layer checks
+  if(typeof mode!=='undefined' && mode==='ai' && typeof started!=='undefined' && started){
+    add('Engine not null during AI game', !!engine||!!fallback, (!engine&&!fallback)?'engine and fallback both falsy during active AI game — aiMove() will silently no-op':'');
+    add('engine and fallback not both true (split-brain)', !(engine&&fallback), 'engine and fallback both true simultaneously — configEngine() and toFallback() disagree on state');
+    add('busy flag coherent (not stuck true)', !(busy&&game.game_over()), busy&&game.game_over()?'busy=true after game_over — future aiMove() calls are blocked; check engMove/engStop paths':'');
+    if(typeof level!=='undefined' && level && level.blunderChance){
+      add('Distraído randomMove() wired (blunderChance present)', typeof randomMove==='function', typeof randomMove==='function'?'':'randomMove not defined — Distraído will fall through to fbMove and play too strong');
+    }
+    if(typeof _watchdogHandle!=='undefined'){
+      add('Watchdog handle initialized (accumulation guard active)', _watchdogHandle!==null||!started, 'watchdog handle is null after startGame(ai) — instances may accumulate across games');
+    }
+  } else {
+    add('Engine checks', true, 'skipped — no active AI game (start a vs-AI game to exercise this)');
+  }
   if(typeof net!=='undefined'){
     var flagsLookSane=!(net.active && net.endReported && net.matchInfo && net.matchInfo.live);
     add('net.endReported not stuck true on a live match', flagsLookSane,
@@ -3107,12 +3120,15 @@ function startGame(m){
   var hideUR=(m==='online');
   $('undo').style.display=hideUR?'none':''; $('redo').style.display=hideUR?'none':'';
   if(mode==='ai'){ boot(); if((ready||fallback)&&!game.game_over()&&game.turn()!==playerColor) setTimeout(aiMove,400);
-    setTimeout(aiWatchdog,9000); setTimeout(aiWatchdog,16000); }
+    // Cancelable handle: prevents watchdog instances accumulating if the player starts multiple AI
+    // games in the same session (old setTimeouts kept firing on each new game, could double-move).
+    if(_watchdogHandle) clearTimeout(_watchdogHandle);
+    _watchdogHandle=setTimeout(aiWatchdog,9000); setTimeout(aiWatchdog,16000); }
   render(); status(); startQuotes(); renderHistory(); saveMatch();
   requestAnimationFrame(()=>{ fitBoard(); requestAnimationFrame(fitBoard); });
 }
 function backToStart(){
-  started=false; resigned=false; netReset(); document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='🔍 zoom!'; showChatUI(false);
+  started=false; resigned=false; engineTeardown(); netReset(); document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='🔍 zoom!'; showChatUI(false);
   $('app').style.display='none'; $('start').classList.remove('hidden');
   $('lobby').classList.remove('show'); $('lobbyStatus').textContent=''; $('lobbyList').innerHTML='';
   $('colorpick').classList.remove('show'); playerColor='w';
@@ -3363,6 +3379,32 @@ function status(){
 
 /* ===== Stockfish ===== */
 let engine=null, ready=false, fallback=false;
+let _watchdogHandle=null; // single cancelable handle — prevents watchdog instances accumulating across games
+
+// Send 'stop' whenever we need to interrupt a running search (before undo, level change, or new game).
+// Without this, a deferred bestmove from a *previous* position arrives and gets applied to a
+// DIFFERENT board state — silent illegal-move injection. The guard is cheap: Stockfish ignores
+// 'stop' when idle, so calling this defensively never hurts.
+function engineStop(){
+  if(engine && !fallback){ try{ engine.postMessage('stop'); }catch(e){} }
+  busy=false;
+}
+// Full worker teardown between games (backToStart / "Nueva Partida").
+// Before this, engine/ready/fallback were never reset. Effects:
+//   (a) iOS Safari: unterm. workers accumulate → memory pressure → tab crash on longer sessions.
+//   (b) Switching level (e.g. Casual → Fischer Bot) after "Nueva Partida" called boot() early-exit
+//       because engine was already truthy, so configEngine() ran on the old worker with the new
+//       level — fine — BUT any orphaned 'go movetime' in flight from the previous game's last
+//       position would eventually respond with 'bestmove' on the new game's worker.onmessage
+//       handler. Unlikely timing, but not impossible, and the resulting engMove() on a fresh board
+//       would pass chess.js validation (legal from starting position) yet be completely wrong.
+function engineTeardown(){
+  engineStop();
+  if(_watchdogHandle) clearTimeout(_watchdogHandle);
+  _watchdogHandle=null;
+  if(engine){ try{ engine.terminate(); }catch(e){} engine=null; }
+  ready=false; fallback=false;
+}
 const SF='https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js';
 async function boot(){
   if(engine||fallback){ configEngine(); return; }
@@ -3384,6 +3426,7 @@ function toFallback(w){ if(fallback) return; fallback=true; ready=true; note.tex
 function aiWatchdog(){
   if(mode!=='ai'||!started||resigned||game.game_over()) return;
   if(game.turn()===playerColor||busy) return;
+  console.warn('[MULTIVERSO ENGINE] aiWatchdog fired — engine stalled on AI turn, forcing move.');
   aiMove();
 }
 function onMsg(e){ const l=typeof e.data==='string'?e.data:'';
@@ -3393,7 +3436,14 @@ function onMsg(e){ const l=typeof e.data==='string'?e.data:'';
 }
 function configEngine(){ note.textContent=''; status();
   if(!engine||fallback) return;
-  if(level.elo){ engine.postMessage('setoption name UCI_LimitStrength value true'); engine.postMessage('setoption name UCI_Elo value '+level.elo); }
+  if(level.elo){
+    engine.postMessage('setoption name UCI_LimitStrength value true');
+    engine.postMessage('setoption name UCI_Elo value '+level.elo);
+    // Reset Contempt to 0 for Elo-capped levels — without this, playing Fischer Bot (Contempt 100)
+    // then switching to any Elo-limited level left Contempt at 100, making the weakened engine
+    // weirdly aggressive rather than playing the simplified positional chess the rating band implies.
+    engine.postMessage('setoption name Contempt value 0');
+  }
   else{
     engine.postMessage('setoption name UCI_LimitStrength value false');
     engine.postMessage('setoption name Contempt value 100');
@@ -3406,6 +3456,8 @@ function aiMove(){ if(game.game_over()) return; busy=true; status();
   // pieces, which doesn't give a brand-new visitor the easy, confidence-building win they need.
   if(level && level.blunderChance && Math.random()<level.blunderChance){ setTimeout(randomMove,260); return; }
   if(fallback||!engine){ setTimeout(fbMove,260); return; }
+  // Stop any search in flight before starting a new one (prevents orphaned bestmove on undo/redo/rematch).
+  engine.postMessage('stop');
   engine.postMessage('position fen '+game.fen()); engine.postMessage('go movetime '+level.mt);
 }
 function engMove(uci){ const from=uci.slice(0,2), to=uci.slice(2,4), promo=uci.length>4?uci[4]:undefined;
@@ -3463,12 +3515,14 @@ function rebuildCaptures(){ capW.length=0; capB.length=0;
 $('undo').onclick=()=>{ if(busy) return;
   // King of the hill stays serious: no take-backs while an online human duel is live.
   if(mode==='online' && !game.game_over() && !resigned) return;
+  engineStop(); // abort any in-flight search before rewinding the position
   if(typeof hideVictory==='function') hideVictory();
   const u1=game.undo(); if(u1) redoStack.push(u1);
   if(mode==='ai'){ const u2=game.undo(); if(u2) redoStack.push(u2); }
   rebuildCaptures(); render(); status(); renderHistory(); maybeShowRematch(); };
 $('redo').onclick=()=>{ if(busy||!redoStack.length) return;
   if(mode==='online' && !game.game_over() && !resigned) return;
+  engineStop(); // same: stop any live search before fast-forwarding
   if(typeof hideVictory==='function') hideVictory();
   const steps=mode==='ai'?2:1;
   for(let i=0;i<steps && redoStack.length;i++){
