@@ -1743,37 +1743,110 @@ function tone(freq,dur,type='sine',vol=0.08,when=0,fc=2400){
     o.start(t); o.stop(t+dur+0.02);
   }catch(e){}
 }
-// Physical piece-on-board click: short bandpass-filtered noise burst (wood-like).
-function clickNoise(){
+/* ══════ WOOD AUDIO ENGINE ══════
+   4-layer synthesis: clack transient + dual wood-body formants + pitch thump.
+   woodKnock(heavy=false) for moves; woodKnock(true) for captures.
+   woodLift() for the softer piece-pickup moment on drag start.
+   Every layer has a randomised micro-variation so repeated moves never sound identical.
+   NO external files — 100% Web Audio API synthesis. */
+function _noiseBuf(ms){
+  if(!actx) return null;
+  const len=Math.max(1,Math.floor(actx.sampleRate*ms/1000));
+  const buf=actx.createBuffer(1,len,actx.sampleRate);
+  const d=buf.getChannelData(0); for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+  return buf;
+}
+function woodKnock(heavy){
   if(muted||!actx) return;
   try{
-    const dur=0.040;
-    const sr=actx.sampleRate;
-    const buf=actx.createBuffer(1, Math.floor(sr*dur), sr);
-    const data=buf.getChannelData(0);
-    for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1);
-    const src=actx.createBufferSource(); src.buffer=buf;
-    const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1800; bp.Q.value=4;
-    const g=actx.createGain();
     const t=actx.currentTime;
-    g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(0.18,t+0.003);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    src.connect(bp); bp.connect(g); g.connect(actx.destination);
-    src.start(t); src.stop(t+dur+0.01);
+    const jit=()=>Math.random()*0.008; // micro-randomise timing for naturalness
+
+    // ── Layer 1: Bright clack transient (high-pass noise, 10-15 ms) ──
+    // Models the sharp initial contact between piece and board surface.
+    { const b1=_noiseBuf(13+Math.random()*4); if(!b1) return;
+      const src=actx.createBufferSource(); src.buffer=b1;
+      const hp=actx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=2700+Math.random()*400; hp.Q.value=0.9;
+      const g=actx.createGain();
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(heavy?0.40:0.26,t+0.001);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.014+jit());
+      src.connect(hp); hp.connect(g); g.connect(actx.destination);
+      src.start(t); src.stop(t+0.025); }
+
+    // ── Layer 2: Wood body — primary formant ~820 Hz ──
+    // Models the resonant body of the wooden piece/board (fundamental wood tone).
+    { const src=actx.createBufferSource(); src.buffer=_noiseBuf(60);
+      const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=800+Math.random()*60; bp.Q.value=8+Math.random()*2;
+      const g=actx.createGain(); const vb=heavy?0.30:0.19;
+      g.gain.setValueAtTime(0,t+0.002);
+      g.gain.linearRampToValueAtTime(vb,t+0.006+jit());
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.060+jit()*2);
+      src.connect(bp); bp.connect(g); g.connect(actx.destination);
+      src.start(t+0.002); src.stop(t+0.070); }
+
+    // ── Layer 3: Secondary overtone ~1380 Hz ──
+    // Adds brightness/character — different woods have different overtone ratios.
+    { const src=actx.createBufferSource(); src.buffer=_noiseBuf(38);
+      const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1360+Math.random()*80; bp.Q.value=4+Math.random()*2;
+      const g=actx.createGain(); const vc=heavy?0.13:0.08;
+      g.gain.setValueAtTime(0,t+0.001);
+      g.gain.linearRampToValueAtTime(vc,t+0.004+jit());
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.040+jit());
+      src.connect(bp); bp.connect(g); g.connect(actx.destination);
+      src.start(t+0.001); src.stop(t+0.048); }
+
+    // ── Layer 4: Low pitch thump (weight / mass of the piece) ──
+    // Sine at sub-200 Hz gives the physical "weight" feel — heavier pieces sound heavier.
+    { const o=actx.createOscillator(); o.type='sine';
+      o.frequency.value=(heavy?195:255)+Math.random()*20;
+      const g=actx.createGain();
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(heavy?0.10:0.065,t+0.003);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.038+jit());
+      o.connect(g); g.connect(actx.destination);
+      o.start(t); o.stop(t+0.046); }
   }catch(e){}
 }
+// woodLift: the lighter sound of picking up a piece (drag-start).
+// Shorter, brighter, quieter than a place — just the surface-release.
+function woodLift(){
+  if(muted||!actx) return;
+  try{
+    const t=actx.currentTime;
+    const src=actx.createBufferSource(); const lb=_noiseBuf(18); if(!lb) return; src.buffer=lb;
+    const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2100+Math.random()*300; bp.Q.value=4;
+    const hp=actx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1600;
+    const g=actx.createGain();
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.10,t+0.002);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.020);
+    src.connect(bp); bp.connect(hp); hp.connect(g); g.connect(actx.destination);
+    src.start(t); src.stop(t+0.028);
+  }catch(e){}
+}
+
 const SFX={
-  // Physical click (noise burst, not oscillator)
-  move:    ()=>{ clickNoise(); },
-  // Muted bell: two close tones
-  capture: ()=>{ tone(440,0.18,'sine',0.07,0,2000); tone(660,0.14,'sine',0.05,0,2200); },
-  // Distant bell warning
-  check:   ()=>{ tone(880,0.32,'sine',0.07,0,2400); tone(1320,0.22,'sine',0.04,0.05,2600); },
-  // Solemn descending bell sequence
+  // Rich wood-on-board thud
+  move:    ()=>{ woodKnock(false); },
+  // Capture: heavy knock (piece removed) + short delay + lighter place (capturing piece lands)
+  capture: ()=>{
+    woodKnock(true);
+    setTimeout(()=>{ if(!muted&&actx){ woodKnock(false); } },55);
+    tone(290,0.16,'sine',0.04,0.04,1100); // deep board resonance
+  },
+  // Check: three overlapping bell partials — urgent, not triumphant
+  check:   ()=>{
+    tone(880,0.22,'sine',0.06,0,2400);
+    tone(1108,0.18,'sine',0.04,0.04,2600);
+    tone(660,0.28,'sine',0.05,0.08,2000);
+  },
+  // Solemn descending bell sequence (unchanged — works well)
   mate:    ()=>{ [880,659,523,392].forEach((f,i)=>tone(f,0.40,'sine',0.08,i*0.22,2200)); },
   // Two neutral tones (neither triumphant nor mournful)
-  draw:    ()=>{ tone(523,0.30,'sine',0.06,0,2000); tone(523,0.30,'sine',0.06,0.35,2000); }
+  draw:    ()=>{ tone(523,0.30,'sine',0.06,0,2000); tone(523,0.30,'sine',0.06,0.35,2000); },
+  // Piece pickup (drag start)
+  lift:    ()=>{ woodLift(); }
 };
 
 const $=id=>document.getElementById(id);
@@ -3265,6 +3338,8 @@ function cleanupDrag(){ killGhost(); gridEl.querySelectorAll('img[style*="hidden
 gridEl.addEventListener('pointerdown',e=>{
   try{ const cell=e.target.closest('.cell'); if(!cell) return; const sq=cell.dataset.sq, p=game.get(sq);
     if(!p||!canDrag(p.color)) return; e.preventDefault();
+    actxInit(); // pre-warm context now (inside gesture) so the place sound has zero init lag
+    if(typeof SFX!=='undefined' && SFX.lift) SFX.lift();
     drag={from:sq,sx:e.clientX,sy:e.clientY}; try{gridEl.setPointerCapture(e.pointerId);}catch(_){}
     const rect=gridEl.querySelector('.cell').getBoundingClientRect();
     const g=document.createElement('div'); g.className='drag-ghost';
@@ -3307,7 +3382,10 @@ function doMove(mv,fromRemote){
   if(res.captured) (res.color==='w'?capW:capB).push({color:res.color==='w'?'b':'w',type:res.captured});
   lastMove={from:res.from,to:res.to}; redoStack.length=0;
   if(mode==='online' && !fromRemote) netSend({t:'move', mv:{from:res.from,to:res.to,promotion:mv.promotion||undefined}});
-  actxInit();
+  // actxInit() is pre-warmed in the pointerdown handler (drag start) so the context is already
+  // running by the time we get here — zero init delay on the place sound.
+  // For remote moves (AI / online) that bypass drag, init here as a safety fallback.
+  if(fromRemote || !actx) actxInit();
   if(game.in_checkmate()) SFX.mate();
   else if(game.in_check()) SFX.check();
   else if(res.captured){
@@ -3497,7 +3575,7 @@ function engMove(uci){ const from=uci.slice(0,2), to=uci.slice(2,4), promo=uci.l
   if(!res){ render(); status(); return; }
   if(res.captured) (res.color==='w'?capW:capB).push({color:res.color==='w'?'b':'w',type:res.captured});
   lastMove={from:res.from,to:res.to};
-  actxInit();
+  actxInit(); // AI move: no pointerdown gesture was captured, so init here (safe — idempotent)
   if(game.in_checkmate()) SFX.mate();
   else if(game.in_check()) SFX.check();
   else if(res.captured){
@@ -4430,6 +4508,7 @@ function setTavernMute(muted){
   wrap('move',    function(){ vibe(8); });
   wrap('capture', function(x,y){ vibe(20); if(window.fxCapture) fxCapture(x,y); });
   wrap('check',   function(){ vibe([0,28,40,28]); if(window.fxCheck) fxCheck(); });
+  wrap('lift',    function(){ vibe(4); }); // subtle haptic on piece pickup
 })();
 
 /* ============================================================
@@ -4438,9 +4517,15 @@ function setTavernMute(muted){
    own <audio> element, own panel, own IIFE; does not touch chess.js,
    Stockfish, PeerJS, or the existing tavern Web Audio system except
    to call the EXISTING stopTavernMusic() so the two don't play at once.
+
+   PERSISTENCE: active genre is saved to localStorage under
+   'losdosreinos_radio'. On page load the last genre is restored
+   automatically on the very first user gesture (pointerdown),
+   transparent to the user. Manual "Apagar radio" clears the key.
    ============================================================ */
 (function(){
   "use strict";
+  var RADIO_STORAGE_KEY='losdosreinos_radio';
   var RADIO_API='https://de1.api.radio-browser.info';
   // Each genre tries broader catalog tags first, then falls back to a name search — some niche
   // genres (gregorian, medieval-tavern) have very few stations actually TAGGED that way, but
@@ -4474,6 +4559,16 @@ function setTavernMute(muted){
     gregorian:['gregorian'],
     metal:['doom']
   };
+
+  /* ── Persistence helpers ── */
+  function saveRadioGenre(genre){
+    try{ if(genre) localStorage.setItem(RADIO_STORAGE_KEY,genre);
+         else localStorage.removeItem(RADIO_STORAGE_KEY); }catch(e){}
+  }
+  function loadRadioGenre(){
+    try{ return localStorage.getItem(RADIO_STORAGE_KEY)||''; }catch(e){ return ''; }
+  }
+
   function positionRadioBtn(){
     var lib=document.getElementById('libFixedBtn'), btn=document.getElementById('radioBtn');
     if(!lib||!btn) return;
@@ -4505,7 +4600,7 @@ function setTavernMute(muted){
     return urls;
   }
   function tryPlayCandidates(urls,idx,statusEl,btn){
-    if(idx>=urls.length){ statusEl.textContent='No se encontró señal, intenta de nuevo'; btn.classList.remove('active'); return; }
+    if(idx>=urls.length){ statusEl.textContent='No se encontró señal, intenta de nuevo'; if(btn) btn.classList.remove('active'); return; }
     var player=document.getElementById('radioPlayer');
     player.onerror=function(){ tryPlayCandidates(urls,idx+1,statusEl,btn); };
     player.src=urls[idx]; player.volume=0.5;
@@ -4515,26 +4610,65 @@ function setTavernMute(muted){
   function playRadio(genre,btn){
     var statusEl=document.getElementById('radioStatus');
     document.querySelectorAll('.radio-genre').forEach(function(b){ b.classList.remove('active'); });
-    btn.classList.add('active'); statusEl.textContent='Buscando emisora…';
+    if(btn) btn.classList.add('active');
+    statusEl.textContent='Buscando emisora…';
     if(typeof stopTavernMusic==='function') stopTavernMusic(); // never play both ambiences at once
+    saveRadioGenre(genre); // persist so a refresh restores this genre
+    // Update radio button icon to show radio is active
+    var rbtn=document.getElementById('radioBtn');
+    if(rbtn){ rbtn.textContent='📻'; rbtn.title='Radio Online (sonando)'; }
     fetchCandidates(genre).then(function(urls){
-      if(!urls.length){ statusEl.textContent='No se encontró señal, intenta de nuevo'; btn.classList.remove('active'); return; }
+      if(!urls.length){ statusEl.textContent='No se encontró señal, intenta de nuevo'; if(btn) btn.classList.remove('active'); saveRadioGenre(''); return; }
       tryPlayCandidates(urls,0,statusEl,btn);
-    }).catch(function(){ statusEl.textContent='Error de conexión'; btn.classList.remove('active'); });
+    }).catch(function(){ statusEl.textContent='Error de conexión'; if(btn) btn.classList.remove('active'); saveRadioGenre(''); });
   }
-  document.querySelectorAll('.radio-genre').forEach(function(b){ b.onclick=function(){ playRadio(b.dataset.genre,b); }; });
-  var stopBtn=document.getElementById('radioStop');
-  if(stopBtn) stopBtn.onclick=function(){
+  function stopRadio(){
     var player=document.getElementById('radioPlayer');
     player.onerror=null; player.pause(); player.removeAttribute('src'); player.load();
     document.querySelectorAll('.radio-genre').forEach(function(b){ b.classList.remove('active'); });
     document.getElementById('radioStatus').textContent='Apagado';
-  };
+    saveRadioGenre(''); // clear persistence — user explicitly stopped
+    var rbtn=document.getElementById('radioBtn');
+    if(rbtn){ rbtn.textContent='📻'; rbtn.title='Radio Online'; }
+  }
+
+  document.querySelectorAll('.radio-genre').forEach(function(b){ b.onclick=function(){ playRadio(b.dataset.genre,b); }; });
+  var stopBtn=document.getElementById('radioStop');
+  if(stopBtn) stopBtn.onclick=stopRadio;
   var radioBtn=document.getElementById('radioBtn'), radioPanel=document.getElementById('radioPanel');
   if(radioBtn) radioBtn.onclick=function(e){ e.stopPropagation(); radioPanel.classList.toggle('show'); };
   document.addEventListener('click',function(e){
     if(radioPanel && radioPanel.classList.contains('show') && !radioPanel.contains(e.target) && e.target!==radioBtn) radioPanel.classList.remove('show');
   });
+
+  /* ── Auto-resume on first user gesture after refresh ──
+     Browser autoplay policy blocks audio.play() before a gesture. We defer
+     the resume to the very first pointerdown anywhere on the page (guaranteed
+     to precede any chess move), so the radio restores itself silently.
+     If the user doesn't want it, the Stop button is always one tap away.
+     Race-safe: we re-read localStorage at gesture time (not at page-load capture
+     time) so that if the user somehow clicks Stop before the first gesture fires,
+     stopRadio() will have already cleared the key and the resume is a no-op.    */
+  var pendingGenre=loadRadioGenre();
+  if(pendingGenre){
+    // Show a subtle paused state on the radio button
+    if(radioBtn){ radioBtn.title='Radio Online (pausada — se reanuda al empezar)'; }
+    var statusEl=document.getElementById('radioStatus');
+    if(statusEl){ statusEl.textContent='⏸ Pausada — se reanuda al primer toque'; }
+    // Mark the saved genre button as 'paused' visually (dashed border = paused state)
+    var savedBtn=document.querySelector('.radio-genre[data-genre="'+pendingGenre+'"]');
+    if(savedBtn){ savedBtn.style.borderStyle='dashed'; savedBtn.style.borderColor='var(--gold2)'; }
+    function resumeOnGesture(){
+      // Re-read at gesture time — if user clicked Stop before this fired, key is already gone
+      var g=loadRadioGenre();
+      // Clear dashed style regardless
+      document.querySelectorAll('.radio-genre').forEach(function(b){ b.style.borderStyle=''; b.style.borderColor=''; });
+      if(!g) return; // user already stopped it explicitly; respect that
+      var gb=document.querySelector('.radio-genre[data-genre="'+g+'"]');
+      playRadio(g,gb);
+    }
+    document.addEventListener('pointerdown',resumeOnGesture,{capture:true,once:true});
+  }
 })();
 </script>
 </body>
