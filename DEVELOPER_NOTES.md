@@ -1,5 +1,32 @@
 # Developer Notes — ElMultiVersoDelAjedrez (index.html)
 
+> **Folder rename (2026-06-22):** the project lives at `C:\00 Projects\0000 El Multiverso Del Ajedrez\`
+> on JFC's machine. The old path `C:\00 Projects\El Reino de JuanFerland\` now exists as a Windows
+> directory junction pointing to the new folder (so any cached preview/MCP servers, .claude/launch.json,
+> or external scripts that still reference the old path keep working). If you ever wipe the
+> junction by accident, recreate it: `New-Item -ItemType Junction -Path "<old>" -Target "<new>"`.
+
+## Wood-knock audio engine (`woodKnock(heavy)`, line ~1759)
+
+JFC built a 4-layer Web Audio synth replacing the old electronic move sound — he hates electronic
+move sounds, MUST sound like wood on wood. After the first wood synth landed he reported it still
+"sonando lento y poco solidas" (2026-06-21). The tuning fix that finally landed:
+
+- Layer 2 (body formant): Q dropped 8→2.4, freq 800→540 Hz, decay 60→30 ms, attack 6→1.6 ms.
+  High-Q bandpass made it RING (tonal), not knock (percussive). Lower Q + lower freq + faster
+  decay = "tock" not "tone."
+- Layer 3 (overtone): Q 4→2, freq 1360→1120, decay 40→22 ms. Same logic — broader bite, less whistle.
+- Layer 4 (low thump): freq 195/255 → 175/215, attack 3→1.8 ms, gain 0.10/0.065 → 0.16/0.11.
+  More low-end "mass," still snappy.
+- Layer 1 (clack transient) was already good (10-15 ms, high-pass 2.7 kHz), unchanged.
+
+Result: snappier, weightier, less ringy. If JFC ever asks for "more solid" again, the move is
+LOWER frequencies + LOWER Q + FASTER decay, not louder. Loud + ringy = electronic, not wood.
+
+**Do NOT** replace `woodKnock` with a sampled .wav/mp3 unless JFC explicitly asks — the procedural
+synth has zero asset weight and random micro-variations per knock, so repeated moves never sound
+identical. A loop of a single sampled knock would.
+
 Single-file HTML game (~3900+ lines). This doc exists so future edits don't accidentally
 break a system whose purpose isn't obvious from the code alone, or rediscover a bug that
 was already fixed once. Read this before touching anything listed below. Matching inline

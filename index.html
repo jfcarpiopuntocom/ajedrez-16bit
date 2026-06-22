@@ -1774,38 +1774,40 @@ function woodKnock(heavy){
       src.connect(hp); hp.connect(g); g.connect(actx.destination);
       src.start(t); src.stop(t+0.025); }
 
-    // ── Layer 2: Wood body — primary formant ~820 Hz ──
-    // Models the resonant body of the wooden piece/board (fundamental wood tone).
-    { const src=actx.createBufferSource(); src.buffer=_noiseBuf(60);
-      const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=800+Math.random()*60; bp.Q.value=8+Math.random()*2;
-      const g=actx.createGain(); const vb=heavy?0.30:0.19;
-      g.gain.setValueAtTime(0,t+0.002);
-      g.gain.linearRampToValueAtTime(vb,t+0.006+jit());
-      g.gain.exponentialRampToValueAtTime(0.0001,t+0.060+jit()*2);
+    // ── Layer 2: Wood body — primary formant ~560 Hz ──
+    // Models the resonant body of solid hardwood. JFC 2026-06-21: lowered Q (8→2.6) so it reads
+    // as a percussive "tock" not a ringing tone, lower freq + shorter decay (60→30ms) for a more
+    // solid, snappier knock ("seguían sonando lento y poco sólidas"). Attack near-instant (+0.001).
+    { const src=actx.createBufferSource(); src.buffer=_noiseBuf(40);
+      const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=540+Math.random()*50; bp.Q.value=2.4+Math.random()*0.5;
+      const g=actx.createGain(); const vb=heavy?0.34:0.24;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(vb,t+0.0016+jit());
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.030+jit());
       src.connect(bp); bp.connect(g); g.connect(actx.destination);
-      src.start(t+0.002); src.stop(t+0.070); }
+      src.start(t); src.stop(t+0.040); }
 
-    // ── Layer 3: Secondary overtone ~1380 Hz ──
-    // Adds brightness/character — different woods have different overtone ratios.
-    { const src=actx.createBufferSource(); src.buffer=_noiseBuf(38);
-      const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1360+Math.random()*80; bp.Q.value=4+Math.random()*2;
-      const g=actx.createGain(); const vc=heavy?0.13:0.08;
-      g.gain.setValueAtTime(0,t+0.001);
-      g.gain.linearRampToValueAtTime(vc,t+0.004+jit());
-      g.gain.exponentialRampToValueAtTime(0.0001,t+0.040+jit());
+    // ── Layer 3: Secondary overtone ~1150 Hz ──
+    // Adds bite/character. Lower Q (4→2) = broader, more knock-like, less tonal whistle.
+    { const src=actx.createBufferSource(); src.buffer=_noiseBuf(24);
+      const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1120+Math.random()*70; bp.Q.value=2+Math.random();
+      const g=actx.createGain(); const vc=heavy?0.12:0.075;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(vc,t+0.0014+jit());
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.022+jit());
       src.connect(bp); bp.connect(g); g.connect(actx.destination);
-      src.start(t+0.001); src.stop(t+0.048); }
+      src.start(t); src.stop(t+0.028); }
 
     // ── Layer 4: Low pitch thump (weight / mass of the piece) ──
-    // Sine at sub-200 Hz gives the physical "weight" feel — heavier pieces sound heavier.
+    // Sine at sub-220 Hz gives the physical "weight" feel. Boosted + faster decay for solidity.
     { const o=actx.createOscillator(); o.type='sine';
-      o.frequency.value=(heavy?195:255)+Math.random()*20;
+      o.frequency.value=(heavy?175:215)+Math.random()*15;
       const g=actx.createGain();
       g.gain.setValueAtTime(0,t);
-      g.gain.linearRampToValueAtTime(heavy?0.10:0.065,t+0.003);
-      g.gain.exponentialRampToValueAtTime(0.0001,t+0.038+jit());
+      g.gain.linearRampToValueAtTime(heavy?0.16:0.11,t+0.0018);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.030+jit());
       o.connect(g); g.connect(actx.destination);
-      o.start(t); o.stop(t+0.046); }
+      o.start(t); o.stop(t+0.038); }
   }catch(e){}
 }
 // woodLift: the lighter sound of picking up a piece (drag-start).
