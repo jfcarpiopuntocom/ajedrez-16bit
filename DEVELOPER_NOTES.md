@@ -6,6 +6,13 @@
 > or external scripts that still reference the old path keep working). If you ever wipe the
 > junction by accident, recreate it: `New-Item -ItemType Junction -Path "<old>" -Target "<new>"`.
 
+## title.png — dual location (intentional)
+
+`title.png` exists both at root (`./title.png`) and inside `assets/title.png`. The root copy
+was uploaded directly by JFC via GitHub's web UI; the `assets/` copy is the one referenced by
+the HTML (`<img src="assets/title.png">`). Both are tracked. Do NOT delete either — the root
+copy serves as a quick-access reference, the assets/ copy is the production path.
+
 ## Wood-knock audio engine (`woodKnock(heavy)`, line ~1759)
 
 JFC built a 4-layer Web Audio synth replacing the old electronic move sound — he hates electronic

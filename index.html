@@ -8,7 +8,7 @@
   ╠══════════════════════════════════════════════════════════════════╣
   ║  ARCHITECTURE                                                   ║
   ║  Single-file game: HTML + CSS + JS, no build step.              ║
-  ║  Chess engine: chess.js (logic) + Stockfish.js (AI, 7 levels).  ║
+  ║  Chess engine: chess.js (logic) + Stockfish.js (AI, 8 levels).  ║
   ║  Online: PeerJS (WebRTC P2P), Trystero (lobby via Nostr/BT).   ║
   ║  Storage: localStorage + IndexedDB + 2-year cookie (identity).  ║
   ║                                                                 ║
@@ -54,7 +54,7 @@
      snippet vs social-share card) but should tell the same story. -->
 <meta name="description" content="Ajedrez 16-bit con un sistema único: cada partida es un código que cualquiera, en cualquier dispositivo, puede continuar. Multiverse de ajedrez: bifurca, retoma, comparte.">
 <meta property="og:title" content="ElMultiVersoDelAjedrez: Multiverse Chess 16-bit">
-<meta property="og:description" content="¿Quién ganará la batalla por su control? Ajedrez 16-bit: juega con un amigo o contra la IA (7 niveles, hasta Bobby Fischer Bot).">
+<meta property="og:description" content="¿Quién ganará la batalla por su control? Ajedrez 16-bit: juega con un amigo o contra la IA (8 niveles, hasta Bobby Fischer Bot).">
 <meta property="og:type" content="website">
 <!-- og:url / og:image were still pointing at the pre-rebrand jfcarpiopuntocom.github.io domain.
      Now that elmultiversodelajedrez.com is live (Cloudflare DNS -> GitHub Pages, CNAME file in
@@ -765,11 +765,29 @@ body.focusmode #radioPanel{ display:none !important } /* #radioBtn already cover
    clientHeight 61px on a 375px viewport). Desktop's override (below, min-width:900px) already
    lets the box grow with content; mobile now does too — consistent with mobile no longer being
    locked to no-scroll outside zoom mode, a taller quote box is no longer a layout risk. */
-.quote{ flex:0 0 auto; width:100%; max-width:430px; text-align:center; font-style:italic; font-size:13px; line-height:1.35;
+.quote{ flex:0 0 auto; width:100%; max-width:100%; text-align:center; font-style:italic; font-size:13px; line-height:1.35;
   color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; padding:4px 10px; min-height:17px; transition:opacity .35s;
   background:linear-gradient(160deg,#1f160d,#150e07); border:1px solid rgba(232,160,32,.3); border-radius:8px; margin-bottom:2px;
   font-family:"Trebuchet MS","Segoe UI",system-ui,Arial,sans-serif; word-wrap:break-word; overflow-wrap:break-word }
 .quote b{ font-style:normal; font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; display:block; margin-top:4px }
+.mv-info{ font-size:13px; line-height:1.4; color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; padding:10px 12px;
+  background:linear-gradient(160deg,#1f160d,#150e07); border:1px solid rgba(232,160,32,.45); border-radius:10px; word-wrap:break-word }
+.mv-info .mv-label{ font-weight:800; color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important; font-size:14px; margin-bottom:6px; letter-spacing:.3px }
+.mv-info .mv-code{ font-family:'Courier New',monospace; font-size:15px; font-weight:800; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+  background:rgba(232,160,32,.12); padding:4px 8px; border-radius:6px; display:inline-block; margin-bottom:6px; letter-spacing:1.5px }
+.mv-info .mv-branch{ color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important; font-weight:700; font-size:13px; margin-bottom:4px }
+.mv-info .mv-branch span{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important }
+.mv-info .mv-row{ margin:2px 0; font-size:12.5px }
+.mv-info .mv-row span{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-weight:700 }
+.mv-info .mv-stats{ margin:6px 0; font-size:13px; font-weight:700 }
+.mv-info .mv-w{ color:#28ECAA !important; -webkit-text-fill-color:#28ECAA !important }
+.mv-info .mv-l{ color:#E86040 !important; -webkit-text-fill-color:#E86040 !important }
+.mv-info .mv-d{ color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+.mv-info .mv-pct{ color:var(--gold2) !important; -webkit-text-fill-color:var(--gold2) !important }
+.mv-info .mv-cta{ margin-top:6px; font-size:12.5px; color:#E8D8B0 !important; -webkit-text-fill-color:#E8D8B0 !important; font-style:italic; border-top:1px solid rgba(232,160,32,.2); padding-top:6px }
+.mv-info .mv-cta b{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-style:normal }
+.mv-info .mv-ch{ font-size:12px; margin:2px 0; color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+.mv-info .mv-ch span{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-weight:700 }
 
 /* ---------- Desktop / tablet ---------- */
 @media (min-width:900px){
@@ -992,7 +1010,7 @@ body.focusmode #radioPanel{ display:none !important } /* #radioBtn already cover
   <h2 id="startH2" style="display:none"></h2>
   <div class="choices">
     <button class="bigbtn" id="btn2p">👥 Con un amigo en persona</button>
-    <button class="bigbtn ai" id="btnAI">🐉 Contra la IA (7 niveles)</button>
+    <button class="bigbtn ai" id="btnAI">🐉 Contra la IA (8 niveles)</button>
     <button class="bigbtn online" id="btnOnline">🌐 Jugar online (1 vs 1)</button>
   </div>
   <div class="splashBoard" id="splashBoard">
@@ -1103,6 +1121,7 @@ body.focusmode #radioPanel{ display:none !important } /* #radioBtn already cover
     <section class="cap blue"><h3><img src="assets/shield-blue.png" class="cap-icon"> Capturas Azul <span class="score" id="scoreW"></span></h3><div class="slots" id="capW"></div></section>
     <div class="left-rail">
       <div class="quote" id="quote"></div>
+      <div class="mv-info" id="mvInfo" style="display:none"></div>
       <aside class="history" id="history"><h4>Jugadas</h4><ol id="histlist"></ol>
         <div class="replay-bar" id="replayBar" style="display:none">
           <button class="replay-btn" id="repFirst" title="Inicio">|◀</button>
@@ -1200,13 +1219,13 @@ const LEVELS=[
 // this point used to silently point at the wrong level whenever the array shape changed.
 function levelByKey(k){ for(var i=0;i<LEVELS.length;i++) if(LEVELS[i].key===k) return LEVELS[i]; return LEVELS[0]; }
 const APHORISMS=[
-  {t:'Cuando veas una buena jugada, busca una mejor.', a:'Emanuel Lasker'},
+  {t:'Cuando veas una buena jugada, busca una mejor.', a:'Emanuel Lasker', pinned:true},
   {t:'El peón es el alma del ajedrez.', a:'A. Philidor'},
   {t:'Una amenaza es más fuerte que su ejecución.', a:'A. Nimzowitsch'},
   {t:'Antes del final, los dioses crearon el medio juego.', a:'S. Tarrasch'},
   {t:'El ajedrez es la lucha contra el error.', a:'J. Zukertort'},
   {t:'Ayuda a tus piezas y ellas te ayudarán.', a:'Paul Morphy'},
-  {t:'Toda batalla se gana antes de librarse.', a:'Sun Tzu'},
+  {t:'Toda batalla se gana antes de librarse.', a:'Sun Tzu', pinned:true},
   {t:'Conoce al rival y conócete: cien victorias.', a:'Sun Tzu'},
   {t:'La oportunidad se multiplica cuando se aprovecha.', a:'Sun Tzu'},
   {t:'La estrategia sin táctica es el camino lento a la victoria.', a:'Sun Tzu'},
@@ -1216,16 +1235,16 @@ const APHORISMS=[
   {t:'Quien domina el centro, dicta el ritmo.', a:'Principio clásico'},
   {t:'El error espera sentado a quien mueve sin plan.', a:'Proverbio'},
   {t:'Sacrifica lo pequeño para conquistar lo grande.', a:'Estrategia'},
-  {t:'La paciencia es una jugada que el rival no ve.', a:'JuanFerland'},
-  {t:'Lo más caro es no planear.', a:'JuanFerland'},
+  {t:'La paciencia es una jugada que el rival no ve.', a:'JuanFerland', pinned:true},
+  {t:'Lo más caro es no planear.', a:'JuanFerland', pinned:true},
   {t:'Quien no arriesga, rara vez conquista el reino.', a:'JuanFerland'},
   {t:'En la guerra y el ajedrez, no hay lugar para el segundo.', a:'Proverbio medieval'},
   {t:'El rey que no estudia a su rival gobierna su propia derrota.', a:'Principio feudal'},
   {t:'Deja que el rival crea que el peón es insignificante.', a:'Estrategia'},
   {t:'Un castillo sin guardia es una invitación.', a:'Proverbio medieval'},
-  {t:'La victoria pertenece al más perseverante.', a:'Napoleón'},
+  {t:'La victoria pertenece al más perseverante.', a:'Napoleón', pinned:true},
   {t:'Divide las fuerzas del rival y caerá solo.', a:'Julio César'},
-  {t:'Un ejército de ciervos liderado por un león es más temible que uno de leones liderado por un ciervo.', a:'Proverbio árabe'},
+  {t:'Un ejército de ciervos liderado por un león es más temible que uno de leones liderado por un ciervo.', a:'Proverbio árabe', pinned:true},
   {t:'No cambies de plan ante la primera dificultad.', a:'Principio militar'},
   {t:'La torre que avanza primero llega primero a la corona.', a:'Proverbio de ajedrez'},
   {t:'Quien controla las diagonales, controla el campo.', a:'Principio posicional'},
@@ -1265,7 +1284,7 @@ const APHORISMS=[
   // Anécdotas increíbles de ajedrez
   {t:'El Turco, autómata ajedrecista de 1770, venció a Napoleón y a Franklin: escondía a un maestro humano dentro.', a:'Historia: El Turco'},
   {t:'Capablanca estuvo ocho años sin perder una sola partida, de 1916 a 1924.', a:'Récord histórico'},
-  {t:'En la Partida Inmortal de 1851, Anderssen sacrificó dama y dos torres para dar mate.', a:'Anderssen, 1851'},
+  {t:'En la Partida Inmortal de 1851, Anderssen sacrificó dama y dos torres para dar mate.', a:'Anderssen, 1851', pinned:true},
   {t:'Fischer aplastó 6 a 0 a Taimánov y 6 a 0 a Larsen en 1971: una hazaña jamás repetida.', a:'Fischer, 1971'},
   {t:'Morphy derrotó a toda la élite europea y se retiró del ajedrez a los 22 años.', a:'Paul Morphy'},
   {t:'En 1997 Deep Blue venció a Kasparov: la primera vez que una máquina derrotó a un campeón mundial.', a:'Kasparov vs Deep Blue'},
@@ -1288,7 +1307,7 @@ const APHORISMS=[
   {t:'Petrosian era tan difícil de vencer que lo apodaban La Roca de Hierro.', a:'Tigran Petrosian'},
   {t:'Korchnói jugó un match por el título mundial a los 47 años contra un rival 24 años menor.', a:'Korchnói vs Karpov, 1978'},
   {t:'Pillsbury jugó 16 partidas simultáneas a ciegas mientras jugaba damas y cartas al mismo tiempo.', a:'Harry Pillsbury, 1900'},
-  {t:'Sultan Khan, un sirviente analfabeto de la India, venció a Capablanca en 1930.', a:'Sultan Khan'},
+  {t:'Sultan Khan, un sirviente analfabeto de la India, venció a Capablanca en 1930.', a:'Sultan Khan', pinned:true},
   {t:'Vera Menchik, primera campeona mundial femenina, venció a muchos grandes maestros de los años 30.', a:'Vera Menchik'},
   {t:'En Wijk aan Zee 1999, Kasparov jugó la misma línea Siciliana en todas sus partidas con negras y ganó el torneo.', a:'Kasparov, 1999'},
   {t:'Akiba Rubinstein tenía una fobia social tan severa que jugaba mirando a la pared, nunca al rival.', a:'Akiba Rubinstein'},
@@ -1710,12 +1729,45 @@ setTimeout(function(){
 
 let qi=-1, qTimer=null;
 function rotateQuote(){ const el=document.getElementById('quote'); if(!el) return;
-  // Random order, avoiding an immediate repeat of the last shown aphorism
-  let ni=Math.floor(Math.random()*APHORISMS.length);
-  if(APHORISMS.length>1 && ni===qi) ni=(ni+1)%APHORISMS.length;
+  // Weighted random: pinned aphorisms get 3× probability
+  const pool=[]; APHORISMS.forEach((a,i)=>{ const w=a.pinned?3:1; for(let j=0;j<w;j++) pool.push(i); });
+  let ni=pool[Math.floor(Math.random()*pool.length)];
+  if(APHORISMS.length>1 && ni===qi) ni=pool[Math.floor(Math.random()*pool.length)];
   qi=ni; const q=APHORISMS[qi];
   el.style.opacity='0'; setTimeout(()=>{ el.innerHTML='&ldquo;'+q.t+'&rdquo; <b>&mdash; '+q.a+'</b>'; el.style.opacity='1'; },160); }
 function startQuotes(){ if(qTimer) clearInterval(qTimer); qi=-1; rotateQuote(); qTimer=setInterval(rotateQuote,10000); }
+function updateMvInfo(){
+  var el=$('mvInfo'); if(!el) return;
+  if(!started || typeof matchLineage==='undefined' || !matchLineage.length){ el.style.display='none'; return; }
+  el.style.display='';
+  var moves=game.history?game.history().length:0;
+  var isBranch=matchLineage.length>1;
+  var isOver=game.game_over()||resigned;
+  var st=loadStats();
+  var h='<div class="mv-label">🌀 '+(isBranch?'Línea Paralela':'Línea Original')+'</div>';
+  h+='<div class="mv-code"><span>'+matchCode+'</span></div>';
+  if(isBranch){
+    h+='<div class="mv-branch">⚡ Esta partida se bifurcó en la jugada <span>'+matchLineage[matchLineage.length-1].at+'</span></div>';
+    h+='<div class="mv-row">Universos cruzados: <span>'+matchLineage.length+'</span></div>';
+  }
+  h+='<div class="mv-row">Jugadas: <span>'+moves+'</span></div>';
+  if(st.total){
+    var pct=st.total>0?Math.round((st.wins/st.total)*100):0;
+    h+='<div class="mv-stats">';
+    h+='<span class="mv-w">'+st.wins+'W</span> <span class="mv-l">'+(st.losses||0)+'L</span> <span class="mv-d">'+(st.draws||0)+'D</span>';
+    h+=' <span class="mv-pct">'+pct+'%</span>';
+    if(st.forks) h+=' · <span>'+st.forks+'</span> forks';
+    h+='</div>';
+  }
+  if(isOver && !isBranch) h+='<div class="mv-cta">Usa <b>Deshacer</b> para reescribir la historia o comparte el código para que otro abra un Multiverso</div>';
+  else if(isOver && isBranch) h+='<div class="mv-cta">Esta línea paralela terminó. Deshaz jugadas para explorar otro destino</div>';
+  matchLineage.forEach(function(ch,i){
+    var label=ch.opp||'?';
+    var icon=i===0?'🏰':'🌀';
+    h+='<div class="mv-ch">'+icon+' '+(i===0?'Origen':' Jugada '+ch.at)+': <span>'+label+'</span></div>';
+  });
+  el.innerHTML=h;
+}
 const BOARD_W=472, BOARD_H=536, ASPECT=BOARD_W/BOARD_H, FILES='abcdefgh';
 
 let mode='2p', level=levelByKey('novato');
@@ -1862,6 +1914,7 @@ const levelsEl=$('levels');
 LEVELS.forEach(l=>{ const b=document.createElement('button'); b.className='lv'; b.dataset.key=l.key;
   b.innerHTML=`<span>${l.name}</span><span class="tag">${l.tag?l.tag:(l.elo?('~'+l.elo+' Elo'):'máxima')}</span>`;
   b.onclick=()=>{ level=l; showColorPick(); }; levelsEl.appendChild(b); });
+['btn2p','btnAI','btnOnline'].forEach(id=>{$(id).addEventListener('pointerdown',()=>actxInit(),{once:true});});
 $('btn2p').onclick=()=>startGame('2p');
 $('btnAI').onclick=()=>{ levelsEl.classList.add('show'); $('btn2p').style.display='none'; $('btnAI').style.display='none'; $('btnOnline').style.display='none'; $('startH2').textContent='Elige el nivel del Rival'; $('startH2').style.display=''; $('backBtn').style.display='block'; $('kingpick').classList.remove('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden'); };
 function showColorPick(){ levelsEl.classList.remove('show'); $('colorpick').classList.add('show'); $('kingpick').classList.add('show-step'); $('splashBoard').classList.add('hidden'); $('resumeRow').classList.add('hidden'); $('resumeMsg').classList.add('hidden'); $('uniCallout').classList.add('hidden'); $('startH2').textContent='¿De qué lado juegas?'; $('startH2').style.display=''; }
@@ -1998,7 +2051,7 @@ function wireConn(c){
       if(!(game.game_over() || resigned)) return;
       // Mirror: swap colors locally so we stay opposite each other.
       net.myColor=(net.myColor==='w'?'b':'w'); flipped=(net.myColor==='b');
-      game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0; resigned=false;
+      game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0; resigned=false; _endTracked=null;
       // Mirror the new matchCode/lineage the initiator just assigned (see $('rematch').onclick),
       // so this side's saveMatch() doesn't clobber the finished match's saved record either.
       matchCode=(mode==='online' && currentRoom)?currentRoom:genCode();
@@ -3161,7 +3214,7 @@ function startGame(m){
   mode=m; started=true; resigned=false;
   if(m==='online') document.body.classList.add('mode-online');
   else document.body.classList.remove('mode-online');
-  game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; flipped=false; redoStack.length=0;
+  game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; flipped=false; redoStack.length=0; _endTracked=null;
   if(pendingResume && pendingResume.data){
     var d=pendingResume.data;
     // Replay the real moves so the full history exists (undo unravels to move 1, free branching).
@@ -3434,33 +3487,37 @@ function getStatsText(){
    Calls addGameToHistory() for Mi Tablero record-keeping.
    showVictory(winner) and showDraw() are in the effects script. */
 /* ===== Status ===== */
+var _endTracked=null; // matchCode of the game whose end was already tracked (prevents stat duplication)
 function status(){
   let s='';
   if(game.in_checkmate()){
     s=game.turn()==='w'?'<span class="warn">¡Jaque mate! Vencen las Rojas (negras). 🐉</span>':'<span class="win">¡Jaque mate! Vencen las Azules (blancas). 🦁</span>';
-    var winner=(game.turn()==='b'?'w':'b');
+    var winner=(game.turn()==='w'?'b':'w');
     var result=(mode==='online'?(winner===net.myColor?'win':'loss'):(playerColor===game.turn()?'loss':'win'));
     var opp=(mode==='online'?net.rivalName:(mode==='2p'?'2P':'IA'));
-    if(matchCode && myBoard) addGameToHistory(matchCode,opp,result);
-    trackGame(result==='win'?'wins':result==='loss'?'losses':'draws',opp,game.history().length);
-    var winner=(game.turn()==='w'?'b':'w');
+    if(_endTracked!==matchCode){
+      _endTracked=matchCode;
+      if(matchCode && myBoard) addGameToHistory(matchCode,opp,result);
+      trackGame(result==='win'?'wins':result==='loss'?'losses':'draws',opp,game.history().length);
+    }
     if(typeof showVictory==='function') setTimeout(function(){ showVictory(winner); },600);
   } else if(game.in_stalemate()){
     s='Tablas por ahogado.';
-    if(matchCode && myBoard) addGameToHistory(matchCode,mode==='online'?net.rivalName:'IA','draw');
   } else if(game.in_threefold_repetition()){
     s='Tablas por repetición.';
-    if(matchCode && myBoard) addGameToHistory(matchCode,mode==='online'?net.rivalName:'IA','draw');
   } else if(game.insufficient_material()){
     s='Tablas: material insuficiente.';
-    if(matchCode && myBoard) addGameToHistory(matchCode,mode==='online'?net.rivalName:'IA','draw');
   } else if(game.in_draw()){
     s='Tablas (50 movimientos).';
-    if(matchCode && myBoard) addGameToHistory(matchCode,mode==='online'?net.rivalName:'IA','draw');
   }
   if(game.in_stalemate()||game.in_threefold_repetition()||game.insufficient_material()||game.in_draw()){
-    trackGame('draws',mode==='online'?net.rivalName:(mode==='2p'?'2P':'IA'),game.history().length);
-    SFX.draw();
+    if(_endTracked!==matchCode){
+      _endTracked=matchCode;
+      var drawOpp=mode==='online'?net.rivalName:(mode==='2p'?'2P':'IA');
+      if(matchCode && myBoard) addGameToHistory(matchCode,drawOpp,'draw');
+      trackGame('draws',drawOpp,game.history().length);
+      SFX.draw();
+    }
     if(typeof showDraw==='function') setTimeout(function(){ showDraw(); },600);
   }
   else if(!game.game_over()){
@@ -3487,6 +3544,7 @@ function status(){
       cb.style.display='';
     } else { cb.innerHTML=''; cb.style.display='none'; }
   }
+  updateMvInfo();
 }
 
 /* Firebase: loaded from firebase-init.js after config */
@@ -3628,12 +3686,16 @@ function rebuildCaptures(){ capW.length=0; capB.length=0;
 // whole purpose is to leave the just-ended position, so auto-closing the veil here is correct in
 // every case, not a workaround.
 $('undo').onclick=()=>{ if(busy) return;
-  // King of the hill stays serious: no take-backs while an online human duel is live.
   if(mode==='online' && !game.game_over() && !resigned) return;
-  engineStop(); // abort any in-flight search before rewinding the position
+  engineStop();
   if(typeof hideVictory==='function') hideVictory();
-  const u1=game.undo(); if(u1) redoStack.push(u1);
-  if(mode==='ai'){ const u2=game.undo(); if(u2) redoStack.push(u2); }
+  // First undo from a finished game rewinds 4 half-moves (2 full turns) so the player
+  // lands on their own turn with real room to change the outcome. Subsequent undos
+  // rewind the normal 1 (2p/online) or 2 (ai) half-moves.
+  const wasOver=(game.game_over()||resigned);
+  const steps=wasOver?4:(mode==='ai'?2:1);
+  for(let i=0;i<steps;i++){ const u=game.undo(); if(u) redoStack.push(u); else break; }
+  resigned=false; _endTracked=null;
   rebuildCaptures(); render(); status(); renderHistory(); maybeShowRematch(); };
 $('redo').onclick=()=>{ if(busy||!redoStack.length) return;
   if(mode==='online' && !game.game_over() && !resigned) return;
@@ -3654,7 +3716,7 @@ $('rematch').onclick=()=>{
     // Face-to-face: swap colors so the loser starts white.
     playerColor=(playerColor==='w'?'b':'w');
   }
-  game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0; resigned=false;
+  game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0; resigned=false; _endTracked=null;
   // New game, new identity: a rematch must get its own matchCode so saveMatch() doesn't overwrite
   // the just-finished match's record in localStorage/IDB (which still holds the result/moves).
   matchCode=(mode==='online' && currentRoom)?currentRoom:genCode();
@@ -3763,7 +3825,7 @@ function backToLobby(){
   // Without it: worker kept running, Contempt/Skill flags persisted, watchdog timers accumulated —
   // identical consequences to the backToStart() bug, just reached via a different button.
   engineTeardown();
-  game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0;
+  game.reset(); capW.length=0; capB.length=0; lastMove=null; busy=false; redoStack.length=0; _endTracked=null;
   document.body.classList.remove('focusmode'); $('zoombtn').style.display='none'; $('zoombtn').innerHTML='🔍 zoom!'; showChatUI(false);
   $('app').style.display='none'; $('start').classList.remove('hidden');
   $('rematch').style.display='none'; $('backLobbyBtn').style.display='none';
@@ -4070,12 +4132,7 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize',()=>{
   });
   // Patrocínalo: native mailto in the href handles it (no JS hijack). The legacy obfuscation
   // path stays only for the Apoyar CTA, which keeps a body template.
-  document.getElementById('helpSponsor').addEventListener('click', function(e){
-    return; // native mailto handles it
-    var subj=encodeURIComponent('Patrocinar un tablero - Los Dos Reinos');
-    var body=encodeURIComponent('Hola Juan Fernando, quiero patrocinar un tablero futuro con mi marca. Hablemos.');
-    window.location.href=['mai','lto',':'].join('')+addrOf()+'?subject='+subj+'&body='+body;
-  });
+  // helpSponsor: native mailto in the href handles it, no JS needed.
 })();
 
 /* ===== Tavern Music — epic medieval score: brass + harp + heroic lead + romantic-piano wash
@@ -4578,7 +4635,8 @@ function setTavernMute(muted){
     var lib=document.getElementById('libFixedBtn'), btn=document.getElementById('radioBtn');
     if(!lib||!btn) return;
     var r=lib.getBoundingClientRect();
-    if(r.width) btn.style.right=(window.innerWidth-r.left+10)+'px';
+    if(r.width){ btn.style.right=(window.innerWidth-r.left+10)+'px';
+      var panel=document.getElementById('radioPanel'); if(panel) panel.style.right=btn.style.right; }
   }
   addEventListener('resize',positionRadioBtn);
   addEventListener('load',positionRadioBtn);

@@ -1,6 +1,6 @@
 # Los Dos Reinos - ElMultiversoDelAjedrez.com
 
-Ajedrez HTML5 con arte pixel propio. Juegas con el ejército **Azul** contra una IA con 5 niveles de dificultad, desde *Medio* hasta el simulador **Bobby Fischer**.
+Ajedrez HTML5 con arte pixel propio. Juegas con el ejército **Azul** contra una IA con 8 niveles de dificultad, desde *Distraído* hasta el simulador **Bobby Fischer**. También se juega con un amigo en persona u online (1 vs 1).
 
 ## Jugar
 Abre `index.html` en cualquier navegador moderno, o visita la versión publicada en GitHub Pages.
@@ -13,6 +13,9 @@ Abre `index.html` en cualquier navegador moderno, o visita la versión publicada
 ## Niveles
 | Nivel | Fuerza aprox. |
 |---|---|
+| Distraído | ~200 Elo |
+| Casual | ~333 Elo |
+| Novato | ~600 Elo |
 | Medio | ~1200 Elo |
 | Alto calibre | ~1600 Elo |
 | Chess Master | ~2100 Elo |
@@ -20,5 +23,5 @@ Abre `index.html` en cualquier navegador moderno, o visita la versión publicada
 | Bobby Fischer | fuerza máxima |
 
 ## Controles
-- Clic en una pieza azul para verla, clic en un destino resaltado para mover.
-- **Nueva partida**, **Deshacer**, **Girar tablero**, y selector de rival arriba.
+- Arrastra una pieza hasta su destino (no hay «tocar para mover»: decisión de diseño).
+- **Nueva partida**, **Deshacer**, **Rehacer**, **Tablas**, **Rendirse** y **Guardar**; el código de partida permite continuarla en otro dispositivo (Función Multiverso).
