@@ -123,7 +123,7 @@ h1,h2,h3,p,span,a,strong,button,div{ -webkit-text-fill-color:inherit }
 /* JFC 2026-06-18: splash art hidden until 16-bit compatible versions are ready */
 .start-art{ display:none !important }
 .start-art img{ width:100%; height:auto; display:block; max-height:72vh; object-fit:cover; image-rendering:pixelated; filter:contrast(1.06) saturate(.95) }
-.start-rail{ flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+.start-rail{ flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:safe center; gap:6px; /* safe: si no cabe (celular horizontal), no corta lo de arriba */
   min-width:0; max-width:430px; overflow-y:auto; max-height:100%; padding:2px 2px }
 /* Theme-pack caption: Los Dos Reinos is the first of several board themes (sci-fi, jungle,
    conquistadors). Small and quiet — a label, not a second headline. */
@@ -808,8 +808,108 @@ body.focusmode #radioPanel{ display:none !important } /* #radioBtn already cover
      laptop window height) the gap was previously 4px end-to-end. */
   .history{ flex:1 1 auto; width:100%; max-width:100%; max-height:none; margin-bottom:12px }
   .history ol{ columns:1 }
-  .title-img{ max-height:12vh }
+  .title-img{ max-height:9.5vh }
+  /* UI líquida (9 nov 2026): el ancho crece con la pantalla en vez de quedarse en 1180 px */
+  .app{ max-width:min(1680px,100%) }
+  .left-rail{ flex-basis:clamp(210px,17vw,330px); width:clamp(210px,17vw,330px); max-width:330px }
+  .cap{ flex-basis:clamp(96px,8vw,150px); width:clamp(96px,8vw,150px); max-width:150px }
+  .cap .slots img{ height:clamp(26px,2vw,36px) }
+  .stage{ gap:clamp(12px,1.6vw,28px) }
+  .left-rail, .right-rail{ flex:0 0 clamp(200px,19vw,330px); width:clamp(200px,19vw,330px); max-width:330px; align-self:stretch }
+  .right-rail{ order:1; display:flex; flex-direction:column; gap:10px }
+  .right-rail .cap{ flex:0 0 auto; width:100%; max-width:none; order:0 }
+  .right-rail .cap .slots{ max-height:none; min-height:34px }
+  .right-rail #codesBar{ max-width:100%; margin:auto 0 0; flex:0 0 auto }
+  .quote{ font-size:clamp(14px,0.95vw,17px) }
 }
+/* ══════ REDISEÑO ESCRITORIO (JFC 9 nov 2026: «en desktop luce todo enano y fatal… rehaz la UI») ══════
+   Tablero a todo el alto; columna izquierda = marca + cita + línea + jugadas; derecha = turno + capturas + controles + código.
+   Tipografía y controles escalan con la pantalla. Solo con body.ui-escritorio (≥900 px y fuera del zoom). */
+body.ui-escritorio .app{ max-width:none; padding:10px clamp(12px,1.6vw,32px) 34px }
+body.ui-escritorio .stage{ gap:clamp(14px,1.8vw,36px); align-items:stretch }
+body.ui-escritorio .left-rail, body.ui-escritorio .right-rail{ flex:0 0 clamp(250px,22vw,420px); width:clamp(250px,22vw,420px); max-width:420px;
+  padding-top:46px; gap:clamp(8px,1.1vh,14px); min-height:0; overflow-y:auto; scrollbar-width:thin }
+body.ui-escritorio .left-rail .title-wrap{ width:100%; margin:0; padding:6px 8px; flex:0 0 auto }
+body.ui-escritorio .left-rail .title-img{ width:100%; max-height:none; height:auto }
+body.ui-escritorio .quote{ font-size:clamp(15px,1.05vw,20px); padding:clamp(12px,1.2vw,20px) }
+body.ui-escritorio .history{ font-size:clamp(14px,0.95vw,18px) }
+body.ui-escritorio .right-rail .status{ font-size:clamp(15px,1.1vw,20px); min-height:0; text-align:left }
+body.ui-escritorio .right-rail .status .chip{ display:block; text-align:center; padding:clamp(8px,0.8vw,12px) 14px; border-radius:12px }
+body.ui-escritorio .right-rail .cap{ padding:clamp(8px,0.8vw,14px) }
+body.ui-escritorio .right-rail .cap h3{ font-size:clamp(14px,1vw,18px); text-align:left }
+body.ui-escritorio .right-rail .cap .slots img{ height:clamp(30px,2.4vw,44px) }
+body.ui-escritorio .right-rail .hud{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(6px,0.7vw,10px); padding:0 }
+body.ui-escritorio .right-rail .hud button{ width:100%; font-size:clamp(15px,1.05vw,19px); padding:clamp(9px,1.1vh,14px) 10px; border-radius:12px }
+body.ui-escritorio .right-rail .hud button.gold{ grid-column:1/-1; font-size:clamp(16px,1.2vw,22px) }
+body.ui-escritorio .right-rail .note{ text-align:left; font-size:clamp(13px,0.9vw,16px) }
+body.ui-escritorio .right-rail #codesBar{ font-size:clamp(13px,0.9vw,16px) }
+body.ui-escritorio .coord{ font-size:clamp(13px,1vw,18px) }
+body.ui-escritorio .mv-info{ font-size:clamp(14px,0.95vw,18px); padding:clamp(10px,1vw,16px) }
+body.ui-escritorio .mv-info .mv-label{ font-size:clamp(15px,1.1vw,20px) }
+body.ui-escritorio .mv-info .mv-code{ font-size:clamp(16px,1.15vw,21px) }
+body.ui-escritorio .mv-info .mv-row, body.ui-escritorio .mv-info .mv-stats, body.ui-escritorio .mv-info .mv-branch{ font-size:clamp(13.5px,0.95vw,17px) }
+body.ui-escritorio .right-rail #codesBar b, body.ui-escritorio .right-rail #codesBar{ font-size:clamp(14px,0.95vw,17px) }
+body.ui-escritorio .right-rail #codesBar .code-val{ font-size:clamp(15px,1.05vw,19px) }
+body.ui-escritorio .right-rail .codes-share{ font-size:clamp(14px,0.95vw,17px); padding:8px 16px }
+body.ui-escritorio .history h3, body.ui-escritorio .history .hist-title{ font-size:clamp(15px,1.05vw,19px) }
+/* ══════ INICIO EN ESCRITORIO (JFC 9 nov 2026: «terrible página de inicio… usa skills») ══════
+   Patrón «hero-centric» (ui-ux-pro-max): el hero domina el primer viewport, una sola jerarquía de botones, contraste alto.
+   Solo piezas 16-bit del juego (reyes, tablero del castillo, título): el arte pintado sigue oculto por decisión de JFC (18 jun). */
+@media (min-width:900px) and (min-height:560px){
+  .start{ padding:clamp(12px,2vh,26px) clamp(20px,4vw,72px) 40px; gap:clamp(8px,1.6vh,18px) }
+  .start img.banner{ max-width:min(860px,60vw); max-height:19vh }
+  .start-body{ align-items:center }
+  .start-rail{ display:grid; grid-template-columns:minmax(0,1.2fr) minmax(360px,.8fr); column-gap:clamp(32px,4.5vw,90px); row-gap:clamp(10px,1.6vh,18px);
+    align-content:center; justify-items:stretch; width:100%; max-width:min(1400px,94vw); overflow:visible; max-height:none }
+  .start-rail > *{ grid-column:2; min-width:0 }
+  .start-rail > .splashBoard{ grid-column:1; grid-row:1 / span 14; align-self:center; justify-self:center; margin:0; gap:clamp(14px,2.2vw,40px) }
+  .start-rail:has(.splashBoard.hidden){ grid-template-columns:minmax(0,600px); justify-content:center }
+  .start-rail:has(.splashBoard.hidden) > *{ grid-column:1; justify-self:center }
+  .start-rail:has(.splashBoard.hidden) .theme-caption{ text-align:center }
+  .levels.show{ width:min(600px,100%); max-width:none; gap:clamp(8px,1.4vh,14px) }
+  .levels .lv{ min-height:clamp(54px,7vh,72px); font-size:clamp(16px,1.15vw,20px) }
+  .levels .lv .tag{ font-size:clamp(13px,.9vw,15px) }
+  #startH2{ font-size:clamp(20px,1.6vw,28px) }
+  .choices{ max-width:none; gap:clamp(10px,1.5vh,16px) }
+  .choices .bigbtn{ font-size:clamp(18px,1.45vw,27px); min-height:clamp(58px,7.6vh,84px); border-radius:14px }
+  .splash-side{ gap:clamp(8px,1.8vh,22px) }
+  .splash-side img{ height:clamp(84px,14vh,176px) }
+  .splash-mini-board{ width:clamp(220px,min(24vw,52vh),460px); height:auto; aspect-ratio:472/536; border:4px solid var(--gold); border-radius:12px;
+    background:url("assets/board.png?v=22") center/100% 100% no-repeat; box-shadow:0 18px 50px rgba(0,0,0,.65), 0 0 70px rgba(245,194,74,.22) }
+  .universo-callout{ max-width:none; margin:0; font-size:clamp(14px,1vw,18px); padding:clamp(12px,1.4vh,18px) clamp(14px,1.2vw,22px) }
+  .universo-callout h3{ font-size:clamp(15px,1.15vw,20px) }
+  .lobby-resume{ max-width:none }
+  .lobby-resume input, .lobby-resume button{ min-height:clamp(46px,6vh,58px); font-size:clamp(15px,1.05vw,19px) }
+  .theme-caption{ text-align:left; font-size:clamp(12px,.85vw,15px); color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
+  /* Paso 3: elegir lado y rey, a escala de escritorio */
+  .colorpick.show{ width:min(660px,100%); max-width:none; gap:clamp(12px,1.4vw,22px) }
+  .colorpick .bigbtn{ min-height:clamp(86px,12.5vh,124px); font-size:clamp(22px,1.8vw,31px); border-radius:16px }
+  .colorpick .shield-icon{ height:clamp(44px,6.4vh,66px) }
+  .colorpick .bigbtn-sub{ font-size:clamp(14px,1vw,17px) }
+  .kingpick.show-step{ gap:clamp(12px,2.2vh,24px) }
+  .kingrow{ gap:clamp(10px,1.3vw,20px) }
+  .kingrow .lbl{ font-size:clamp(15px,1.15vw,20px); min-width:clamp(170px,14vw,240px) }
+  .kingrow button{ width:clamp(78px,12.5vh,140px); height:clamp(78px,12.5vh,140px); border-radius:14px; padding:6px; transition:transform .18s cubic-bezier(.2,.8,.3,1), box-shadow .25s, filter .25s }
+  .kingrow button img{ max-height:100%; max-width:100%; image-rendering:pixelated }
+  .kingrow button:hover{ transform:translateY(-4px) }
+  .kingrow button.active{ box-shadow:0 0 0 2px var(--gold2), 0 0 26px 6px rgba(245,194,74,.55), 0 0 64px 16px rgba(245,194,74,.22) }
+  .levels .lv{ transition:transform .18s cubic-bezier(.2,.8,.3,1), box-shadow .25s }
+  .levels .lv:hover{ transform:translateY(-3px); box-shadow:0 0 22px 4px rgba(245,194,74,.35) }
+}
+/* Lienzo del bloom detrás del hero (por encima del degradado, por debajo del contenido) */
+#start > canvas#brilloInicio{ position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none }
+.start.con-brillo #dustCanvas{ display:none }
+/* Motion orquestado: una sola entrada en cascada cuando aparece cada paso */
+@media (prefers-reduced-motion:no-preference){
+  .choices .bigbtn, .levels.show .lv, .colorpick.show .bigbtn, .kingpick.show-step .kingrow{ animation:entraPaso .46s cubic-bezier(.2,.8,.3,1) both }
+  .choices .bigbtn:nth-child(2), .levels.show .lv:nth-child(2), .colorpick.show .bigbtn:nth-child(2), .kingpick.show-step .kingrow:nth-child(2){ animation-delay:.07s }
+  .choices .bigbtn:nth-child(3), .levels.show .lv:nth-child(3){ animation-delay:.14s }
+  .levels.show .lv:nth-child(4){ animation-delay:.18s } .levels.show .lv:nth-child(5){ animation-delay:.22s } .levels.show .lv:nth-child(6){ animation-delay:.26s }
+  .levels.show .lv:nth-child(7){ animation-delay:.30s } .levels.show .lv:nth-child(8){ animation-delay:.34s }
+  @keyframes entraPaso{ from{ opacity:0; transform:translateY(16px) scale(.97) } }
+}
+/* Celular y tablet: que los botones fijos de arriba no tapen el título */
+@media (max-width:899px){ .app{ padding-top:50px } }
 /* ══════ EFFECTS CSS ══════
    Button sheen, king float, dust/fx canvas, victory overlay.
    Added from Claude Design v75 (aesthetic cherry-pick). */
@@ -880,6 +980,7 @@ body.focusmode #radioPanel{ display:none !important } /* #radioBtn already cover
   .note{ color:#CCCCCC !important; -webkit-text-fill-color:#CCCCCC !important }
 }
 </style>
+<script type="importmap">{"imports":{"three":"./assets/vendor/three.module.min.js","postprocessing":"./assets/vendor/postprocessing.js"}}</script>
 </head>
 <body>
 
@@ -1003,6 +1104,7 @@ body.focusmode #radioPanel{ display:none !important } /* #radioBtn already cover
 <!-- ===== START SCREEN ===== -->
 <div class="start" id="start">
   <canvas id="dustCanvas" aria-hidden="true"></canvas>
+  <canvas id="brilloInicio" aria-hidden="true"></canvas>
   <div class="title-wrap"><img class="banner" src="assets/title.png" alt="ElMultiVersoDelAjedrez: ajedrez fantástico de 16-bit"></div>
   <div class="start-body">
   <div class="start-art" id="startArt"><img src="assets/splash-duel.png" alt="Los reyes en batalla" onerror="this.parentNode.style.display='none'"></div>
@@ -1199,7 +1301,7 @@ body.focusmode #radioPanel{ display:none !important } /* #radioBtn already cover
 <script>
 "use strict";
 let blueKing='k_bkA', redKing='k_rkA';
-const V='?v=76';
+const V='?v=77';
 const PIECE=(c,t)=> ((t==='k') ? `assets/pieces/${c==='w'?blueKing:redKing}.png` : `assets/pieces/${c}${t.toUpperCase()}.png`)+V;
 const CAPICON=(c,t)=> `assets/pieces/${c}${t.toUpperCase()}_t.png`+V;
 const NATIVE_RIGHT=t=>(t==='k'||t==='q');
@@ -3300,13 +3402,47 @@ function labels(){
 }
 
 /* ===== Fit board ===== */
+/* UI líquida (JFC, 9 nov 2026: «el tablero es muy enano y sobra espacio a los lados… liquid en todos los tipos de pantalla»).
+   Escritorio: «Continuar esta jugada» sube a la columna izquierda para que el tablero gane alto.
+   Celular/tablet: el tablero se mide por el ANCHO (la página ya puede desplazarse en vertical desde jun 2026). */
+function placeCodesBar(){
+  // Escritorio: tres columnas que abrazan el tablero (izq: citas/línea/jugadas · centro: tablero · der: capturas + «Continuar esta jugada»).
+  // Celular, tablet y zoom: el orden original del DOM (capturas arriba y abajo del tablero, código bajo la nota).
+  const cb=document.getElementById('codesBar'), note=document.getElementById('note'), stage=document.querySelector('.stage');
+  const red=document.querySelector('.cap.red'), blue=document.querySelector('.cap.blue'), area=boardAreaEl;
+  if(!cb||!note||!stage||!red||!blue||!area) return;
+  let der=document.querySelector('.right-rail');
+  if(!der){ der=document.createElement('div'); der.className='right-rail'; stage.appendChild(der); }
+  const escritorio=window.innerWidth>=900 && !document.body.classList.contains('focusmode');
+  const app=document.getElementById('app'), titulo=app&&app.querySelector('.title-wrap'), estado=document.getElementById('status'),
+        hud=app&&app.querySelector('.hud'), izq=document.querySelector('.left-rail');
+  if(escritorio){   // rediseño escritorio (JFC 9 nov): el tablero toma todo el alto; lo demás vive en las dos columnas
+    if(red.parentNode!==der){ der.appendChild(estado); der.appendChild(red); der.appendChild(blue); der.appendChild(hud); der.appendChild(note); der.appendChild(cb);
+      if(titulo&&izq) izq.prepend(titulo); }
+    der.style.display=''; document.body.classList.add('ui-escritorio');
+  } else {
+    if(red.parentNode===der){ stage.insertBefore(red, area); area.after(blue);
+      if(titulo) app.insertBefore(titulo, stage); app.insertBefore(estado, stage);
+      stage.after(hud); hud.after(note); note.after(cb); }
+    der.style.display='none'; area.style.flex=''; area.style.width=''; document.body.classList.remove('ui-escritorio');
+  }
+  return escritorio;
+}
 function fitBoard(){
   if(!started) return;
-  const availW=boardAreaEl.clientWidth, availH=boardAreaEl.clientHeight-4;
+  const escritorio=placeCodesBar();
+  let availW=boardAreaEl.clientWidth; const availH=boardAreaEl.clientHeight-4;
+  if(escritorio){   // ancho disponible = escenario menos las dos columnas; luego el área se ajusta al tablero y el trío queda centrado
+    const st=document.querySelector('.stage'), gap=parseFloat(getComputedStyle(st).columnGap)||12;
+    availW=st.clientWidth-document.querySelector('.left-rail').offsetWidth-document.querySelector('.right-rail').offsetWidth-2*gap;
+  }
   const gutter=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--g'))||14;
-  let bw=Math.min(availW-2*gutter, (availH-2*gutter)*ASPECT);
+  const movil=window.innerWidth<=899 && !document.body.classList.contains('focusmode');
+  let bw=movil ? Math.min(availW-2*gutter, (window.innerHeight*(window.innerWidth>window.innerHeight?0.92:0.68)-2*gutter)*ASPECT)  // horizontal: casi todo el alto
+               : Math.min(availW-2*gutter, (availH-2*gutter)*ASPECT);
   bw=Math.max(170, Math.floor(bw||170));
   boardEl.style.width=bw+'px'; boardEl.style.height=Math.round(bw/ASPECT)+'px';
+  if(escritorio){ boardAreaEl.style.flex='0 0 auto'; boardAreaEl.style.width=(bw+2*gutter+4)+'px'; }
   ensureNoScroll();
 }
 function ensureNoScroll(){
@@ -3434,10 +3570,88 @@ function tryMove(from,to){
   if(ms.some(m=>m.promotion)){ doMove({from,to,promotion:'q'}); return; }
   doMove({from,to});
 }
+
+/* ══════ CHOQUES: golpe en capturas y jaque mate (JFC, 9 nov 2026) ══════
+   Lo que JFC pidió: «haptics y choques varoniles o nada». Sin partículas, chispas ni estelas (vetadas en junio).
+   Captura: flash blanco 2 cuadros + freno 5 cuadros + empujón 12 px (8 cuadros) + «+N» del valor. Sin temblor (vetado por JFC el 9 nov).
+   Jaque mate: freno de 9 cuadros y todo en cámara lenta (×3); el rey vencido recibe el golpe. Respeta «movimiento reducido». */
+const JUICE_F=1000/60;
+function juiceSnap(res){
+  const cell=sq=>gridEl.querySelector(`.cell[data-sq="${sq}"]`);
+  const fromC=cell(res.from), toC=cell(res.to);
+  let victim=null;
+  if(res.captured){
+    const vsq=(res.flags||'').includes('e') ? res.to[0]+res.from[1] : res.to;   // al paso: la víctima está al lado
+    const vc=cell(vsq), vcol=res.color==='w'?'b':'w';
+    const img=vc&&(vc.querySelector(`img[data-c="${vcol}"]`)||vc.querySelector('img'));
+    if(img) victim={img:img, r:img.getBoundingClientRect()};
+  }
+  return {victim:victim, from:fromC&&fromC.getBoundingClientRect(), to:toC&&toC.getBoundingClientRect()};
+}
+function juicePlay(res,snap){
+  try{
+    if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const mate=game.in_checkmate(), slow=mate?3:1, stop=(mate?9:5)*JUICE_F, push=8*JUICE_F*slow, flashT=2*JUICE_F;
+    const dx=(snap.from&&snap.to)?Math.sign(snap.to.left-snap.from.left):0, dy=(snap.from&&snap.to)?Math.sign(snap.to.top-snap.from.top):0;
+    const WHITE='brightness(0) invert(1)';
+    if(snap.victim){   // fantasma de la pieza capturada: blanco, freno, empujón
+      const r=snap.victim.r, g=snap.victim.img.cloneNode(true), T=stop+push;
+      g.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:60;pointer-events:none;margin:0`;
+      document.body.appendChild(g);
+      const a=g.animate([
+        {offset:0, filter:WHITE, transform:'translate(0,0)', opacity:1},
+        {offset:flashT/T, filter:WHITE, transform:'translate(0,0)', opacity:1},
+        {offset:Math.min(.99,flashT/T+.001), filter:'none', transform:'translate(0,0)', opacity:1},
+        {offset:stop/T, filter:'none', transform:'translate(0,0)', opacity:1, easing:'cubic-bezier(.15,.85,.3,1)'},
+        {offset:1, filter:'none', transform:`translate(${dx*12}px,${dy*12}px)`, opacity:0}],
+        {duration:T, fill:'forwards'});
+      a.onfinish=()=>g.remove(); setTimeout(()=>g.remove(),T+400);
+    }
+    if(mate){   // el rey vencido: fantasma encima (el tablero se redibuja después y borraría la animación del rey real)
+      const col=game.turn(), k=gridEl.querySelector(`img[data-t="k"][data-c="${col}"]`), tab=document.getElementById('board');
+      if(k&&tab){ const r=k.getBoundingClientRect(), g=k.cloneNode(true), T=stop+push*2, cls='juice-mate-'+col;
+        g.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:60;pointer-events:none;margin:0`;
+        if(!document.getElementById('juiceCss')){ const st=document.createElement('style'); st.id='juiceCss';
+          st.textContent='.juice-mate-w img[data-t="k"][data-c="w"],.juice-mate-b img[data-t="k"][data-c="b"]{visibility:hidden}'; document.head.appendChild(st); }
+        tab.classList.add(cls); document.body.appendChild(g);
+        const fin=()=>{ g.remove(); tab.classList.remove(cls); };
+        const a=g.animate([
+          {offset:0, filter:WHITE, transform:'translate(0,0)'},
+          {offset:flashT*slow/T, filter:WHITE, transform:'translate(0,0)'},
+          {offset:Math.min(.99,flashT*slow/T+.001), filter:'none', transform:'translate(0,0)'},
+          {offset:stop/T, filter:'none', transform:'translate(0,0)', easing:'cubic-bezier(.15,.85,.3,1)'},
+          {offset:(stop+push)/T, filter:'none', transform:`translate(${dx*12}px,${dy*12}px)`, easing:'ease-in-out'},
+          {offset:1, filter:'none', transform:'translate(0,0)'}],{duration:T});
+        a.onfinish=fin; setTimeout(fin,T+400); }
+    }
+    // sin temblor del tablero: JFC 9 nov 2026, «no me gustan los sacudones»
+    if(res.captured&&snap.to&&VAL[res.captured]){   // «+N»: salta, rebota y parpadea
+      const n=document.createElement('div'), t=snap.to;
+      n.textContent='+'+VAL[res.captured];
+      n.style.cssText=`position:fixed;left:${t.left+t.width/2}px;top:${t.top+t.height*0.15}px;z-index:61;pointer-events:none;`+
+        `transform:translate(-50%,-50%);font:900 ${Math.max(18,Math.round(t.width*0.42))}px "Trebuchet MS",system-ui,sans-serif;`+
+        `color:var(--gold2,#F5C24A);-webkit-text-stroke:2px #1c140d;paint-order:stroke fill;text-shadow:0 3px 0 #1c140d;opacity:0`;
+      document.body.appendChild(n);
+      const D=700*slow;
+      const b=n.animate([
+        {offset:0, opacity:0, transform:'translate(-50%,-50%) scale(.4)'},
+        {offset:.14, opacity:1, transform:'translate(-50%,-90%) scale(1.25)'},
+        {offset:.28, opacity:1, transform:'translate(-50%,-70%) scale(1)'},
+        {offset:.62, opacity:1, transform:'translate(-50%,-78%) scale(1)'},
+        {offset:.7, opacity:0, transform:'translate(-50%,-78%) scale(1)'},
+        {offset:.78, opacity:1, transform:'translate(-50%,-80%) scale(1)'},
+        {offset:.86, opacity:0, transform:'translate(-50%,-82%) scale(1)'},
+        {offset:.93, opacity:1, transform:'translate(-50%,-84%) scale(1)'},
+        {offset:1, opacity:0, transform:'translate(-50%,-86%) scale(1)'}],{duration:D, delay:stop, fill:'forwards'});
+      b.onfinish=()=>n.remove(); setTimeout(()=>n.remove(),D+stop+400);
+    }
+  }catch(e){}
+}
 function doMove(mv,fromRemote){
   const res=game.move({from:mv.from,to:mv.to,promotion:mv.promotion||undefined});
   if(!res){ render(); return; }
   if(res.captured) (res.color==='w'?capW:capB).push({color:res.color==='w'?'b':'w',type:res.captured});
+  const _snap=juiceSnap(res);
   lastMove={from:res.from,to:res.to}; redoStack.length=0;
   if(mode==='online' && !fromRemote) netSend({t:'move', mv:{from:res.from,to:res.to,promotion:mv.promotion||undefined}});
   // actxInit() is pre-warmed in the pointerdown handler (drag start) so the context is already
@@ -3454,7 +3668,7 @@ function doMove(mv,fromRemote){
     SFX.capture(capPt&&capPt.x,capPt&&capPt.y);
   }
   else SFX.move();
-  render(); status(); renderHistory(); maybeShowRematch(); saveMatch();
+  render(); juicePlay(res,_snap); status(); renderHistory(); maybeShowRematch(); saveMatch();
   if(mode==='ai' && !game.game_over() && game.turn()!==playerColor) setTimeout(aiMove,200);
 }
 
@@ -3637,6 +3851,7 @@ function engMove(uci){ const from=uci.slice(0,2), to=uci.slice(2,4), promo=uci.l
   const res=game.move({from,to,promotion:promo}); busy=false;
   if(!res){ render(); status(); return; }
   if(res.captured) (res.color==='w'?capW:capB).push({color:res.color==='w'?'b':'w',type:res.captured});
+  const _snap2=juiceSnap(res);
   lastMove={from:res.from,to:res.to};
   actxInit(); // AI move: no pointerdown gesture was captured, so init here (safe — idempotent)
   if(game.in_checkmate()) SFX.mate();
@@ -3647,7 +3862,7 @@ function engMove(uci){ const from=uci.slice(0,2), to=uci.slice(2,4), promo=uci.l
     SFX.capture(capPt2&&capPt2.x,capPt2&&capPt2.y);
   }
   else SFX.move();
-  render(); status(); renderHistory(); maybeShowRematch();
+  render(); juicePlay(res,_snap2); status(); renderHistory(); maybeShowRematch();
   // BUGFIX 2026-06-21: this was the one move-application path that never persisted. doMove() (the
   // human's move) always called saveMatch(); engMove() (the AI's reply, from both Stockfish and the
   // fbMove fallback) never did. Closing the tab right after the AI moved meant the saved snapshot was
@@ -4733,6 +4948,19 @@ function setTavernMute(muted){
     document.addEventListener('pointerdown',resumeOnGesture,{capture:true,once:true});
   }
 })();
+</script>
+<script type="module">
+/* Bloom real en la portada (JFC 9 nov 2026: «bloom effect y motion»): brillo.js = three.js + pmndrs postprocessing.
+   Solo escritorio y sin «reducir movimiento»; se carga tras el load. Sin WebGL, brillo() retira el lienzo y queda el polvo dorado. */
+if(innerWidth>=900 && !matchMedia('(prefers-reduced-motion:reduce)').matches){
+  addEventListener('load',()=>setTimeout(async()=>{
+    const cv=document.getElementById('brilloInicio'); if(!cv) return;
+    try{ const {brillo}=await import('./assets/brillo.js?v=1');
+      const r=await brillo(cv,{colores:['#F5C24A','#E8A020','#7FA8FF','#FF6A5C'],modo:'subir',cantidad:150,fondo:'#140d07',intensidad:1.7});
+      if(r!==null && document.getElementById('brilloInicio')) document.getElementById('start').classList.add('con-brillo');
+    }catch(e){ cv.remove(); }
+  },350));
+}
 </script>
 </body>
 </html>
